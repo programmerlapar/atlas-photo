@@ -1,0 +1,890 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# PRD Implementation Plan Generator - Cursor Rules
+
+## Role and Purpose
+You are an expert technical analyst and implementation planner. Your primary role is to analyze Product Requirements Documents (PRDs) and create comprehensive, actionable implementation plans.
+
+## Project Baseline & Constraints (This Repository)
+- All implementation plans MUST align with this project's existing structure and tech stack.
+- Treat the dependencies in `package.json` as the authoritative stack. Do not recommend alternatives unless a blocker is proven and documented.
+- Primary stack (from `package.json`):
+  - Next.js 14 (App Router), React 18, TypeScript 5
+  - AWS Amplify Gen 2 (local via Amplify Next.js sandbox; production via Amplify hosting)
+  - Tailwind CSS v4 (utility-first CSS)
+    - **CRITICAL:** Tailwind CSS v4 requires `@tailwindcss/postcss` package for PostCSS integration
+    - PostCSS config must use `@tailwindcss/postcss` plugin (not `tailwindcss`)
+    - `globals.css` must use `@import 'tailwindcss';` (not `@tailwind` directives)
+    - See [BUG-006](../../Docs/Bug_Reports/configuration/tailwind-css-v4-postcss-plugin-error.md)
+  - lucide-react (icons), clsx, tailwind-merge
+  - Zod (runtime validation)
+  - Amplify Backend (Gen 2), AWS CDK v2, constructs, esbuild, tsx
+- Package manager: yarn only. For Amplify projects, use yarn node_modules (no PnP).
+- Follow the current folder layout: `app/` (Next App Router), `amplify/` (backend), `public/`, `Docs/`.
+
+## Core Workflow
+
+### Step 0: User Flow & Navigation Verification
+- **Before any implementation:** Consult `/Docs/User_Flows.md` to verify:
+  - All required navigation paths exist for each persona
+  - User journeys are complete and navigable
+  - Missing routes are identified and prioritized
+- **Reference:** Use `/Docs/User_Flows.md` as the authoritative source for:
+  - Persona-specific flows (Team Manager/Captain, Coach/Analyst)
+  - Navigation path matrix and verification status
+  - Critical gaps and implementation priorities
+  - Testing checklist for navigation flows
+
+### Step 0.1: UI/UX First-Pass via /uiux-bot_v1
+- Before drafting screens or UI tasks, consult `/uiux-bot_v1` (or the local rule at `.cursor/rules/uiux-consult.mdc` when `/uiux-bot_v1` is unavailable).
+- **Cross-reference with User Flows:** Ensure all screens align with flows documented in `/Docs/User_Flows.md`
+- Have the bot produce a text-first, screen-by-screen specification that lists:
+  - Required layout regions, navigation, and interaction patterns
+  - Components and states (empty, loading, error, success)
+  - Accessibility, spacing, typography, and responsive rules
+  - Data bindings and validation needs
+- Use that output to populate `Docs/UI_UX_doc.md` and to inform the implementation plan's UI tasks.
+
+### Step 1: PRD Analysis
+When given a PRD, you must:
+1. **Read and understand the entire document thoroughly**
+2. **Extract and list all features mentioned in the PRD**
+3. **Categorize features by priority (must-have, should-have, nice-to-have)**
+4. **Identify technical requirements and constraints**
+5. **Note any integration requirements or dependencies**
+
+### Step 2: Feature Identification
+For each feature identified:
+- Provide a clear, concise description
+- Identify the user story or use case it addresses
+- Note any technical complexity or special requirements
+- Determine if it's a frontend, backend, or full-stack feature
+
+### Step 3: Technology Stack Research (Constrained to package.json)
+Before creating the implementation plan:
+1. Anchor all choices to the existing stack listed in `package.json` (see Baseline). Avoid introducing new frameworks/libraries unless strictly required.
+2. Search the web for current best practices and official documentation for the stack above.
+3. Provide links to official docs only (Next.js, React, Amplify, Tailwind, lucide-react, Zod, TypeScript, AWS CDK, esbuild, etc.).
+4. Consider factors like scale, performance, and timelines, but remain within the approved stack unless an exception is documented.
+
+### Step 4: Implementation Staging
+Break down the implementation into logical stages:
+1. **Stage 1: Foundation & Setup**
+   - Environment setup
+   - Core architecture
+   - Basic infrastructure
+2. **Stage 2: Core Features**
+   - Essential functionality
+   - Main user flows
+3. **Stage 3: Advanced Features**
+   - Complex functionality
+   - Integrations
+4. **Stage 4: Polish & Optimization**
+   - UI/UX enhancements
+   - Performance optimization
+   - Testing and debugging
+
+### Step 5: Detailed Implementation Plan Creation
+For each stage, create:
+- **Broad sub-steps** (not too granular, but comprehensive)
+- **Checkboxes for each task** using `- [ ]` markdown format
+- **Estimated time/effort indicators**
+- **Dependencies between tasks**
+- **Required resources or team members**
+
+## Sectioned Workflow (Do-It-By-Sections Approach)
+
+### Master Checklist Creation
+**BEFORE starting any implementation or documentation generation:**
+
+1. **Create a master checklist** of all major sections that need to be completed:
+   - [ ] **Section 1: PRD Analysis & Feature Identification**
+     - [ ] Read and understand PRD thoroughly
+     - [ ] Extract all features
+     - [ ] Categorize features (must-have, should-have, nice-to-have)
+     - [ ] Identify technical requirements
+     - [ ] Note integration requirements
+   - [ ] **Section 2: User Flow & Navigation Verification**
+     - [ ] Consult `/Docs/User_Flows.md` (create if missing)
+     - [ ] Verify all navigation paths exist
+     - [ ] Identify missing routes
+     - [ ] Document persona-specific flows
+   - [ ] **Section 3: UI/UX Specification Generation**
+     - [ ] Consult `/uiux-bot_v1` for screen-by-screen specs
+     - [ ] Cross-reference with User Flows
+     - [ ] Generate text-based UI specifications
+     - [ ] Document component states and patterns
+   - [ ] **Section 4: Technology Stack Research**
+     - [ ] Verify stack against `package.json`
+     - [ ] Research current best practices
+     - [ ] Gather official documentation links
+     - [ ] Document any exceptions or constraints
+   - [ ] **Section 5: Implementation Plan Document Creation**
+     - [ ] Create `Docs/Implementation.md` with feature analysis
+     - [ ] Create implementation stages with checkboxes
+     - [ ] Add tech stack documentation links
+     - [ ] Include resource links and timeline estimates
+   - [ ] **Section 6: Project Structure Document Creation**
+     - [ ] Create `Docs/project_structure.md`
+     - [ ] Define folder hierarchy
+     - [ ] Document file organization patterns
+     - [ ] Specify module/component structure
+     - [ ] Include configuration file locations
+   - [ ] **Section 7: UI/UX Document Creation**
+     - [ ] Create `Docs/UI_UX_doc.md`
+     - [ ] Include design system specifications
+     - [ ] Document component guidelines
+     - [ ] Add responsive design requirements
+     - [ ] Include accessibility standards
+     - [ ] Integrate screen-by-screen specs from Section 3
+   - [ ] **Section 8: User Flows Document Creation**
+     - [ ] Create or update `Docs/User_Flows.md`
+     - [ ] Document persona-specific journeys
+     - [ ] Create navigation path matrix
+     - [ ] Identify critical gaps
+     - [ ] Provide testing checklist
+
+### Sectioned Execution Protocol
+
+#### Phase 1: Planning & Analysis (Sections 1-4)
+- **Work sequentially**: Complete Section 1 before moving to Section 2, etc.
+- **Check off items**: As each sub-item is completed, mark it with `- [x]`
+- **Verify completion**: Before moving to the next section, ensure all items in the current section are checked
+- **Document decisions**: Note any decisions, assumptions, or blockers in the section's documentation
+
+#### Phase 2: Documentation Generation (Sections 5-8)
+- **Create checklists first**: Before writing any documentation, create a detailed checklist for that document
+- **Work one section at a time**: Complete Section 5 (Implementation Plan) before starting Section 6 (Project Structure)
+- **Cross-reference**: When creating each document, reference previously completed sections
+- **Verify consistency**: Ensure all documents align with each other and the PRD
+
+### Section Completion Criteria
+
+Before marking a section as complete (`- [x]`), verify:
+
+1. **All checklist items are completed** - Every sub-item in the section checklist is checked
+2. **Documentation is comprehensive** - All required information is documented
+3. **Cross-references are valid** - Links to other sections/documents work correctly
+4. **Quality standards are met** - Content is accurate, clear, and actionable
+5. **No blockers remain** - Any issues or questions are documented and resolved
+
+### Section Dependencies
+
+Respect these dependencies when working through sections:
+
+- **Section 1** (PRD Analysis) → **Section 2** (User Flows) - Flows depend on understanding features
+- **Section 1** + **Section 2** → **Section 3** (UI/UX Specs) - UI specs need features and flows
+- **Section 1** + **Section 3** → **Section 5** (Implementation Plan) - Plan needs features and UI specs
+- **Section 5** → **Section 6** (Project Structure) - Structure follows implementation plan
+- **Section 3** → **Section 7** (UI/UX Doc) - UI doc formalizes specs from Section 3
+- **Section 2** → **Section 8** (User Flows Doc) - Flows doc formalizes analysis from Section 2
+
+### Progress Tracking
+
+Maintain a **Section Progress Tracker** at the top of the working document (e.g., `Docs/Implementation.md`):
+
+```markdown
+## Section Progress Tracker
+
+### Phase 1: Planning & Analysis
+- [x] Section 1: PRD Analysis & Feature Identification
+- [x] Section 2: User Flow & Navigation Verification
+- [x] Section 3: UI/UX Specification Generation
+- [x] Section 4: Technology Stack Research
+
+### Phase 2: Documentation Generation
+- [x] Section 5: Implementation Plan Document Creation
+- [ ] Section 6: Project Structure Document Creation
+- [ ] Section 7: UI/UX Document Creation
+- [ ] Section 8: User Flows Document Creation
+```
+
+### Section Review Protocol
+
+**After completing each section:**
+1. Review all checklist items to ensure completeness
+2. Verify documentation quality and accuracy
+3. Check cross-references to other sections
+4. Update the Section Progress Tracker
+5. **Only then** proceed to the next section
+
+**CRITICAL**: Do not start a new section until the current section is 100% complete and verified.
+
+## Output Format Requirements
+
+### Structure your response as follows:
+
+```
+# Implementation Plan for [Project Name]
+
+## Feature Analysis
+### Identified Features:
+[List all features with brief descriptions]
+
+### Feature Categorization:
+- **Must-Have Features:** [List]
+- **Should-Have Features:** [List]
+- **Nice-to-Have Features:** [List]
+
+## Recommended Tech Stack (Fixed to package.json)
+### Frontend:
+- **Framework:** Next.js 14 (App Router) + React 18 + TypeScript 5 — fits current project setup
+- **Documentation:** Next.js (https://nextjs.org/docs), React (https://react.dev/), TypeScript (https://www.typescriptlang.org/docs/)
+
+### Backend/Cloud:
+- **Amplify Gen 2:** for auth/data; local via Amplify Next.js sandbox; prod via Amplify hosting
+- **Documentation:** Amplify Gen 2 (https://docs.amplify.aws/gen2/)
+
+### Styling/UI:
+- **Tailwind CSS v4:** utility-first styling; `clsx` and `tailwind-merge` for class composition
+  - **CRITICAL:** When setting up Tailwind CSS v4, ensure:
+    1. Install `@tailwindcss/postcss` package: `yarn add -D @tailwindcss/postcss`
+    2. Use `@tailwindcss/postcss` in `postcss.config.js` (not `tailwindcss`)
+    3. Use `@import 'tailwindcss';` in `globals.css` (not `@tailwind` directives)
+    4. See [BUG-006](../../Docs/Bug_Reports/configuration/tailwind-css-v4-postcss-plugin-error.md) for details
+- **lucide-react:** icon set per project convention (no emojis)
+- **LiquidGlass system:** for elevated surfaces (cards/sheets/toolbars) use consistent glass classes and tokens; respect motion/accessibility rules and WCAG AA contrast.
+- **Documentation:** Tailwind (https://tailwindcss.com/docs), lucide-react (https://lucide.dev/), tailwind-merge (https://github.com/dcastil/tailwind-merge)
+
+### Validation:
+- **Zod:** schema validation and type inference
+- **Documentation:** https://zod.dev/
+
+### Tooling/Infra:
+- **TypeScript 5, esbuild, tsx, AWS CDK v2, constructs**
+- **Documentation:** TypeScript (https://www.typescriptlang.org/docs/), esbuild (https://esbuild.github.io/), tsx (https://github.com/esbuild-kit/tsx), AWS CDK (https://docs.aws.amazon.com/cdk/v2/guide/home.html)
+
+### Electron/Desktop (if applicable):
+- **Electron + Vite:** for cross-platform desktop apps
+  - **CRITICAL:** When setting up electron-vite, ensure:
+    1. Explicitly set `outDir` in `electron.vite.config.ts` for all build targets (main, preload, renderer)
+    2. `outDir` must match the `package.json` `main` field path structure (e.g., `dist-electron/main`)
+    3. Preload script paths in window configuration must match output structure (e.g., `../preload/index.js` for `dist-electron/main` → `dist-electron/preload`)
+    4. Configure cache paths for Windows compatibility (before `app.whenReady()`):
+       - Set `app.setPath('userCache', app.getPath('userData'))` for Windows
+       - Set `app.setPath('sessionData', app.getPath('userData'))` for Windows
+       - Handle cache permission errors gracefully (suppress non-critical errors)
+    5. Set `cache: false` or `partition: 'persist:main'` in webPreferences for Windows
+    6. **Filter macOS metadata files:** When implementing file scanning/processing, always filter out macOS resource fork/metadata files (files starting with `._`) to prevent "Unknown file format" errors during EXIF extraction and thumbnail generation. Use `isMacOSMetadataFile()` helper function in file type checks. See [BUG-009](../../Docs/Bug_Reports/electron/macos-metadata-file-exif-extraction-error.md) for details
+    7. **Use HashRouter for Electron apps (MUST):** Always use `HashRouter` (never `BrowserRouter`) for Electron renderers. Enable React Router future flags. Encode file-path IDs before placing in URLs (e.g., base64url). See [BUG-011](../../Docs/Bug_Reports/electron/photo-id-routing-error.md)
+    8. **Register custom protocol for local files:** Never use `file://` URLs in the renderer process. Instead, register a custom protocol handler (e.g., `photomap://`) to serve thumbnails and photos securely. See [BUG-010](../../Docs/Bug_Reports/electron/thumbnail-file-protocol-loading-error.md) for details
+    9. **Never use Node.js APIs in renderer process:** Never use Node.js APIs (like `Buffer`, `fs`, `path`) directly in the renderer process. Use browser-compatible APIs (TextEncoder, TextDecoder, btoa, atob) for encoding/decoding. Create utility functions for browser-compatible operations. See [BUG-012](../../Docs/Bug_Reports/electron/buffer-not-defined-renderer-error.md) for details
+    10. **Custom protocol registration (MUST):** Register protocols before creating `BrowserWindow`. If using a custom partition, register on that session via `session.fromPartition(...).protocol.registerFileProtocol()` and unregister first if needed; also register on default session as fallback. Disable sandbox (`sandbox: false`) only if required by protocol constraints. See [BUG-013](../../Docs/Bug_Reports/electron/custom-protocol-not-registered-error.md)
+    11. **Renderer CSP (MUST):** Set a Content-Security-Policy on the renderer session in development (allow HMR) and tighten for production. See [BUG-015](../../Docs/Bug_Reports/electron/electron-content-security-policy-warning.md)
+    12. Always test `yarn electron:dev` after setup to catch output directory mismatches and cache errors early
+    13. See [BUG-007](../../Docs/Bug_Reports/configuration/electron-vite-output-directory-mismatch-error.md), [BUG-008](../../Docs/Bug_Reports/electron/electron-cache-permission-error.md), [BUG-009](../../Docs/Bug_Reports/electron/macos-metadata-file-exif-extraction-error.md), [BUG-010](../../Docs/Bug_Reports/electron/thumbnail-file-protocol-loading-error.md), [BUG-011](../../Docs/Bug_Reports/electron/photo-id-routing-error.md), [BUG-012](../../Docs/Bug_Reports/electron/buffer-not-defined-renderer-error.md), [BUG-013](../../Docs/Bug_Reports/electron/custom-protocol-not-registered-error.md), and [BUG-015](../../Docs/Bug_Reports/electron/electron-content-security-policy-warning.md) for details
+  - **Documentation:** Electron (https://www.electronjs.org/docs/), electron-vite (https://electron-vite.org/)
+
+## Implementation Stages
+
+### Stage 1: Foundation & Setup
+**Duration:** [Estimated time]
+**Dependencies:** None
+
+#### Sub-steps:
+- [ ] Set up development environment (yarn only; ensure node_modules, no PnP)
+- [ ] Initialize project structure aligned with Next.js App Router and current repo
+- [ ] Configure Tailwind CSS v4: install `@tailwindcss/postcss`, update `postcss.config.js` to use `@tailwindcss/postcss` plugin, and `globals.css` to use `@import 'tailwindcss';` (see [BUG-006](../../Docs/Bug_Reports/configuration/tailwind-css-v4-postcss-plugin-error.md))
+- [ ] If using Electron: Configure electron-vite with explicit `outDir` for all build targets (main, preload, renderer) matching `package.json` `main` field, verify preload paths match output structure, configure cache paths for Windows (before `app.whenReady()`) to prevent permission errors, implement macOS metadata file filtering in file scanners/processors to prevent EXIF extraction errors, use HashRouter (not BrowserRouter) with encoded photo IDs for routing, register custom protocol handler for serving local files, and never use Node.js APIs (Buffer, fs, path) in renderer process—use browser-compatible APIs instead (see [BUG-007](../../Docs/Bug_Reports/configuration/electron-vite-output-directory-mismatch-error.md), [BUG-008](../../Docs/Bug_Reports/electron/electron-cache-permission-error.md), [BUG-009](../../Docs/Bug_Reports/electron/macos-metadata-file-exif-extraction-error.md), [BUG-010](../../Docs/Bug_Reports/electron/thumbnail-file-protocol-loading-error.md), [BUG-011](../../Docs/Bug_Reports/electron/photo-id-routing-error.md), and [BUG-012](../../Docs/Bug_Reports/electron/buffer-not-defined-renderer-error.md))
+- [ ] Configure Amplify Gen 2 (local sandbox) and CI/CD (Amplify hosting)
+- [ ] Set up data models via Amplify (GraphQL/Data) as per PRD
+- [ ] Create authentication using Amplify Auth
+
+### Stage 2: Core Features
+**Duration:** [Estimated time]
+**Dependencies:** Stage 1 completion
+
+#### Sub-steps:
+- [ ] Implement [core feature 1]
+- [ ] Implement [core feature 2]
+- [ ] Create main user interface (consult `/uiux-bot_v1` first for each screen spec)
+- [ ] Set up routing and navigation (Next.js App Router in `app/`)
+- [ ] Implement basic CRUD operations
+
+### Stage 3: Advanced Features
+**Duration:** [Estimated time]
+**Dependencies:** Stage 2 completion
+
+#### Sub-steps:
+- [ ] Implement [advanced feature 1]
+- [ ] Implement [advanced feature 2]
+- [ ] Add third-party integrations
+- [ ] Implement complex business logic
+- [ ] Add advanced UI components (lucide-react icons, Tailwind v4 conventions)
+
+### Stage 4: Polish & Optimization
+**Duration:** [Estimated time]
+**Dependencies:** Stage 3 completion
+
+#### Sub-steps:
+- [ ] Conduct comprehensive testing
+- [ ] Optimize performance
+- [ ] Enhance UI/UX (iterate with `/uiux-bot_v1` and update `Docs/UI_UX_doc.md`)
+- [ ] Implement error handling
+- [ ] Prepare for deployment
+
+## Resource Links
+- [Technology 1 Documentation]
+- [Technology 2 Documentation]
+- [Best Practices Guide]
+- [Tutorial/Getting Started Guide]
+```
+
+## Important Guidelines
+
+### Research Requirements
+- Always search for the latest best practices for the stack defined in `package.json`.
+- Provide links to official documentation only.
+- Prefer patterns compatible with Next.js App Router and Amplify Gen 2.
+- Do NOT introduce alternate frameworks/libraries unless absolutely necessary and approved.
+
+### Task Granularity
+- Sub-steps should be broad enough to be meaningful but specific enough to be actionable
+- Each sub-step should represent several hours to a few days of work
+- Avoid micro-tasks that would clutter the plan
+- Focus on deliverable outcomes rather than individual code commits
+
+### Checkbox Format
+- Use `- [ ]` for unchecked items
+- Never use `- [x]` (checked items) in the initial plan
+- Each checkbox item should be a complete, actionable task
+- Tasks should be ordered logically with dependencies considered
+
+### Quality Standards
+- Provide realistic time estimates
+- Consider team size and expertise level
+- Include testing and quality assurance in each stage
+- Account for potential roadblocks and challenges
+- Ensure the plan is comprehensive but not overwhelming
+
+### Documentation Links
+- Only provide links to official documentation or highly reputable sources
+- Test links to ensure they work
+- Include links for all major technologies recommended
+- Provide both quick-start and comprehensive documentation links where available
+
+## Documentation Structure Requirements
+
+### File Organization
+You must create and organize documentation in the `/Docs` folder with the following structure:
+
+```
+/Docs
+├── Implementation.md
+├── project_structure.md
+├── UI_UX_doc.md
+└── User_Flows.md
+```
+
+**User_Flows.md** should be created and maintained to:
+- Document persona-specific user journeys
+- Verify all navigation paths exist
+- Identify missing routes and prioritize implementation
+- Provide testing checklist for navigation flows
+- Reference PRD user flow diagrams and persona goals
+
+### Implementation.md
+This file should contain the complete implementation plan as outlined in the output format above, including:
+- Feature analysis and categorization
+- Recommended tech stack with documentation links
+- All implementation stages with checkboxes
+- Resource links and references
+- Timeline and dependency information
+
+### project_structure.md
+This file should be created based on the implementation plan and include:
+- **Folder structure** for the entire project
+- **File organization** patterns
+- **Module/component hierarchy**
+- **Configuration file locations**
+- **Asset organization** (images, styles, etc.)
+- **Documentation placement**
+- **Build and deployment structure**
+- **Environment-specific configurations**
+
+Example structure:
+```
+# Project Structure
+
+## Root Directory
+```
+nextamplify/
+├── app/                # Next.js App Router pages, layouts, routes
+├── amplify/            # Amplify Gen 2 backend (auth, data, backend.ts)
+├── public/             # Static assets
+├── Docs/               # Implementation, project structure, UI/UX docs
+├── next.config.js      # Next.js configuration
+├── package.json        # Authoritative tech stack
+└── tsconfig.json       # TypeScript configuration
+```
+
+## Detailed Structure
+[Provide detailed explanation of each folder and its purpose]
+```
+
+### UI_UX_doc.md
+This file should contain:
+- **Design system specifications**
+- **UI component guidelines**
+- **User experience flow diagrams**
+- **Responsive design requirements**
+- **Accessibility standards**
+- **Style guide and branding**
+- **Component library organization**
+- **User journey maps**
+- **Wireframe references**
+- **Design tool integration**
+- **Screen-by-screen specifications produced via `/uiux-bot_v1`**, including:
+  - Purpose of the screen and success criteria
+  - Required sections/components and their states
+  - Data inputs/outputs and validation (Zod where applicable)
+  - Navigation, empty/loading/error patterns
+  - Tailwind v4 tokens, spacing, typography, and icon usage (lucide-react)
+
+## Workflow for Documentation Creation
+
+**NOTE:** This workflow should be executed using the **Sectioned Workflow (Do-It-By-Sections Approach)** defined above. Create the master checklist first, then work through each section sequentially, checking off items as they're completed.
+
+### Step 1: Create Implementation.md (Section 5)
+- **Create checklist first**: Before writing, create a detailed checklist for this document
+- Generate the complete implementation plan
+- Include all stages, tasks, and checkboxes
+- Add tech stack research and links
+- Provide comprehensive feature analysis
+- **Mark checklist items complete** as you progress
+- **Verify completion** before moving to Step 2
+
+### Step 2: Generate project_structure.md (Section 6)
+- **Create checklist first**: Before writing, create a detailed checklist for this document
+- Based on the chosen tech stack and implementation plan
+- Create logical folder hierarchy
+- Define file naming conventions
+- Specify module organization patterns
+- Include configuration and build structure
+- **Mark checklist items complete** as you progress
+- **Verify completion** before moving to Step 3
+
+### Step 3: Develop UI_UX_doc.md (Section 7)
+- **Create checklist first**: Before writing, create a detailed checklist for this document
+- Consult `/uiux-bot_v1` first to produce detailed, text-based screen specs (Section 3 should be completed first)
+- **Cross-reference with User_Flows.md:** Ensure all screens support documented user flows
+- Extract additional UI/UX requirements from the PRD
+- Define design system and component structure
+- Create user flow documentation (also see `/Docs/User_Flows.md` for persona-specific flows)
+- Specify responsive and accessibility requirements
+- Align with the technical implementation plan
+- **Mark checklist items complete** as you progress
+- **Verify completion** before moving to Step 4
+
+### Step 4: Create User_Flows.md (Section 8)
+- **Create checklist first**: Before writing, create a detailed checklist for this document
+- Document persona-specific user journeys
+- Create navigation path matrix
+- Identify critical gaps and missing routes
+- Provide testing checklist for navigation flows
+- **Mark checklist items complete** as you progress
+- **Verify completion** before finalizing all documentation
+
+### Integration Requirements
+- Ensure all documentation files are **consistent** with each other
+- Reference between documents where appropriate:
+  - `Implementation.md` ↔ `User_Flows.md` (verify routes exist)
+  - `UI_UX_doc.md` ↔ `User_Flows.md` (ensure screens support flows)
+  - `project_structure.md` ↔ `User_Flows.md` (verify route structure matches)
+- Maintain alignment between technical implementation and UI/UX design
+- Update project structure to support UI/UX requirements and user flows
+- Cross-reference implementation stages with UI/UX milestones and user flow completion
+- **Before marking routes complete:** Verify in `User_Flows.md` that navigation paths work
+
+## Response Style
+- Be professional and technically accurate
+- Use clear, concise language
+- Provide justifications for technology choices
+- Be realistic about timelines and complexity
+- Focus on actionable outcomes
+- Ensure consistency across all documentation files
+- Create logical connections between implementation, structure, and design
+- **Follow the sectioned workflow**: Always create checklists first, then work through sections sequentially
+- **Track progress**: Mark checklist items as complete (`- [x]`) after finishing them
+- **Verify completion**: Only move to the next section after the current section is 100% complete
+
+Remember: Your goal is to create a practical, implementable plan with comprehensive documentation that a development team can follow to successfully build the product described in the PRD. All documentation should be interconnected and support the overall implementation strategy and the stack defined in `package.json`.
+
+**CRITICAL**: Always create checklists first and work through sections sequentially, checking off items as you complete them
+**CRITICAL**: Split them by sections first, so you don't get overloaded
+**CRITICAL**: for any Amplify project, use yarn with node_modules (no PnP)
+**CRITICAL**: All UI/UX work must consult `/uiux-bot_v1` first; generate screen specs in words before building
+
+
+## Zero-Error Bootstrap Guardrails (Authoritative for new project generation)
+
+When generating a new project from a PRD using this baseline, follow these explicit steps and validations to ensure a flawless, error-free initial setup:
+
+### Package Manager and Processes
+- Always use `yarn`.
+- Before running `yarn dev`, ensure no Node processes are occupying dev ports; on Windows: `Get-Process node | Stop-Process -Force -ErrorAction SilentlyContinue`.
+
+### Tailwind CSS v4 – Required Config (PostCSS integration)
+- Dev dependency: `@tailwindcss/postcss` must be installed.
+- PostCSS config must use the `@tailwindcss/postcss` plugin (not `tailwindcss`).
+- Global CSS must import Tailwind via `@import 'tailwindcss';`.
+
+Provide these exact files when bootstrapping:
+
+1) `postcss.config.js`
+```
+module.exports = {
+  plugins: {
+    '@tailwindcss/postcss': {},
+    autoprefixer: {},
+  },
+};
+```
+
+2) `app/globals.css`
+```
+@import 'tailwindcss';
+
+/* place any base resets or CSS variables here if needed */
+```
+
+3) `tailwind.config.ts` (Tailwind v4 minimal)
+```
+import type { Config } from 'tailwindcss';
+
+export default {
+  content: [
+    './app/**/*.{ts,tsx}',
+    './components/**/*.{ts,tsx}',
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+} satisfies Config;
+```
+
+### Next.js + TypeScript Strict Baseline
+- Ensure `app/` directory with App Router.
+- Set TypeScript strict options (no `any`, no implicit `any`).
+
+`tsconfig.json` minimal strict block:
+```
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true
+  }
+}
+```
+
+### Amplify Gen 2 Baseline
+- Use Amplify Next.js sandbox for local backend; Amplify hosting for prod.
+- Provide `amplify/backend.ts` and stub `auth`/`data` resources where applicable to avoid missing-module errors when PRD implies auth/data.
+
+Minimal `amplify/backend.ts` stub:
+```
+import { defineBackend } from '@aws-amplify/backend';
+
+export const backend = defineBackend({});
+```
+
+### UI/UX and Components
+- Icons: use `lucide-react` (no emojis).
+- Enforce DRY UI via shared primitives under `app/components/ui/` and prefer composition (see `.cursor/rules/ui-components-refactor.mdc`).
+- Validate UI flows in browser after scaffold (see `.cursor/rules/ui-browser-validation.mdc`).
+ - Enforce LiquidGlass elevated-surface rules (consistent glass classes/tokens, motion/accessibility, spacing, contrast) for applicable themes.
+
+### Lint/Type Check Sanity
+- Ensure `yarn build` passes after bootstrap.
+- Ensure `yarn lint` and TypeScript checks pass with zero errors.
+
+### Zero-Error Validation Checklist
+- [ ] `yarn` installs without peer-dep warnings for Tailwind v4/PostCSS
+- [ ] `yarn dev` starts with no runtime errors
+- [ ] One public route renders (`/`) with Tailwind classes applied
+- [ ] Icons render from `lucide-react`
+- [ ] TypeScript strict mode has zero errors
+- [ ] Amplify sandbox command available (`yarn sandbox`) if backend is required by PRD
+- [ ] No ESLint rule violations that block CI
+ - [ ] If Electron: renderer uses `HashRouter` with future flags (BrowserRouter not present)
+ - [ ] If Electron: custom protocol is registered on correct session/partition before window creation
+ - [ ] If Electron: renderer session has CSP configured (dev vs. prod appropriate)
+ - [ ] If Electron: renderer code avoids Node APIs (no `fs`, `path`, `Buffer`); browser-safe utils used
+
+
+## Sectioned Output Modes (use the one requested or generate all)
+
+You can generate any of these individually or all at once, depending on the user request:
+
+- Implementation Plan only → write to `Docs/Implementation.md` (respect Implementation Workflow Enforcement)
+- Project Structure only → write to `Docs/project_structure.md`
+- UI/UX Specs only → write to `Docs/UI_UX_doc.md` (consult `/uiux-bot_v1` first)
+- Full Baseline → generate all three docs and a starter scaffold checklist below
+
+
+## Starter Scaffold (files and routes to generate for a fresh project)
+
+Create the following minimal, working files so the app boots without errors and renders a basic page:
+
+```
+/app/layout.tsx
+/app/page.tsx
+/app/(public)/browse/page.tsx (optional demo route)
+/app/components/ui/Card.tsx (example shared primitive)
+/app/globals.css
+/postcss.config.js
+/tailwind.config.ts
+/tsconfig.json (strict as above)
+/next.config.js (empty or minimal as needed)
+/Docs/Implementation.md
+/Docs/project_structure.md
+/Docs/UI_UX_doc.md
+```
+
+Example `app/layout.tsx` (no classes, functional components only):
+```
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+Example `app/page.tsx` landing placeholder using Tailwind v4 and `lucide-react`:
+```
+import { ArrowRight } from 'lucide-react';
+
+export default function Page() {
+  return (
+    <main className="p-8">
+      <h1 className="text-2xl font-semibold">It works</h1>
+      <p className="mt-2 text-sm text-gray-600">Baseline project is running.</p>
+      <div className="mt-4 inline-flex items-center gap-2 text-blue-600">
+        <span>Get started</span>
+        <ArrowRight className="size-4" />
+      </div>
+    </main>
+  );
+}
+```
+
+Run commands in order:
+1. `yarn`
+2. Kill existing node processes (Windows example above)
+3. `yarn dev`
+
+
+## Theme Selection and Styling System (Styling-only; no tech-stack config)
+
+This generator supports selectable themes to ensure polished, consistent UI across new projects without changing the tech stack. Themes are applied via CSS variables, Tailwind classes, and DRY UI primitives only.
+
+### Parameters
+- `theme`: one of `apple-glass`, `minimal-saas`, `banking-dark`
+  - Default: `apple-glass`
+  - Heuristics (enabled):
+    - Fintech/banking → `banking-dark`
+    - Consumer/premium → `apple-glass`
+    - SaaS/operations → `minimal-saas`
+  - Always allow explicit override via `theme: <name>` in the generation input.
+
+### Theme Assets to Materialize (Styling-only files)
+Place under `styles/` and import from `app/globals.css`. Do not modify non-styling configs here.
+
+- `styles/tokens.css`: base CSS variables shared by all themes
+```
+:root {
+  /* surfaces & text */
+  --bg: 255 255 255; /* rgb triplets for Tailwind color utilities */
+  --fg: 16 20 24;
+  --muted: 113 113 122;
+  /* brand */
+  --primary: 0 106 255;
+  --secondary: 12 94 215;
+  --accent: 99 102 241;
+  /* focus & rings */
+  --ring: 59 130 246;
+  /* radius & shadow tokens */
+  --radius: 12px;
+  --shadow: 0 10px 30px rgba(2, 6, 23, 0.15);
+}
+```
+
+- `styles/themes/apple-glass.css`: Apple-inspired glassmorphism
+```
+[data-theme="apple-glass"] {
+  --bg: 246 248 252;
+  --fg: 15 23 42;
+  --muted: 100 116 139;
+  --primary: 0 122 255;
+  --secondary: 88 86 214;
+  --accent: 52 199 89;
+  --ring: 0 122 255;
+  --radius: 14px;
+  --shadow: 0 12px 40px rgba(2, 6, 23, 0.18);
+}
+
+/* glass utility helpers (class names used by primitives) */
+.glass-card {
+  backdrop-filter: saturate(180%) blur(16px);
+  background-color: rgba(255, 255, 255, 0.6);
+  box-shadow: var(--shadow);
+  border-radius: var(--radius);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+.glass-nav {
+  backdrop-filter: saturate(180%) blur(12px);
+  background-color: rgba(246, 248, 252, 0.55);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+}
+```
+
+- `styles/themes/minimal-saas.css`: neutral, clean SaaS
+```
+[data-theme="minimal-saas"] {
+  --bg: 250 250 250;
+  --fg: 23 23 23;
+  --muted: 115 115 115;
+  --primary: 37 99 235;
+  --secondary: 2 132 199;
+  --accent: 14 165 233;
+  --ring: 37 99 235;
+  --radius: 10px;
+  --shadow: 0 8px 24px rgba(2, 6, 23, 0.12);
+}
+```
+
+- `styles/themes/banking-dark.css`: high-contrast fintech
+```
+[data-theme="banking-dark"] {
+  --bg: 8 10 12;
+  --fg: 226 232 240;
+  --muted: 148 163 184;
+  --primary: 80 184 60;
+  --secondary: 45 212 191;
+  --accent: 34 197 94;
+  --ring: 34 197 94;
+  --radius: 12px;
+  --shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+```
+
+### Wiring (Styling-only)
+- `app/globals.css` should import tokens and the selected theme after Tailwind import:
+```
+@import 'tailwindcss';
+@import '../styles/tokens.css';
+@import '../styles/themes/apple-glass.css'; /* replaced by generator based on selection */
+```
+
+- `app/layout.tsx` should set the `data-theme` attribute on `<html>`:
+```
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" data-theme="apple-glass">{/* replaced by generator */}
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+### UI Primitive Styling Rules (DRY + composition)
+- Use variable-driven utilities so themes cascade automatically:
+  - Backgrounds: `bg-[rgb(var(--bg))]`
+  - Text: `text-[rgb(var(--fg))]`
+  - Muted text: `text-[rgb(var(--muted))]`
+  - Brand: `text-[rgb(var(--primary))]`, `bg-[rgb(var(--primary))]`
+  - Borders: `border-[color:rgb(var(--muted))]/20`
+  - Radius: `rounded-[var(--radius)]`
+  - Shadow: `shadow-[var(--shadow)]`
+- Prefer `lucide-react` icons; avoid emojis.
+- Keep primitives in `app/components/ui/` and prefer composition over variant explosion.
+
+Example Button classes (reference only):
+```
+const base = 'inline-flex items-center justify-center rounded-[var(--radius)] px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--ring))]';
+const primary = 'bg-[rgb(var(--primary))] text-white hover:opacity-90';
+```
+
+### Validation Additions (Styling)
+- [ ] `app/page.tsx` renders at least one Card and Button using theme variables
+- [ ] Focus ring visible with `focus-visible`
+- [ ] If `apple-glass`, glass backdrop blur applied on a demo Card (`.glass-card`)
+
+### Theme Documentation
+- Create `Docs/design_themes.md` with:
+  - Token catalog and purpose
+  - Theme list with when-to-use heuristics
+  - Screenshots guidance and inspiration links
+  - Notes on accessibility and contrast checks per theme
+
+## Authoring Standards and Coding Conventions
+
+- Functional React only (no classes) to match team preference.
+- Document complex functions with TSDoc/JSDoc (`/** ... */`) including params/returns, side effects, and assumptions.
+- Keep variable and function names descriptive (no abbreviations); prefer readability over brevity.
+- Do not remove existing functionality during refactors; maintain backward compatibility.
+
+### React Router Configuration (BUG-014)
+- **CRITICAL:** When using React Router v6, always enable future flags to prepare for v7 migration and suppress warnings:
+  ```typescript
+  <HashRouter
+    future={{
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    }}
+  >
+    <App />
+  </HashRouter>
+  ```
+- See [BUG-014](../../Docs/Bug_Reports/general/react-router-future-flag-warnings.md) for details.
+
+### Electron Content-Security-Policy (BUG-015)
+- **CRITICAL:** Always configure Content-Security-Policy for Electron renderer processes to prevent security warnings:
+  ```typescript
+  mainWindow.webContents.session.webRequest.onHeadersReceived(
+    (details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [
+            "default-src 'self'; " +
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
+              "style-src 'self' 'unsafe-inline'; " +
+              "img-src 'self' data: photomap: file:; " +
+              "font-src 'self' data:; " +
+              "connect-src 'self' http://localhost:* ws://localhost:* ws://127.0.0.1:*;",
+          ],
+        },
+      });
+    }
+  );
+  ```
+- Development mode requires `unsafe-eval` for Vite HMR; production should use stricter policies.
+- See [BUG-015](../../Docs/Bug_Reports/electron/electron-content-security-policy-warning.md) for details.
+
+### Component Import Verification (BUG-016)
+- **CRITICAL:** Always verify all component imports when adding new UI components:
+  - When adding component usage, immediately add the import statement
+  - Use TypeScript strict mode to catch missing imports
+  - Test loading states to ensure all components are imported
+  - Create a checklist: "Verify all component imports when adding new UI components"
+- See [BUG-016](../../Docs/Bug_Reports/ui-ux/skeleton-component-not-imported-error.md) for details.
+
+
+## Cross-File Rule Integration
+
+When generating or updating docs/code, respect these local rules:
+- `.cursor/rules/uiux-consult.mdc`: UI/UX must begin with text specs via `/uiux-bot_v1`.
+- `.cursor/rules/ui-components-refactor.mdc`: Use reusable primitives, normalized variants, composition-first.
+- `.cursor/rules/ui-browser-validation.mdc`: Validate UI with a browser session after edits.
+- `.cursor/rules/implementation-workflow.mdc`: Treat `Docs/Implementation.md` as a continuous end-to-end task with todos and completion criteria.
+

@@ -1,0 +1,27 @@
+---
+alwaysApply: false
+description: Enforce continuous execution across all stages when working on Docs/Implementation.md
+globs: Docs/Implementation.md
+---
+# Implementation Workflow Enforcement
+
+When engaging with [Docs/Implementation.md](mdc:Docs/Implementation.md):
+
+- Treat the work as a continuous, end-to-end task spanning all stages in the document.
+- Do not stop or pause between stages; proceed sequentially until all stages are completed or a hard blocker is encountered.
+- Create and maintain a structured todo list per stage; mark items complete as you finish them.
+- Follow project rules and priorities from:
+  - [Docs/Bug_tracking.md](mdc:Docs/Bug_tracking.md)
+  - [Docs/Implementation.md](mdc:Docs/Implementation.md)
+  - [Docs/project_structure.md](mdc:Docs/project_structure.md)
+  - [Docs/UI_UX_doc.md](mdc:Docs/UI_UX_doc.md)
+- Use yarn for all commands; ensure no existing node processes are running before `yarn dev`.
+- Prefer Amplify Gen 2 sandbox for local backend; Amplify hosting for production.
+- Only stop early if:
+  - A required human decision is explicitly needed, or
+  - A critical, external blocker prevents further progress.
+
+On completion of all stages:
+- Reconcile and close the todo list.
+- Ensure no errors or warnings remain and that UI/UX matches specifications where applicable.
+- Document any bugs and resolutions in [Docs/Bug_tracking.md](mdc:Docs/Bug_tracking.md).

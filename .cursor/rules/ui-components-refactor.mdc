@@ -1,0 +1,43 @@
+---
+description: Enforce DRY UI via reusable primitives; normalize variants; prefer composition; follow refactor-ui-bot
+globs: app/**/*.tsx
+alwaysApply: false
+---
+# UI Components Refactor & Consistency Rules
+
+Before creating or modifying UI in TSX/JSX under `app/`:
+
+1. Read and follow the DRY refactor guidance in [refactor-ui-bot.md](mdc:.cursor/commands/refactor-ui-bot.md).
+2. Align with the design system in [Docs/UI_UX_doc.md](mdc:Docs/UI_UX_doc.md).
+3. Reuse existing primitives first; only create new components if no good fit exists.
+
+## Required Practices
+- Prefer composition over inheritance; keep components small and prop-driven.
+- Normalize surface across primitives:
+  - `variant`: primary, secondary, ghost, destructive
+  - `size`: sm, md, lg
+  - Shared states: `disabled`, `loading`
+- Enforce a11y: semantic roles/landmarks, labels, focus rings (focus-visible), keyboard nav.
+- Use lucide-react icons only.
+
+## Reusable Primitives (use/extend instead of ad-hoc HTML)
+- Button (existing): action triggers with `variant`/`size` normalization
+- Card (existing): content container; prefer `elevation` and `padding` props
+
+## High-Frequency Atoms to Introduce/Use
+- SectionHeader: `title`, `subtitle?`, `icon?`, `actions?`; sizes sm/md/ld
+- DataRow: `label`, `value`, `icon?`, `muted?`; dense/comfortable
+- EmptyState: `title`, `description`, `action?`, `icon?`; compact/standard
+- FormField: wraps label → control → hint/error with proper ARIA wiring
+
+If a page uses repeated raw Tailwind blocks matching these patterns, replace them with the components above instead of duplicating markup.
+
+## Migration Aids (optional but recommended)
+- Use the search heuristics in [refactor-ui-bot.md](mdc:.cursor/commands/refactor-ui-bot.md) to find duplicate patterns (headers, cards, empty states, label+input stacks).
+- Map occurrences to target components and refactor in-place.
+
+## Acceptance
+- No new raw repeated HTML+Tailwind for headers/cards/forms/empty states.
+- Variants and sizes are consistent across primitives.
+- Focus styles, spacing, and tokens match [Docs/UI_UX_doc.md](mdc:Docs/UI_UX_doc.md).
+

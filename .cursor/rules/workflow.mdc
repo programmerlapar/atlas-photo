@@ -1,0 +1,145 @@
+---
+descriptions: Always read and implemented this in any situation
+alwaysApply: true
+---
+
+# Development Agent Workflow - Cursor Rules
+
+## Primary Directive
+You are a development agent implementing a project. Follow established documentation and maintain consistency.
+
+## Core Workflow Process
+
+### Before Starting Any Task
+- Consult `/Docs/Implementation.md` for current stage and available tasks
+- **Verify user flows:** Consult `/Docs/User_Flows.md` to ensure navigation paths exist for the feature being implemented
+- Check task dependencies and prerequisites
+- Verify scope understanding
+ - Confirm all choices align with `package.json` tech stack; avoid introducing new libs/frameworks
+
+### Task Execution Protocol
+
+#### 1. Task Assessment
+- Read subtask from `/Docs/Implementation.md`
+- Assess subtask complexity:
+  - **Simple subtask:** Implement directly
+  - **Complex subtask:** Create a todo list
+
+#### 2. Section Planning (Context Management)
+- For long or structured tasks (e.g., `/Docs/Implementation.md`), plan the work in discrete sections/stages before implementing.
+- Summarize outcomes and decisions at the end of each section to keep context small.
+- Maintain a concise todo list per section and mark items complete as you go.
+
+
+#### 3. Documentation Research
+- Check `/Docs/Implementation.md` for relevant documentation links in the subtask
+- Read and understand documentation before implementing
+
+#### 4. UI/UX Implementation
+- Consult `/uiux-bot_v1` FIRST to generate screen-by-screen text specs
+- Then consult `/Docs/UI_UX_doc.md` to align with the evolving design system
+- Follow responsive, accessibility, and spacing/typography requirements
+- Use `lucide-react` for icons (no emojis); Tailwind v4 utilities
+ - Enforce LiquidGlass elevated surfaces policy for premium themes (cards/sheets/toolbars use glass classes consistently; respect motion/contrast and `prefers-reduced-motion`)
+
+#### 5. Project Structure Compliance
+- Check `/Docs/project_structure.md` before:
+  - Running commands
+  - Creating files/folders
+  - Making structural changes
+  - Adding dependencies
+- **Verify navigation:** Check `/Docs/User_Flows.md` when creating routes to ensure:
+  - Route supports documented user flows
+  - Navigation path is verified in the matrix
+  - Missing routes are documented and prioritized
+- Keep routing in `app/` (Next.js App Router) and backend in `amplify/`
+
+#### 6. Error Handling
+- Check `/Docs/Bug_tracking.md` for similar issues before fixing
+- Document all errors and solutions in Bug_tracking.md
+- Include error details, root cause, and resolution steps
+ - Consult `/Docs/Bug_Reports/` for global bug reports and templates
+
+#### 6.1. Error Reporting After Resolution (CRITICAL)
+**After resolving any issue, you MUST follow this explicit workflow:**
+
+1. **Categorize the Issue:**
+   - Determine if the issue could potentially break initial setup or project generation
+   - Assess if the issue would affect new project bootstrap or integration workflows
+   - Check if the issue impacts configuration files, build processes, or core dependencies
+
+2. **If Issue Would Break Initial Setup (Critical Category):**
+   - **Update `generate.mdc`:** Add prevention measures, guardrails, or explicit configuration requirements to prevent this issue in future project generation
+   - **Update Global Bug Report:** Create or update a bug report in `/Docs/Bug_Reports/` following the template:
+     - Use descriptive filename: `[technology]-[error-type]-[context].md`
+     - Include complete metadata (bug_id, category, severity, status, etc.)
+     - Document root cause, resolution, and prevention strategies
+     - Update `/Docs/Bug_Reports/INDEX.md` with the new bug entry
+   - **Cross-reference:** Link the bug report in `generate.mdc` where relevant (e.g., in Zero-Error Bootstrap Guardrails section)
+
+3. **If Issue Would NOT Break Initial Setup (Non-Critical Category):**
+   - **Update Global Bug Report Only:** Use the `/log-issue-and-update-generate-file` command workflow:
+     - Create or update bug report in `/Docs/Bug_Reports/` with descriptive filename
+     - Include complete metadata and resolution details
+     - Update `/Docs/Bug_Reports/INDEX.md` with the new bug entry
+   - **No generate.mdc update needed:** Only update if the issue could affect project generation
+
+4. **Verification Checklist:**
+   - [ ] Issue is categorized correctly (critical vs. non-critical)
+   - [ ] Bug report created with descriptive filename in appropriate category folder
+   - [ ] Bug report metadata completed (bug_id, category, severity, status, etc.)
+   - [ ] `/Docs/Bug_Reports/INDEX.md` updated with new bug entry
+   - [ ] If critical: `generate.mdc` updated with prevention measures
+   - [ ] If critical: Bug report cross-referenced in `generate.mdc` where relevant
+   - [ ] Resolution documented with root cause and prevention strategies
+   - [ ] Related files listed in bug report metadata
+
+**Key Principles:**
+- **Always report:** Every resolved issue must be logged to global bug reports
+- **Categorize first:** Determine criticality before deciding on updates
+- **Prevent recurrence:** Critical setup-breaking issues must update `generate.mdc`
+- **Use descriptive filenames:** Bug report filenames should be descriptive (e.g., `tailwind-css-v4-postcss-plugin-error.md`) not generic (e.g., `bug-001.md`)
+- **Maintain index:** Always update `INDEX.md` when adding new bug reports
+
+#### 7. Task Completion
+Mark tasks complete only when:
+- All functionality implemented correctly
+- Code follows project structure guidelines
+- **Navigation verified:** Routes are documented in `/Docs/User_Flows.md` and navigation paths work
+- UI/UX matches specifications (if applicable)
+- No errors or warnings remain
+- All task list items completed (if applicable)
+
+### File Reference Priority
+1. `/Docs/Bug_tracking.md` - Check for known issues first
+2. `/Docs/Implementation.md` - Main task reference
+3. `/Docs/User_Flows.md` - Verify navigation paths and user journeys
+4. `/Docs/project_structure.md` - Structure guidance
+5. `/Docs/UI_UX_doc.md` - Design requirements
+6. `/Docs/Bug_Reports/INDEX.md` - Global bug reports index
+
+## Critical Rules
+- **NEVER** skip documentation consultation
+- **NEVER** mark tasks complete without proper testing
+- **NEVER** ignore project structure guidelines
+- **NEVER** create routes without verifying in `/Docs/User_Flows.md`
+- **NEVER** implement UI without checking UI_UX_doc.md
+- **NEVER** fix errors without checking Bug_tracking.md first
+- **ALWAYS** document errors and solutions
+- **ALWAYS** follow the established workflow process
+- **ALWAYS** verify navigation paths exist for user flows before marking routes complete
+ - **ALWAYS** use yarn with node_modules (no PnP); kill existing node processes before `yarn dev`
+ - **ALWAYS** use Amplify Gen 2 sandbox for local backend and Amplify hosting for prod
+ - **ALWAYS** constrain tech decisions to `package.json`; justify any exceptions in `/Docs/Implementation.md`
+
+### Electron Execution Rules (CRITICAL)
+- For Electron renderers, MUST use `HashRouter` (never `BrowserRouter`) and enable React Router future flags.
+- MUST register custom protocols (e.g., `photomap://`) before creating `BrowserWindow`, and if using a custom partition, register on that session via `session.fromPartition(...).protocol.registerFileProtocol()`; unregister first if needed.
+- MUST apply a Content-Security-Policy to the renderer session in development (lenient for HMR) and strengthen it for production builds.
+- On Windows, set `userCache` and `sessionData` to `app.getPath('userData')` before `app.whenReady()`; handle cache warnings gracefully.
+- MUST filter macOS metadata files (names starting with `._`) in any file scanning/EXIF/thumbnail flows.
+- Renderer MUST NOT use Node.js APIs (`fs`, `path`, `Buffer`); use browser-safe utilities instead.
+- Verify component imports immediately when adding UI (prevent missing import runtime errors).
+
+Remember: Build a cohesive, well-documented, and maintainable project. Every decision should support overall project goals and maintain consistency with established patterns.
+

@@ -1,0 +1,44 @@
+@import 'leaflet/dist/leaflet.css';
+
+/* Leaflet CSS overrides for dark theme */
+.leaflet-container {
+  background-color: #0a2a4a;
+  color: #fff;
+}
+
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08) !important;
+}
+
+.leaflet-control-zoom a {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  color: #fff !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 20px !important;
+  color: #fff !important;
+}
+
+.leaflet-popup-tip {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.leaflet-popup-close-button {
+  color: #fff !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: #1ec8e6 !important;
+}

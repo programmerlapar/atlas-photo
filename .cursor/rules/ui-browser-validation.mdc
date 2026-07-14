@@ -1,0 +1,49 @@
+---
+globs: app/**/*.tsx,app/**/*.jsx,app/**/*.css,app/**/page.tsx,app/**/layout.tsx
+description: When working with UI, always validate and double-check them with the browser tab
+---
+
+# UI Browser Validation Requirement
+
+When creating or modifying any UI components, pages, layouts, or styles under the `app/` directory:
+
+## Validation Protocol
+
+1. **After implementing UI changes:**
+   - Start the development server (if not already running): `yarn dev`
+   - **Always open the browser tab using `@Browser`** to validate UI changes
+   - Navigate to the relevant page/route where the UI changes are visible
+   - Take a snapshot of the page to verify the visual appearance
+
+2. **Validation Checklist:**
+   - **Visual Layout:** Verify the UI renders correctly with proper spacing, alignment, and positioning
+   - **Responsive Design:** Check that the UI adapts properly across different screen sizes (mobile, tablet, desktop)
+   - **Styling:** Confirm that Tailwind classes are applied correctly and match the design system
+   - **Interactive Elements:** Test buttons, links, forms, and other interactive components function as expected
+   - **Accessibility:** Verify semantic HTML, proper ARIA labels, and keyboard navigation
+   - **Browser Console:** Check for any JavaScript errors or warnings in the browser console
+   - **Network Requests:** Verify API calls and data loading work correctly
+
+3. **Double-Check Requirements:**
+   - **Before marking UI work complete:** Always validate in the browser
+   - **For critical UI changes:** Take screenshots and verify against design specifications
+   - **For responsive changes:** Test at multiple viewport sizes using browser dev tools
+   - **For styling changes:** Verify Tailwind classes render correctly and match [Docs/UI_UX_doc.md](mdc:Docs/UI_UX_doc.md)
+
+4. **Browser Tools Usage:**
+   - Use the `@Browser` browser tab to navigate to pages and validate UI
+   - Capture snapshots to verify visual appearance and layout
+   - Check browser console for JavaScript errors or warnings
+   - Verify network requests and API calls complete successfully
+   - Take screenshots when visual documentation is needed for critical changes
+
+## Integration with Other Rules
+
+This validation step should be performed in addition to:
+- Consulting [uiux-consult.mdc](mdc:.cursor/rules/uiux-consult.mdc) for UI/UX guidance
+- Following [ui-components-refactor.mdc](mdc:.cursor/rules/ui-components-refactor.mdc) for component consistency
+- Aligning with [Docs/UI_UX_doc.md](mdc:Docs/UI_UX_doc.md) design specifications
+
+## Critical Reminder
+
+**NEVER mark UI work as complete without validating it in the browser.** Visual verification is essential to ensure the UI renders correctly and provides the intended user experience.

@@ -1,0 +1,23 @@
+---
+description: For any component, page, layout, or UI edits, consult the UI/UX bot instructions and design docs first.
+globs: *.tsx
+alwaysApply: false
+---
+# UI/UX Consultation Requirement for Page/Layout/UI Work
+
+Before creating or modifying any Next.js pages, layouts, or UI/styling under the `app/` directory:
+
+1. Consult the UI/UX guidance in [uiux-bot_v1.md](mdc:.cursor/commands/uiux-bot_v1.md) and follow its review process and recommendations.
+2. Review the project's design specifications in [Docs/UI_UX_doc.md](mdc:Docs/UI_UX_doc.md) to ensure consistency with the design system and responsive requirements.
+3. **ENFORCE Liquid Glass system requirements** from [apple-liquid-glass-ui-bot.md](mdc:.cursor/commands/apple-liquid-glass-ui-bot.md):
+   - **All elevated surfaces** MUST use `.glass-surface-2` + `.hairline` + `.inner-rim` (all three classes required).
+   - Radii: buttons `rounded-sm` (14px), cards `rounded-md` (20px), sheets `rounded-xl` (28px).
+   - Tints ≤ 28% except primary CTA (gradient allowed for primary only).
+   - Motion: 200–320ms (`duration-sm` to `duration-lg`), timing `ease-ios`, **ALWAYS respect `prefers-reduced-motion`**.
+   - Enforce 8-pt spacing rhythm (4/8/12/16/20/24/32/48/64px).
+   - WCAG AA contrast ≥ 4.5:1.
+4. Reuse existing patterns and components to maintain visual and interaction consistency across the app.
+5. Prefer lucide-react icons over emojis for UI implementations.
+
+This rule exists to ensure visual hierarchy, accessibility, and system design consistency across all UI changes. **The Liquid Glass system is non-negotiable for all elevated surfaces.**
+

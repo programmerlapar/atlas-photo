@@ -1,0 +1,430 @@
+@import 'tailwindcss';
+
+/* Custom CSS variables for design tokens */
+:root {
+  /* Spacing scale (8-pt rhythm) */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+
+  /* Border radius */
+  --radius-xs: 8px;
+  --radius-sm: 14px;
+  --radius-md: 20px;
+  --radius-xl: 28px;
+
+  /* Transitions */
+  --transition-ios: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* ===== BEGIN: PALETTE UPDATE (from PRD) ===== */
+
+/* Dark theme (default) */
+:root,
+[data-theme='dark'] {
+  /* Primary colors - Electric Cyan */
+  --color-primary: #1ec8e6;
+  --color-primary-h: 191;
+  --color-primary-s: 81%;
+  --color-primary-l: 51%;
+  --color-primary-hsl: 191, 81%, 51%;
+  --color-primary-dark: #1ab8d6;
+  --color-primary-hover: #1ab8d6;
+  --color-primary-pressed: #17a8c6;
+
+  /* Secondary colors - Midnight Blue */
+  --color-secondary: #0a2a4a;
+  --color-secondary-h: 210;
+  --color-secondary-s: 77%;
+  --color-secondary-l: 16%;
+  --color-secondary-hsl: 210, 77%, 16%;
+
+  /* Accent colors - Royal Slate */
+  --color-accent: #314d6e;
+  --color-accent-h: 210;
+  --color-accent-s: 38%;
+  --color-accent-l: 31%;
+  --color-accent-hsl: 210, 38%, 31%;
+
+  /* Neutral grayscale */
+  --color-neutral-50: #fafbfc;
+  --color-neutral-100: #f0f2f4;
+  --color-neutral-200: #e2e6ea;
+  --color-neutral-300: #cbd2d9;
+  --color-neutral-400: #9aa5b1;
+  --color-neutral-500: #7b8794;
+  --color-neutral-600: #616e7c;
+  --color-neutral-700: #3e4c59;
+  --color-neutral-800: #323f4b;
+  --color-neutral-900: #1f2933;
+
+  /* Semantic colors */
+  --color-success: #22c55e;
+  --color-success-h: 142;
+  --color-success-s: 71%;
+  --color-success-l: 46%;
+  --color-error: #ef4444;
+  --color-error-h: 0;
+  --color-error-s: 84%;
+  --color-error-l: 60%;
+  --color-warning: #f59e0b;
+  --color-warning-h: 38;
+  --color-warning-s: 92%;
+  --color-warning-l: 50%;
+  --color-info: #60a5fa;
+  --color-info-h: 213;
+  --color-info-s: 94%;
+  --color-info-l: 68%;
+
+  /* Background colors */
+  --bg-primary: #0a2a4a;
+  --bg-secondary: #1f2933;
+  --bg-tertiary: #323f4b;
+  --bg-elevated: #3e4c59;
+  --bg-muted: #323f4b;
+
+  /* Text colors */
+  --text-primary: #fafbfc;
+  --text-secondary: #e2e6ea;
+  --text-tertiary: #9aa5b1;
+  --text-muted: #9aa5b1;
+  --text-disabled: #616e7c;
+
+  /* Border colors */
+  --border-subtle: rgba(255, 255, 255, 0.15);
+  --border-default: rgba(255, 255, 255, 0.2);
+  --border-strong: rgba(255, 255, 255, 0.3);
+
+  /* Glass surfaces (dark theme) */
+  --glass-bg-1: rgba(255, 255, 255, 0.05);
+  --glass-bg-2: rgba(255, 255, 255, 0.07);
+  --glass-bg-3: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.15);
+
+  /* Shadows */
+  --shadow-l1: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-l2: 0 4px 10px rgba(0, 0, 0, 0.4);
+  --shadow-l3: 0 10px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Light theme */
+[data-theme='light'] {
+  /* Primary colors - Electric Cyan (same) */
+  --color-primary: #1ec8e6;
+  --color-primary-h: 191;
+  --color-primary-s: 81%;
+  --color-primary-l: 51%;
+  --color-primary-hsl: 191, 81%, 51%;
+  --color-primary-dark: #1ab8d6;
+  --color-primary-hover: #1ab8d6;
+  --color-primary-pressed: #17a8c6;
+
+  /* Secondary colors - Light backgrounds */
+  --color-secondary: #f0f2f4;
+  --color-secondary-h: 210;
+  --color-secondary-s: 10%;
+  --color-secondary-l: 95%;
+  --color-secondary-hsl: 210, 10%, 95%;
+
+  /* Accent colors - Light grays */
+  --color-accent: #cbd2d9;
+  --color-accent-h: 210;
+  --color-accent-s: 10%;
+  --color-accent-l: 85%;
+  --color-accent-hsl: 210, 10%, 85%;
+
+  /* Neutral grayscale (inverted for light theme) */
+  --color-neutral-50: #1f2933;
+  --color-neutral-100: #323f4b;
+  --color-neutral-200: #3e4c59;
+  --color-neutral-300: #616e7c;
+  --color-neutral-400: #7b8794;
+  --color-neutral-500: #9aa5b1;
+  --color-neutral-600: #cbd2d9;
+  --color-neutral-700: #e2e6ea;
+  --color-neutral-800: #f0f2f4;
+  --color-neutral-900: #fafbfc;
+
+  /* Semantic colors (darker for light theme) */
+  --color-success: #16a34a;
+  --color-success-h: 142;
+  --color-success-s: 76%;
+  --color-success-l: 36%;
+  --color-error: #dc2626;
+  --color-error-h: 0;
+  --color-error-s: 84%;
+  --color-error-l: 50%;
+  --color-warning: #d97706;
+  --color-warning-h: 38;
+  --color-warning-s: 92%;
+  --color-warning-l: 43%;
+  --color-info: #2563eb;
+  --color-info-h: 213;
+  --color-info-s: 94%;
+  --color-info-l: 53%;
+
+  /* Background colors */
+  --bg-primary: #fafbfc;
+  --bg-secondary: #f0f2f4;
+  --bg-tertiary: #e2e6ea;
+  --bg-elevated: #ffffff;
+  --bg-muted: #f0f2f4;
+
+  /* Text colors */
+  --text-primary: #1f2933;
+  --text-secondary: #323f4b;
+  --text-tertiary: #7b8794;
+  --text-muted: #7b8794;
+  --text-disabled: #9aa5b1;
+
+  /* Border colors */
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-default: rgba(0, 0, 0, 0.12);
+  --border-strong: rgba(0, 0, 0, 0.2);
+
+  /* Glass surfaces (light theme) */
+  --glass-bg-1: rgba(255, 255, 255, 0.6);
+  --glass-bg-2: rgba(255, 255, 255, 0.7);
+  --glass-bg-3: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.8);
+
+  /* Shadows */
+  --shadow-l1: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-l2: 0 4px 10px rgba(0, 0, 0, 0.08);
+  --shadow-l3: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* ===== END: PALETTE UPDATE ===== */
+
+/* Base styles */
+/* Modern CSS reset - preserves default spacing for better UX */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+/* Remove default padding/margin from elements that need it */
+html,
+body,
+h1, h2, h3, h4, h5, h6,
+p, ul, ol, li,
+blockquote, pre,
+figure, figcaption,
+dl, dd {
+  margin: 0;
+  padding: 0;
+}
+
+/* List elements need explicit spacing control */
+ul, ol {
+  list-style: none;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+  /* No body padding - let components control their own spacing */
+  /* This allows full-screen layouts (detail views, map views) to work properly */
+}
+
+/* Ensure root layout containers have proper spacing */
+#root {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Glass surface utilities */
+/* Liquid Glass system: These are used by Card component and legacy components */
+.glass-surface-1 {
+  backdrop-filter: blur(16px);
+  background-color: var(--glass-bg-1);
+  border: 1px solid var(--glass-border);
+  transition:
+    background-color 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.glass-surface-2 {
+  backdrop-filter: blur(24px);
+  background-color: var(--glass-bg-2);
+  border: 1px solid var(--glass-border);
+  transition:
+    background-color 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.glass-surface-3 {
+  backdrop-filter: blur(40px);
+  background-color: var(--glass-bg-3);
+  border: 1px solid var(--glass-border);
+  transition:
+    background-color 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-color 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Liquid Glass variant helpers */
+.hairline {
+  border: 1px solid var(--glass-border);
+}
+
+.inner-rim {
+  /* Additional inner rim styling for liquid-glass variant if needed */
+  box-shadow: inset 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+/* Smooth animations and transitions */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animation utility classes */
+/* Liquid Glass system: 200-320ms duration, ease-ios timing, respects prefers-reduced-motion */
+.animate-fade-in {
+  animation: fadeIn 200ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 280ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 200ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+/* Smooth transitions for interactive elements */
+/* Liquid Glass system: 200-320ms duration, ease-ios timing */
+.transition-smooth {
+  transition: all 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.transition-smooth-slow {
+  transition: all 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Grid resize animation - smooth transitions for grid layout changes */
+/* Note: grid-template-columns doesn't animate smoothly, but CSS variables can help */
+.grid-resize-transition {
+  /* Use will-change for better performance during resize animations */
+  will-change: grid-template-columns;
+  /* Animate the grid template columns change */
+  transition: grid-template-columns 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Album card size transition - for smooth card resizing */
+/* Cards resize smoothly with transform and dimension changes */
+.album-card-transition {
+  will-change: transform, width, height;
+  transition: 
+    transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Smooth resize animation for album cards */
+/* Use CSS variable animation for better performance */
+@supports (transition: --album-card-size) {
+  .grid-resize-transition {
+    transition: --album-card-size 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
+
+/* Hover effects */
+/* Liquid Glass system: 200ms duration, ease-ios timing */
+.hover-lift {
+  transition:
+    transform 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-l2);
+}
+
+.hover-glow {
+  transition: box-shadow 0.2s ease-ios;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(30, 200, 230, 0.3);
+}
+
+/* Reduced motion support */
+/* Liquid Glass system: ALWAYS respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  /* Disable transforms for reduced motion */
+  .hover-lift:hover {
+    transform: none !important;
+  }
+  
+  /* Disable scale animations */
+  .animate-scale-in {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  
+  /* Disable grid resize animations */
+  .grid-resize-transition {
+    transition: none !important;
+  }
+  
+  .album-card-transition {
+    transition: none !important;
+  }
+}
