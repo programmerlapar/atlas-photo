@@ -1,0 +1,9 @@
+{
+  "description": "PHOTO_MAP_PROJECT_INDEX — Master reference for PhotoMap (electron desktop gallery app modeled after Apple Photos). Electron runtime with Vite + React rendering; react-leaflet maps alongside photo browsing. All source code explored: main/index.ts, preload scripts, services (thumbnailGenerator+cacheManager, exifExtractor, directoryScanner, fileWatcher), renderer views/components/stores/hooks/utils/services. Sections up through Background Design Proposal fully captured.",
+  "rules": [
+    "Copy-once then delete semantics confirmed for user files (atomic rename pattern)",
+    "Smart albums deferred for v2/v3 iteration",
+    "Performance focus: sharp caching thumbnails, file watcher real-time updates"
+  ],
+  "_note_for_next_session": "Full project index captured at /PROJECT_ROOT/PROJECT_INDEX.md — read that first when starting any new AI session!"
+}
