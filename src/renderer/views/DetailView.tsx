@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import {
   X,
   ChevronLeft,
@@ -29,11 +29,12 @@ import type { Photo } from '../../shared/types/photo';
  */
 const DetailView = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { photoId } = useParams<{ photoId: string }>();
   const { photos, currentDirectory } = usePhotos();
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showMetadata, setShowMetadata] = useState(true);
+  const [showMetadata, setShowMetadata] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -53,31 +54,33 @@ const DetailView = () => {
   const [thumbnailPath, setThumbnailPath] = useState<string | undefined>(undefined);
   const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false);
   const generatingRef = useRef(false);
+  const [fullImagePath, setFullImagePath] = useState<string | null>(null);
+  const [isFullImageReady, setIsFullImageReady] = useState(false);
+
+  const routePhoto = useMemo(() => {
+    if (!photoId) return null;
+    const decodedPhotoId = decodePhotoId(photoId);
+    return photos.find((photo) => photo.id === decodedPhotoId) ?? null;
+  }, [photoId, photos]);
+  const routePhotoIndex = routePhoto ? photos.indexOf(routePhoto) : -1;
 
   // Find photo by ID
   useEffect(() => {
     if (photoId && photos.length > 0) {
-      // Decode the photo ID from URL
-      const decodedPhotoId = decodePhotoId(photoId);
-      const photo = photos.find((p) => p.id === decodedPhotoId);
-      if (photo) {
-        setSelectedPhoto(photo);
-        setCurrentIndex(photos.indexOf(photo));
+      if (routePhoto) {
+        setSelectedPhoto(routePhoto);
+        setCurrentIndex(routePhotoIndex);
         
         // Reset thumbnail state when photo changes
-        setThumbnailPath(photo.thumbnailPath);
+        setThumbnailPath(routePhoto.thumbnailPath);
         setIsGeneratingThumbnail(false);
         generatingRef.current = false;
         
         // For HEIC files without thumbnails, try to generate thumbnail lazily
-        const isHeic = isHeicFile(photo.filename);
-        const isHeicWithoutThumbnail = isHeic && !photo.thumbnailPath;
+        const isHeic = isHeicFile(routePhoto.filename);
+        const isHeicWithoutThumbnail = isHeic && !routePhoto.thumbnailPath;
         
         if (isHeicWithoutThumbnail) {
-          console.log(`[DetailView] HEIC file without thumbnail detected: ${photo.filename}`, {
-            photoPath: photo.path,
-            willGenerateThumbnail: true,
-          });
           setImageError(true);
           setIsLoading(false);
         } else {
@@ -88,7 +91,7 @@ const DetailView = () => {
         navigate('/gallery');
       }
     }
-  }, [photoId, photos, navigate]);
+  }, [photoId, photos.length, routePhoto, routePhotoIndex, navigate]);
 
   // Lazy thumbnail generation for HEIC files in detail view
   useEffect(() => {
@@ -101,8 +104,6 @@ const DetailView = () => {
       generatingRef.current = true;
       setIsGeneratingThumbnail(true);
       
-      console.log(`[DetailView] Generating thumbnail for HEIC file: ${selectedPhoto.filename}`);
-      
       // Generate thumbnail lazily
       generateThumbnail(selectedPhoto.path)
         .then((path: unknown) => {
@@ -110,9 +111,7 @@ const DetailView = () => {
             setThumbnailPath(path);
             setImageError(false);
             setIsLoading(true);
-            console.log(`[DetailView] Thumbnail generated successfully: ${selectedPhoto.filename}`);
           } else {
-            console.warn(`[DetailView] Thumbnail generation failed: ${selectedPhoto.filename}`);
             setImageError(true);
             setIsLoading(false);
           }
@@ -129,40 +128,34 @@ const DetailView = () => {
     }
   }, [selectedPhoto, thumbnailPath]);
 
-  // Listen for thumbnail-generated events from main process
+  // Load the original only after the thumbnail preview can paint. This keeps
+  // open/close interactions responsive for high-resolution photos.
   useEffect(() => {
-    if (!selectedPhoto) return;
-    // @ts-ignore - window is available in Electron renderer
-    if (!window.electronAPI) return;
+    setFullImagePath(null);
+    setIsFullImageReady(false);
+    if (!selectedPhoto || isHeicFile(selectedPhoto.filename) || !thumbnailPath) return;
 
-    const handleThumbnailGenerated = (data: { path: string; thumbnailPath: string }) => {
-      if (data.path === selectedPhoto.path) {
-        setThumbnailPath(data.thumbnailPath);
-        setIsGeneratingThumbnail(false);
-        setImageError(false);
-        setIsLoading(true);
-        console.log(`[DetailView] Thumbnail received from main process: ${selectedPhoto.filename}`);
-      }
-    };
-
-    // @ts-ignore - window is available in Electron renderer
-    window.electronAPI.onThumbnailGenerated(handleThumbnailGenerated);
+    let cancelled = false;
+    const preloadTimer = setTimeout(() => {
+      const original = new Image();
+      original.onload = () => {
+        if (!cancelled) setFullImagePath(`photomap://${encodeFilePath(selectedPhoto.path)}`);
+      };
+      original.src = `photomap://${encodeFilePath(selectedPhoto.path)}`;
+    }, 0);
 
     return () => {
-      // @ts-ignore - window is available in Electron renderer
-      if (window.electronAPI) {
-        // @ts-ignore - window is available in Electron renderer
-        window.electronAPI.removeAllListeners('thumbnail-generated');
-      }
+      cancelled = true;
+      clearTimeout(preloadTimer);
     };
-  }, [selectedPhoto]);
+  }, [selectedPhoto, thumbnailPath]);
 
   // Update thumbnail path when photo prop changes
   useEffect(() => {
     if (selectedPhoto?.thumbnailPath && selectedPhoto.thumbnailPath !== thumbnailPath) {
       setThumbnailPath(selectedPhoto.thumbnailPath);
     }
-  }, [selectedPhoto?.thumbnailPath]);
+  }, [selectedPhoto?.thumbnailPath, thumbnailPath]);
 
   // Navigate to previous photo
   const handlePrevious = () => {
@@ -207,6 +200,17 @@ const DetailView = () => {
 
   // Close detail view
   const handleClose = () => {
+    if (location.state?.returnTo === '/map') {
+      const clusterPhotoIds = location.state?.clusterPhotoIds;
+      navigate('/map', {
+        replace: true,
+        state: Array.isArray(clusterPhotoIds)
+          ? { reopenClusterPhotoIds: clusterPhotoIds }
+          : undefined,
+      });
+      return;
+    }
+
     navigate('/gallery');
   };
 
@@ -753,9 +757,9 @@ const DetailView = () => {
             <img
               ref={imageRef}
               src={
-                // Use original photo path for detail view for higher quality
-                // Only use thumbnail if original is HEIC (which can't be displayed)
-                selectedPhoto && isHeicFile(selectedPhoto.filename) && thumbnailPath
+                // Paint the cached gallery thumbnail first. The original is
+                // overlaid only after it has been preloaded in the background.
+                thumbnailPath
                   ? `photomap://${encodeFilePath(thumbnailPath)}`
                   : `photomap://${encodeFilePath(selectedPhoto.path)}`
               }
@@ -767,13 +771,6 @@ const DetailView = () => {
                 transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
               }}
               onLoad={() => {
-                console.log(`[DetailView] Image loaded successfully: ${selectedPhoto.filename}`, {
-                  src: thumbnailPath
-                    ? `photomap://${encodeFilePath(thumbnailPath)}`
-                    : `photomap://${encodeFilePath(selectedPhoto.path)}`,
-                  usingThumbnail: !!thumbnailPath,
-                  isHeic: isHeicFile(selectedPhoto.filename),
-                });
                 setIsLoading(false);
                 setImageError(false);
                 setIsGeneratingThumbnail(false);
@@ -805,6 +802,21 @@ const DetailView = () => {
                 setIsLoading(false);
                 setImageError(true);
               }}
+              draggable={false}
+            />
+          )}
+          {selectedPhoto && fullImagePath && (
+            <img
+              src={fullImagePath}
+              alt={selectedPhoto.filename}
+              className={`absolute max-w-full max-h-full object-contain transition-opacity duration-200 ${
+                zoom > 1 ? 'cursor-move' : 'cursor-default'
+              } ${isFullImageReady ? 'opacity-100' : 'opacity-0'}`}
+              style={{
+                transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
+              }}
+              onLoad={() => setIsFullImageReady(true)}
+              onError={() => setFullImagePath(null)}
               draggable={false}
             />
           )}

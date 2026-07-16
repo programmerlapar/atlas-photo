@@ -5,6 +5,7 @@ import { isHeicFile } from '../../../shared/constants/fileTypes';
 import { generateThumbnail } from '../../services/api';
 import Card from '../ui/Card';
 import type { Photo } from '../../../shared/types/photo';
+import { cacheThumbnail, getCachedThumbnail } from '../../cache/thumbCache';
 
 export interface PhotoCardProps {
   photo: Photo;
@@ -33,7 +34,11 @@ const PhotoCard = ({
   const isHeicWithoutThumbnail = isHeic && !photo.thumbnailPath;
   
   // State for lazy thumbnail generation
-  const [thumbnailPath, setThumbnailPath] = useState<string | undefined>(photo.thumbnailPath);
+  const [thumbnailPath, setThumbnailPath] = useState<string | undefined>(
+    getCachedThumbnail(photo.path) ?? photo.thumbnailPath
+  );
+  const thumbnailContainerRef = useRef<HTMLDivElement>(null);
+  const [isThumbnailVisible, setIsThumbnailVisible] = useState(false);
   const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false);
   const generatingRef = useRef(false);
   
@@ -42,16 +47,36 @@ const PhotoCard = ({
   const [imageError, setImageError] = useState(isHeicWithoutThumbnail && !thumbnailPath);
   const [imageLoading, setImageLoading] = useState(!isHeicWithoutThumbnail && !!thumbnailPath);
 
-  // Lazy thumbnail generation - generate when component mounts if no thumbnail
+  // Generate only when a card is approaching the viewport. This prevents a
+  // large album from decoding every full-size image at the same time.
   useEffect(() => {
-    if (!thumbnailPath && !generatingRef.current) {
+    const element = thumbnailContainerRef.current;
+    if (!element || thumbnailPath || isThumbnailVisible) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsThumbnailVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '400px' }
+    );
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [isThumbnailVisible, thumbnailPath]);
+
+  // Lazy thumbnail generation - only after the card becomes visible.
+  useEffect(() => {
+    if (isThumbnailVisible && !thumbnailPath && !generatingRef.current) {
       generatingRef.current = true;
       setIsGeneratingThumbnail(true);
       
       // Generate thumbnail lazily
       generateThumbnail(photo.path)
         .then((path) => {
-          if (path) {
+          if (typeof path === 'string') {
+            cacheThumbnail(photo.path, path);
             setThumbnailPath(path);
             setImageLoading(true);
             setImageError(false);
@@ -68,49 +93,22 @@ const PhotoCard = ({
           generatingRef.current = false;
         });
     }
-  }, [photo.path, thumbnailPath]);
-
-  // Listen for thumbnail-generated events from main process
-  useEffect(() => {
-    if (!window.electronAPI) return;
-
-    const handleThumbnailGenerated = (data: { path: string; thumbnailPath: string }) => {
-      if (data.path === photo.path) {
-        setThumbnailPath(data.thumbnailPath);
-        setIsGeneratingThumbnail(false);
-        setImageLoading(true);
-        setImageError(false);
-      }
-    };
-
-    window.electronAPI.onThumbnailGenerated(handleThumbnailGenerated);
-
-    return () => {
-      if (window.electronAPI) {
-        window.electronAPI.removeAllListeners('thumbnail-generated');
-      }
-    };
-  }, [photo.path]);
+  }, [isThumbnailVisible, photo.filename, photo.path, thumbnailPath]);
 
   // Update thumbnail path when photo prop changes
   useEffect(() => {
     if (photo.thumbnailPath && photo.thumbnailPath !== thumbnailPath) {
+      cacheThumbnail(photo.path, photo.thumbnailPath);
       setThumbnailPath(photo.thumbnailPath);
+      setIsGeneratingThumbnail(false);
+      setImageLoading(true);
+      setImageError(false);
     }
-  }, [photo.thumbnailPath]);
+  }, [photo.path, photo.thumbnailPath, thumbnailPath]);
 
-  // Log HEIC file detection
-  useEffect(() => {
-    if (isHeic) {
-      console.log(`[PhotoCard] HEIC file detected: ${photo.filename}`, {
-        hasThumbnail: !!thumbnailPath,
-        photoPath: photo.path,
-        willShowPlaceholder: isHeicWithoutThumbnail && !thumbnailPath,
-      });
-    }
-  }, [photo, isHeic, isHeicWithoutThumbnail, thumbnailPath]);
-
-  const handleClick = (e: React.MouseEvent) => {
+  const handleClick = (
+    e: React.MouseEvent<HTMLDivElement> | React.KeyboardEvent<HTMLDivElement>
+  ) => {
     if (selectionMode) {
       e.stopPropagation();
       onToggleSelect?.(photo);
@@ -146,7 +144,6 @@ const PhotoCard = ({
         overflow-hidden cursor-pointer
         hover-lift
         ${isSelected ? 'ring-2 ring-[#1EC8E6] ring-offset-2 ring-offset-[var(--bg-primary)]' : ''}
-        ${imageLoading ? 'animate-pulse' : 'animate-fade-in'}
       `}
       onClick={handleClick}
       onMouseEnter={handleMouseEnter}
@@ -156,39 +153,26 @@ const PhotoCard = ({
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          handleClick(e as any);
+          handleClick(e);
         }
-      }}
-      style={{
-        animationDelay: `${Math.random() * 0.1}s`, // Stagger animation
       }}
     >
       {/* Thumbnail Image */}
-      <div className="aspect-square relative bg-neutral-800">
-        {!imageError && (thumbnailPath || (!isHeic && photo.path)) ? (
+      <div ref={thumbnailContainerRef} className="aspect-square relative bg-neutral-800">
+        {!imageError && thumbnailPath ? (
           <>
             <img
-              src={
-                thumbnailPath
-                  ? `photomap://${encodeFilePath(thumbnailPath)}`
-                  : `photomap://${encodeFilePath(photo.path)}`
-              }
+              src={`photomap://${encodeFilePath(thumbnailPath)}`}
               alt={photo.filename}
-              className="w-full h-full object-cover"
+              className={`w-full h-full object-cover transition-opacity duration-200 ${
+                imageLoading ? 'opacity-0' : 'opacity-100'
+              }`}
               onLoad={() => {
-                console.log(`[PhotoCard] Image loaded successfully: ${photo.filename}`, {
-                  usingThumbnail: !!thumbnailPath,
-                  src: thumbnailPath
-                    ? `photomap://${encodeFilePath(thumbnailPath)}`
-                    : `photomap://${encodeFilePath(photo.path)}`,
-                });
                 setImageLoading(false);
                 setIsGeneratingThumbnail(false);
               }}
               onError={(e) => {
-                const src = thumbnailPath
-                  ? `photomap://${encodeFilePath(thumbnailPath)}`
-                  : `photomap://${encodeFilePath(photo.path)}`;
+                const src = `photomap://${encodeFilePath(thumbnailPath)}`;
                 
                 // For HEIC files without thumbnails, show error
                 // For HEIC files with thumbnails, this shouldn't happen (thumbnails are JPEGs)

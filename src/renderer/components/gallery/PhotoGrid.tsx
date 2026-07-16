@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import PhotoCard from './PhotoCard';
 import type { Photo } from '../../../shared/types/photo';
 
@@ -25,6 +25,44 @@ const PhotoGrid = ({
   onToggleSelect,
   groupBy = 'date',
 }: PhotoGridProps) => {
+  const initialRenderCount = 50;
+  const renderBatchSize = 60;
+  const photoCollectionKey = `${photos.length}:${photos[0]?.id ?? ''}:${photos[photos.length - 1]?.id ?? ''}`;
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const [visibleCount, setVisibleCount] = useState(() =>
+    Math.min(initialRenderCount, photos.length)
+  );
+
+  // Keep the DOM bounded. More cards mount only when the user approaches the
+  // end of the rendered grid, rather than mounting a whole large album idle.
+  useEffect(() => {
+    setVisibleCount(Math.min(initialRenderCount, photos.length));
+  }, [photoCollectionKey, photos.length]);
+
+  useEffect(() => {
+    const sentinel = loadMoreRef.current;
+    if (!sentinel || visibleCount >= photos.length) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisibleCount((current) => Math.min(current + renderBatchSize, photos.length));
+        }
+      },
+      { rootMargin: '600px' }
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [photos.length, visibleCount]);
+
+  const loadMoreMarker = visibleCount < photos.length ? (
+    <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
+  ) : null;
+
+  const visiblePhotoIds = useMemo(
+    () => new Set(photos.slice(0, visibleCount).map((photo) => photo.id)),
+    [photos, visibleCount]
+  );
   /**
    * Groups photos by date
    */
@@ -49,7 +87,10 @@ const PhotoGrid = ({
       if (b === 'Unknown Date') return -1;
       return new Date(b).getTime() - new Date(a).getTime();
     });
-  }, [photos, groupBy]);
+    // Thumbnail-path changes do not affect date grouping, so rebuilding every
+    // thumbnail batch would negate progressive rendering.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photoCollectionKey, groupBy]);
 
   /**
    * Groups photos by location
@@ -71,7 +112,9 @@ const PhotoGrid = ({
     });
 
     return Array.from(groups.entries());
-  }, [photos, groupBy]);
+    // Thumbnail-path changes do not affect location grouping.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photoCollectionKey, groupBy]);
 
   /**
    * Formats date for group header
@@ -100,26 +143,31 @@ const PhotoGrid = ({
   if (groupBy === 'date' && groupedByDate) {
     return (
       <div className="space-y-8">
-        {groupedByDate.map(([date, groupPhotos]) => (
-          <div key={date} className="space-y-4">
-            <h3 className="text-lg font-semibold text-[var(--text-primary)] px-2">
-              {formatGroupDate(date)}
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {groupPhotos.map((photo) => (
-                <PhotoCard
-                  key={photo.id}
-                  photo={photo}
-                  onClick={onPhotoClick}
-                  onHover={onPhotoHover}
-                  isSelected={selectedPhotoIds.includes(photo.id)}
-                  selectionMode={selectionMode}
-                  onToggleSelect={onToggleSelect}
-                />
-              ))}
+        {groupedByDate.map(([date, groupPhotos]) => {
+          const visiblePhotos = groupPhotos.filter((photo) => visiblePhotoIds.has(photo.id));
+          if (visiblePhotos.length === 0) return null;
+          return (
+            <div key={date} className="space-y-4">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)] px-2">
+                {formatGroupDate(date)}
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                {visiblePhotos.map((photo) => (
+                  <PhotoCard
+                    key={photo.id}
+                    photo={photo}
+                    onClick={onPhotoClick}
+                    onHover={onPhotoHover}
+                    isSelected={selectedPhotoIds.includes(photo.id)}
+                    selectionMode={selectionMode}
+                    onToggleSelect={onToggleSelect}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
+        {loadMoreMarker}
       </div>
     );
   }
@@ -127,28 +175,33 @@ const PhotoGrid = ({
   if (groupBy === 'location' && groupedByLocation) {
     return (
       <div className="space-y-8">
-        {groupedByLocation.map(([location, groupPhotos]) => (
-          <div key={location} className="space-y-4">
-            <h3 className="text-lg font-semibold text-[var(--text-primary)] px-2">
-              {location === 'No Location'
-                ? 'No Location'
-                : `Location: ${location}`}
-            </h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-              {groupPhotos.map((photo) => (
-                <PhotoCard
-                  key={photo.id}
-                  photo={photo}
-                  onClick={onPhotoClick}
-                  onHover={onPhotoHover}
-                  isSelected={selectedPhotoIds.includes(photo.id)}
-                  selectionMode={selectionMode}
-                  onToggleSelect={onToggleSelect}
-                />
-              ))}
+        {groupedByLocation.map(([location, groupPhotos]) => {
+          const visiblePhotos = groupPhotos.filter((photo) => visiblePhotoIds.has(photo.id));
+          if (visiblePhotos.length === 0) return null;
+          return (
+            <div key={location} className="space-y-4">
+              <h3 className="text-lg font-semibold text-[var(--text-primary)] px-2">
+                {location === 'No Location'
+                  ? 'No Location'
+                  : `Location: ${location}`}
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                {visiblePhotos.map((photo) => (
+                  <PhotoCard
+                    key={photo.id}
+                    photo={photo}
+                    onClick={onPhotoClick}
+                    onHover={onPhotoHover}
+                    isSelected={selectedPhotoIds.includes(photo.id)}
+                    selectionMode={selectionMode}
+                    onToggleSelect={onToggleSelect}
+                  />
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
+        {loadMoreMarker}
       </div>
     );
   }
@@ -156,7 +209,7 @@ const PhotoGrid = ({
   // No grouping - display all photos in a single grid
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-      {photos.map((photo) => (
+      {photos.slice(0, visibleCount).map((photo) => (
         <PhotoCard
           key={photo.id}
           photo={photo}
@@ -165,6 +218,7 @@ const PhotoGrid = ({
           isSelected={selectedPhotoIds.includes(photo.id)}
         />
       ))}
+      {loadMoreMarker}
     </div>
   );
 };

@@ -1,12 +1,11 @@
-import { useNavigate } from 'react-router-dom';
-import { Grid, ArrowLeft } from 'lucide-react';
-import { lazy, Suspense } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ArrowLeft } from 'lucide-react';
 import { usePhotos } from '../hooks/usePhotos';
 import { encodePhotoId } from '../utils/photoId';
-import Button from '../components/ui/Button';
-
-// Lazy load MapView to avoid context issues with react-leaflet v5 in Electron/Vite
-const MapView = lazy(() => import('../components/map/MapView'));
+import MapView from '../components/map/MapView';
+import PhotoClusterSheet from '../components/map/PhotoClusterSheet';
+import type { Photo } from '../../shared/types/photo';
 
 /**
  * Map view page component
@@ -14,53 +13,89 @@ const MapView = lazy(() => import('../components/map/MapView'));
  */
 const MapViewPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { photos } = usePhotos();
+  const [nearbyPhotos, setNearbyPhotos] = useState<Photo[] | null>(null);
+  const restoredClusterKey = useRef<string | null>(null);
 
-  const handlePhotoClick = (photo: { id: string }) => {
-    navigate(`/detail/${encodePhotoId(photo.id)}`);
+  useEffect(() => {
+    const reopenClusterPhotoIds = location.state?.reopenClusterPhotoIds;
+    if (!Array.isArray(reopenClusterPhotoIds) || !reopenClusterPhotoIds.every((id) => typeof id === 'string')) {
+      return;
+    }
+
+    const clusterKey = reopenClusterPhotoIds.join('|');
+    if (!clusterKey || restoredClusterKey.current === clusterKey) return;
+
+    const photosById = new Map(photos.map((photo) => [photo.id, photo]));
+    const restoredPhotos = reopenClusterPhotoIds
+      .map((id) => photosById.get(id))
+      .filter((photo): photo is Photo => Boolean(photo));
+
+    if (restoredPhotos.length > 0) {
+      restoredClusterKey.current = clusterKey;
+      setNearbyPhotos(restoredPhotos);
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.pathname, location.state, navigate, photos]);
+
+  const handleClusterClick = (clusterPhotos: Photo[]) => {
+    if (clusterPhotos.length === 1) {
+      handlePhotoSelect(clusterPhotos[0]);
+      return;
+    }
+
+    setNearbyPhotos(clusterPhotos);
   };
 
-  const handleGalleryToggle = () => {
+  const handlePhotoSelect = (photo: Photo) => {
+    navigate(`/detail/${encodePhotoId(photo.id)}`, {
+      state: {
+        returnTo: '/map',
+        clusterPhotoIds: nearbyPhotos?.map((nearbyPhoto) => nearbyPhoto.id),
+      },
+    });
+  };
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
     navigate('/gallery');
   };
 
   return (
     <div className="w-full h-screen bg-[var(--bg-primary)] flex flex-col relative">
-      {/* Toolbar */}
-      <div className="glass-surface-2 border-b border-white/10 sticky top-0 z-10 shadow-l2">
-        <div className="flex items-center justify-between h-16 px-6">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={handleGalleryToggle}
-              className="p-2 rounded hover:bg-white/10 transition-smooth"
-              aria-label="Back to gallery"
-              title="Back to gallery"
-            >
-              <ArrowLeft className="w-5 h-5 text-[var(--text-primary)]" />
-            </button>
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Map View</h2>
-          </div>
-          <Button onClick={handleGalleryToggle} variant="secondary" size="sm">
-            <Grid className="w-4 h-4 mr-2" />
-            Gallery
-          </Button>
+      {/* A single contextual back action is more reliable than a duplicate Gallery button. */}
+      <header className="z-10 border-b border-white/70 bg-white/72 backdrop-blur-2xl shadow-[0_4px_20px_rgba(37,99,120,0.12)]">
+        <div className="grid h-[68px] grid-cols-[44px_1fr_44px] items-center px-4">
+          <button
+            onClick={handleBack}
+            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/55 text-[#123247] shadow-[0_2px_8px_rgba(37,99,120,0.12)] transition-smooth hover:bg-white/90 focus-visible:bg-white/90"
+            aria-label="Go back"
+            title="Go back"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="text-center text-[17px] font-semibold tracking-[-0.01em] text-[#123247]">
+            Map
+          </h1>
+          <div aria-hidden="true" />
         </div>
-      </div>
+      </header>
 
       {/* Map */}
       <div className="flex-1 relative">
-        <Suspense
-          fallback={
-            <div className="w-full h-full bg-[var(--bg-primary)] flex items-center justify-center">
-              <div className="text-center space-y-4">
-                <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-                <p className="text-lg text-[var(--text-primary)] font-semibold">Loading map...</p>
-              </div>
-            </div>
-          }
-        >
-          <MapView photos={photos} onPhotoClick={handlePhotoClick} />
-        </Suspense>
+        <MapView photos={photos} onClusterClick={handleClusterClick} />
+        {nearbyPhotos && (
+          <PhotoClusterSheet
+            photos={nearbyPhotos}
+            onClose={() => setNearbyPhotos(null)}
+            onPhotoSelect={handlePhotoSelect}
+          />
+        )}
       </div>
     </div>
   );

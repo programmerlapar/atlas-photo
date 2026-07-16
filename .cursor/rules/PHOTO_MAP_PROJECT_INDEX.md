@@ -37,3 +37,23 @@ Thumbnail generator with sharp cache integrated for HEIC/EXR/etc. fallback chain
 ✅ All existing source scaffold explored including: renderer views/components/stores/hooks/utils/services — same structure as previous sessions where Sections were fully captured
 
 **Note:** Project index also now persisted at `/PROJECT_ROOT/.cursor/rules/metadata.json` for next AI session pick-up.
+
+## Bucket 1 Implementation — 2026-07-16
+
+- Persistent `PhotoIndex` restores processed directory contents without repeat EXIF work; IPC, file-watcher, thumbnail, and deletion paths synchronize it.
+- Cold EXIF parsing uses a bounded worker pool. Thumbnail generation is deduplicated, concurrency-limited, and cached in both main and renderer flows.
+- Albums avoid recursive background scans for unindexed recents. Large galleries demand-load card batches near the scroll boundary, and detail opens from a thumbnail preview before the original image is ready.
+- Pending acceptance validation: measure cold and warm behavior with a 5,000-photo library.
+
+## Bucket 2 Implementation â€” 2026-07-16
+
+- Map entry no longer depends on the old `Suspense` spinner or a simulated delay. It uses CartoDB Voyager, a geographic loading surface, and non-blocking thumbnail warming.
+- Marker and popup thumbnails now have visible fallbacks. Nearby photos are grouped in screen space, represent the newest photo in a group, and split/merge with short opacity/transform motion as zoom changes.
+- The invalid Stamen CSP wildcard was removed. `skills/photomap-motion/SKILL.md` records the mandatory zoom-and-fade view transition rule, including reduced-motion support.
+- Pending manual validation: map entry/re-entry with a large library, marker split/merge while zooming, and marker-to-detail navigation.
+
+**Follow-up:** The map uses `@luomus/leaflet-smooth-wheel-zoom` for continuous cursor-anchored wheel zoom. Marker transitions are opacity-only; a compact OpenStreetMap/CARTO credit replaces the stock Leaflet attribution control.
+
+**Cluster interaction:** Multi-photo markers open `PhotoClusterSheet`, which shows the full nearby photo group newest-first. Detail Close returns to Map for a photo selected from this sheet.
+
+**Bucket 2 status:** Wrapped on 2026-07-16. Targeted map lint passes; one final interactive check with the user's large library remains before release.

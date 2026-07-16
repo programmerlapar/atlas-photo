@@ -38,23 +38,28 @@ export const processPhotos = async (
     onProgress({ stage: 'metadata', current: 0, total: photos.length });
   }
 
-  for (let i = 0; i < photos.length; i++) {
-    const photo = photos[i];
-    const metadata = await extractPhotoMetadata(photo.path);
+  // EXIF parsing is CPU/IO bound. A small pool makes cold imports practical
+  // without opening thousands of parsers for a large library.
+  const workerCount = Math.min(8, Math.max(1, photos.length));
+  let nextIndex = 0;
+  let completed = 0;
+  const processNext = async (): Promise<void> => {
+    while (nextIndex < photos.length) {
+      const index = nextIndex++;
+      const photo = photos[index];
+      const metadata = await extractPhotoMetadata(photo.path);
+      if (metadata) photo.metadata = metadata;
 
-    if (metadata) {
-      photo.metadata = metadata;
-    }
-
-    if (onProgress) {
-      onProgress({
+      completed++;
+      onProgress?.({
         stage: 'metadata',
-        current: i + 1,
+        current: completed,
         total: photos.length,
         path: photo.path,
       });
     }
-  }
+  };
+  await Promise.all(Array.from({ length: workerCount }, processNext));
 
   // Stage 3: Skip thumbnail generation - now done lazily when PhotoCard renders
   // This allows gallery to show immediately while thumbnails generate on-demand

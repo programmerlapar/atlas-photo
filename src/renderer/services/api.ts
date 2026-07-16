@@ -53,7 +53,7 @@ export const getPhotoMetadata = async (path: string): Promise<unknown> => {
 /**
  * Generates a thumbnail for a photo
  */
-export const generateThumbnail = async (path: string): Promise<unknown> => {
+export const generateThumbnail = async (path: string): Promise<string | null> => {
   if (!window.electronAPI) {
     throw new Error('Electron API not available');
   }

@@ -125,11 +125,10 @@ const AlbumsView = () => {
       const selectedDirectory = await selectDirectory();
 
       if (selectedDirectory) {
-        // Scan directory and navigate to gallery
-        await handleScanDirectory(selectedDirectory);
         navigate('/gallery');
-        // Reload albums to show the new one
-        await loadAlbums();
+        // Let the gallery show its loading state immediately while a new
+        // directory receives its first background index.
+        void handleScanDirectory(selectedDirectory);
       }
     } catch (error) {
       console.error('Error adding album:', error);
@@ -141,13 +140,11 @@ const AlbumsView = () => {
   /**
    * Handles clicking on an album to view its photos
    */
-  const handleAlbumClick = async (album: Album) => {
-    try {
-      await handleScanDirectory(album.path);
-      navigate('/gallery');
-    } catch (error) {
-      console.error('Error loading album:', error);
-    }
+  const handleAlbumClick = (album: Album) => {
+    // Navigation must not wait for a cold index build. The gallery owns the
+    // loading view and becomes responsive immediately.
+    navigate('/gallery');
+    void handleScanDirectory(album.path);
   };
 
   /**
@@ -457,4 +454,3 @@ const AlbumsView = () => {
 };
 
 export default AlbumsView;
-

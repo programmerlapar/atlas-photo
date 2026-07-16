@@ -8,6 +8,8 @@ import { extractPhotoMetadata } from '../services/exifExtractor';
 import { generateThumbnail } from '../services/thumbnailGenerator';
 import { FileWatcher } from '../services/fileWatcher';
 import { Storage } from '../utils/storage';
+import { PhotoIndex } from '../services/photoIndex';
+import { ImageCacheService } from './cache/ImageCacheService';
 import type { Photo } from '../../shared/types/photo';
 
 // Store photo data in memory for current session
@@ -15,6 +17,8 @@ let currentPhotos: Photo[] = [];
 let currentDirectory: string | null = null;
 const fileWatcher = new FileWatcher();
 const storage = new Storage();
+const photoIndex = new PhotoIndex();
+const imageCache = new ImageCacheService();
 
 // Load last directory on startup
 (async () => {
@@ -73,7 +77,9 @@ export const setupIpcHandlers = () => {
       const updatedDirs = [path, ...filteredDirs].slice(0, 10); // Keep max 10 recent directories
       await storage.set('recentDirectories', updatedDirs);
 
-      // Start file watcher for new photos
+      const cachedPhotos = await photoIndex.get(path);
+
+      // The watcher keeps an instant index restore current while the app runs.
       fileWatcher.startWatching(
         path,
         async (photo) => {
@@ -83,13 +89,14 @@ export const setupIpcHandlers = () => {
             photo.metadata = metadata;
           }
 
-          const thumbnailPath = await generateThumbnail(photo.path);
+          const thumbnailPath = await imageCache.getThumbnail(photo.path);
           if (thumbnailPath) {
             photo.thumbnailPath = thumbnailPath;
           }
 
           // Add to current photos
           currentPhotos.push(photo);
+          await photoIndex.upsert(path, photo);
 
           // Notify renderer
           const windows = BrowserWindow.getAllWindows();
@@ -97,9 +104,10 @@ export const setupIpcHandlers = () => {
             window.webContents.send('photo-added', photo);
           });
         },
-        (photoPath) => {
+        async (photoPath) => {
           // Remove from current photos
           currentPhotos = currentPhotos.filter((p) => p.path !== photoPath);
+          await photoIndex.remove(path, photoPath);
 
           // Notify renderer
           const windows = BrowserWindow.getAllWindows();
@@ -109,10 +117,16 @@ export const setupIpcHandlers = () => {
         }
       );
 
+      if (cachedPhotos) {
+        currentPhotos = cachedPhotos;
+        return { photos: cachedPhotos, error: null };
+      }
+
       // Process existing photos
       const photos = await processPhotos(path, sendProgress);
 
       currentPhotos = photos;
+      await photoIndex.save(path, photos);
 
       return { photos, error: null };
     } catch (error) {
@@ -132,7 +146,14 @@ export const setupIpcHandlers = () => {
   // Get photo metadata handler
   ipcMain.handle('get-photo-metadata', async (_event, path: string) => {
     try {
+      const cachedPhoto = currentPhotos.find((photo) => photo.path === path);
+      if (cachedPhoto?.metadata) return cachedPhoto.metadata;
+
       const metadata = await extractPhotoMetadata(path);
+      if (cachedPhoto && metadata) {
+        cachedPhoto.metadata = metadata;
+        if (currentDirectory) await photoIndex.upsert(currentDirectory, cachedPhoto);
+      }
       return metadata;
     } catch (error) {
       console.error('Error getting photo metadata:', error);
@@ -144,12 +165,13 @@ export const setupIpcHandlers = () => {
   // Returns thumbnail path and updates the photo in currentPhotos
   ipcMain.handle('generate-thumbnail', async (_event, path: string) => {
     try {
-      const thumbnailPath = await generateThumbnail(path);
+      const thumbnailPath = await imageCache.getThumbnail(path);
       
       // Update photo in currentPhotos if found
       const photo = currentPhotos.find((p) => p.path === path);
       if (photo && thumbnailPath) {
         photo.thumbnailPath = thumbnailPath;
+        if (currentDirectory) await photoIndex.upsert(currentDirectory, photo);
         
         // Notify renderer that thumbnail was generated
         const windows = BrowserWindow.getAllWindows();
@@ -214,26 +236,28 @@ export const setupIpcHandlers = () => {
   // Get album info (first photo, count) - lightweight for album thumbnails
   ipcMain.handle('get-album-info', async (_event, directoryPath: string) => {
     try {
-      // Quick scan to get first photo and count
-      const { scanDirectory } = await import('../services/directoryScanner');
-      const photos = await scanDirectory(directoryPath);
-      
-      if (photos.length === 0) {
+      const indexedPhotos = await photoIndex.get(directoryPath);
+      if (indexedPhotos) {
+        const firstPhoto = indexedPhotos[0];
+        const thumbnailPath = firstPhoto.thumbnailPath || await imageCache.getThumbnail(firstPhoto.path);
+        if (thumbnailPath && !firstPhoto.thumbnailPath) {
+          firstPhoto.thumbnailPath = thumbnailPath;
+          await photoIndex.upsert(directoryPath, firstPhoto);
+        }
+
         return {
-          photoCount: 0,
-          firstPhotoPath: null,
-          thumbnailPath: null,
+          photoCount: indexedPhotos.length,
+          firstPhotoPath: firstPhoto.path,
+          thumbnailPath,
         };
       }
 
-      // Get first photo and generate thumbnail
-      const firstPhoto = photos[0];
-      const thumbnailPath = await generateThumbnail(firstPhoto.path);
-
+      // Do not recursively scan every recent directory just to paint the
+      // albums screen. The first normal album open creates its full index.
       return {
-        photoCount: photos.length,
-        firstPhotoPath: firstPhoto.path,
-        thumbnailPath,
+        photoCount: 0,
+        firstPhotoPath: null,
+        thumbnailPath: null,
       };
     } catch (error) {
       console.error('Error getting album info:', error);
@@ -497,6 +521,7 @@ export const setupIpcHandlers = () => {
 
               // Remove from current photos
               currentPhotos = currentPhotos.filter((p) => p.path !== photoPath);
+              if (currentDirectory) await photoIndex.remove(currentDirectory, photoPath);
 
               // Notify renderer
               const windows = BrowserWindow.getAllWindows();

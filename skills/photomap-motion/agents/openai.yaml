@@ -1,0 +1,4 @@
+interface:
+  display_name: "PhotoMap Motion"
+  short_description: "Apply zoom-and-fade navigation motion."
+  default_prompt: "Use $photomap-motion to implement or review PhotoMap route transitions."

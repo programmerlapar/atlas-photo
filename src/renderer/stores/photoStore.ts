@@ -15,6 +15,7 @@ interface PhotoState {
   setPhotos: (photos: Photo[]) => void;
   addPhoto: (photo: Photo) => void;
   removePhoto: (photoPath: string) => void;
+  updatePhotoThumbnails: (thumbnailPaths: Record<string, string>) => void;
   setCurrentDirectory: (directory: string | null) => void;
   setLoading: (isLoading: boolean) => void;
   setLoadingProgress: (
@@ -47,6 +48,19 @@ export const usePhotoStore = create<PhotoState>((set) => ({
     set((state) => ({
       photos: state.photos.filter((p) => p.path !== photoPath),
     })),
+  updatePhotoThumbnails: (thumbnailPaths) =>
+    set((state) => {
+      let changed = false;
+      const photos = state.photos.map((photo) => {
+        const thumbnailPath = thumbnailPaths[photo.path];
+        if (!thumbnailPath || photo.thumbnailPath === thumbnailPath) return photo;
+        changed = true;
+        return { ...photo, thumbnailPath };
+      });
+      if (!changed) return state;
+
+      return { photos };
+    }),
   setCurrentDirectory: (directory) => set({ currentDirectory: directory }),
   setLoading: (isLoading) => set({ isLoading }),
   setLoadingProgress: (progress) => set({ loadingProgress: progress }),

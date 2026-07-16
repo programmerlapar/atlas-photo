@@ -1,9 +1,10 @@
 {
-  "description": "PHOTO_MAP_PROJECT_INDEX — Master reference for PhotoMap (electron desktop gallery app modeled after Apple Photos). Electron runtime with Vite + React rendering; react-leaflet maps alongside photo browsing. All source code explored: main/index.ts, preload scripts, services (thumbnailGenerator+cacheManager, exifExtractor, directoryScanner, fileWatcher), renderer views/components/stores/hooks/utils/services. Sections up through Background Design Proposal fully captured.",
+  "description": "PHOTO_MAP_PROJECT_INDEX — Master reference for PhotoMap (Electron desktop gallery app modeled after Apple Photos). Bucket 1 implementation on 2026-07-16 added a persistent PhotoIndex, bounded cold EXIF and thumbnail work, renderer thumbnail batching, demand-loaded gallery cards, and thumbnail-first detail loading. Manual 5,000-photo timing validation remains.",
   "rules": [
     "Copy-once then delete semantics confirmed for user files (atomic rename pattern)",
     "Smart albums deferred for v2/v3 iteration",
-    "Performance focus: sharp caching thumbnails, file watcher real-time updates"
+    "Performance focus: persistent photo index, bounded thumbnail work, file watcher real-time updates, and demand-loaded gallery cards",
+    "Bucket 1 is implemented; manually verify cold and warm behavior with a 5,000-photo library before moving to Bucket 2"
   ],
-  "_note_for_next_session": "Full project index captured at /PROJECT_ROOT/PROJECT_INDEX.md — read that first when starting any new AI session!"
+  "_note_for_next_session": "Read /PROJECT_ROOT/PROJECT_INDEX.md and BUCKETS_PROTOCOL.md first. Bucket 1 is implemented but still needs a real 5,000-photo cold/warm timing check."
 }

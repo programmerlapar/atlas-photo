@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { usePhotos } from '../hooks/usePhotos';
 import { useFilterStore } from '../stores/filterStore';
@@ -64,7 +64,7 @@ const GalleryView = () => {
   } = useFilterStore();
 
   // Apply filters and sorting (must be declared before handlers that use it)
-  const filteredPhotos = applyFilters(photos);
+  const filteredPhotos = useMemo(() => applyFilters(photos), [applyFilters, photos]);
 
   useEffect(() => {
     // Load photos based on view mode
@@ -75,20 +75,20 @@ const GalleryView = () => {
         // multi-album photo loading in the backend
         // For MVP, we'll just load the current directory
         const lastDirectory = await getLastDirectory();
-        if (lastDirectory && photos.length === 0) {
+        if (lastDirectory && photos.length === 0 && !isLoading) {
           loadPhotos();
         }
       } else {
         // For single album view, load current directory
         const lastDirectory = await getLastDirectory();
-        if (lastDirectory && photos.length === 0) {
+        if (lastDirectory && photos.length === 0 && !isLoading) {
           loadPhotos();
         }
       }
     };
 
     loadPhotosForView();
-  }, [isAllView, getLastDirectory, loadPhotos, photos.length]);
+  }, [isAllView, getLastDirectory, isLoading, loadPhotos, photos.length]);
 
   // Get selected photos (must be declared before handlers that use it)
   const selectedPhotos = filteredPhotos.filter((photo) =>
@@ -429,7 +429,7 @@ const GalleryView = () => {
           {filteredPhotos.length === 0 && searchQuery ? (
             <div className="text-center py-12">
               <p className="text-lg text-[var(--text-tertiary)]">
-                No photos found matching "{searchQuery}"
+                No photos found matching &quot;{searchQuery}&quot;
               </p>
             </div>
           ) : (
