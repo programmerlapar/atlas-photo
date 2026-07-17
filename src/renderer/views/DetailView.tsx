@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useParams } from 'react-router-dom';
 import {
-  X,
   ChevronLeft,
   ChevronRight,
   Calendar,
@@ -568,11 +567,54 @@ const DetailView = () => {
 
   return (
     <div
-      className="detail-viewer fixed inset-x-0 bottom-0 top-[58px] z-50 flex"
+      className="detail-viewer fixed inset-0 z-50 flex"
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
     >
+      <header className="detail-toolbar" data-scrolled="false">
+        <div className="window-drag-region flex min-w-0 flex-1 items-center gap-4">
+          <button
+            onClick={handleClose}
+            className="window-no-drag photos-icon-button photos-back-button shrink-0"
+            aria-label="Back to gallery"
+            title="Back to gallery"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+          <div className="min-w-0">
+            <h1 className="truncate text-[17px] font-semibold leading-5">
+              {selectedPhoto.filename}
+            </h1>
+            <p className="truncate text-xs leading-4 detail-toolbar-subtitle">
+              {currentIndex + 1} of {photos.length} photos
+            </p>
+          </div>
+        </div>
+
+        <div className="detail-top-actions window-no-drag">
+          {currentDirectory && (
+            <button
+              onClick={handleSetAsAlbumCover}
+              className="detail-icon-button"
+              aria-label="Set as album cover"
+              title="Set as album cover"
+            >
+              <ImagePlus className="w-5 h-5" />
+            </button>
+          )}
+          {currentDirectory && <span className="photos-group-divider" aria-hidden="true" />}
+          <button
+            onClick={handleShare}
+            className="detail-icon-button"
+            aria-label="Share photo"
+            title="Share photo"
+          >
+            <Share2 className="w-5 h-5" />
+          </button>
+        </div>
+      </header>
+
       {/* Photo viewer */}
       <div
         ref={containerRef}
@@ -602,38 +644,6 @@ const DetailView = () => {
             <ChevronRight className="w-6 h-6 text-[var(--text-primary)]" />
           </button>
         )}
-
-        <div className="detail-top-actions absolute right-4 top-4 z-10">
-          {selectedPhoto && (
-            <>
-              {currentDirectory && (
-                <button
-                  onClick={handleSetAsAlbumCover}
-                  className="detail-icon-button"
-                  aria-label="Set as album cover"
-                  title="Set as album cover"
-                >
-                  <ImagePlus className="w-5 h-5" />
-                </button>
-              )}
-              <button
-                onClick={handleShare}
-                className="detail-icon-button"
-                aria-label="Share photo"
-                title="Share photo"
-              >
-                <Share2 className="w-5 h-5" />
-              </button>
-            </>
-          )}
-          <button
-            onClick={handleClose}
-            className="detail-icon-button"
-            aria-label="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
 
         {/* One shared glass control keeps zoom and slideshow actions from overlapping. */}
         <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg-2)] p-2 shadow-l3 backdrop-blur-2xl">

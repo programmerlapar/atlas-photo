@@ -21,7 +21,8 @@ export interface ToolbarProps {
   title?: string;
   subtitle?: string;
   onBack?: () => void;
-  contextInContent?: boolean;
+  overlay?: boolean;
+  isScrolled?: boolean;
   onPhotoSizeDecrease?: () => void;
   onPhotoSizeIncrease?: () => void;
   canDecreasePhotoSize?: boolean;
@@ -44,7 +45,8 @@ const Toolbar = ({
   title,
   subtitle,
   onBack,
-  contextInContent = false,
+  overlay = false,
+  isScrolled = false,
   onPhotoSizeDecrease,
   onPhotoSizeIncrease,
   canDecreasePhotoSize = true,
@@ -59,33 +61,32 @@ const Toolbar = ({
   );
 
   return (
-    <header className="photos-toolbar">
+    <header
+      className={`photos-toolbar ${overlay ? 'photos-toolbar-overlay' : ''}`}
+      data-scrolled={overlay ? isScrolled : undefined}
+    >
       <div className="window-drag-region flex min-w-0 flex-1 items-center gap-3">
         {/* Left section - Gallery context */}
         {onBack && (
-          <div className="photos-toolbar-group shrink-0">
-            <button
-              onClick={onBack}
-              className="photos-icon-button"
-              aria-label="Back to collections"
-              title="Back to collections"
-            >
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-          </div>
+          <button
+            onClick={onBack}
+            className="photos-icon-button photos-back-button shrink-0"
+            aria-label="Back to collections"
+            title="Back to collections"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
         )}
-        {!contextInContent && (
-          <div className="min-w-0">
-            <h1 className="truncate text-[16px] font-semibold leading-5 text-[var(--photos-primary-text)]">
-              {title || currentDirectory?.split(/[/\\]/).pop() || 'Photos'}
-            </h1>
-            {subtitle && (
-              <p className="truncate text-xs leading-4 text-[var(--photos-secondary-text)]">
-                {subtitle}
-              </p>
-            )}
-          </div>
-        )}
+        <div className="min-w-0">
+          <h1 className="truncate text-[17px] font-semibold leading-5">
+            {title || currentDirectory?.split(/[/\\]/).pop() || 'Photos'}
+          </h1>
+          {subtitle && (
+            <p className="truncate text-xs leading-4 photos-toolbar-subtitle">
+              {subtitle}
+            </p>
+          )}
+        </div>
         {!title && currentDirectory && (
           <button
             onClick={onDirectoryChange}
@@ -112,9 +113,10 @@ const Toolbar = ({
                   className="photos-icon-button"
                   aria-label="Smaller thumbnails"
                 >
-                  <Minus className="h-4 w-4" />
+                  <Minus className="h-5 w-5" />
                 </button>
               </Tooltip>
+              <span className="photos-group-divider" aria-hidden="true" />
               <Tooltip content="Larger thumbnails" position="bottom">
                 <button
                   onClick={onPhotoSizeIncrease}
@@ -122,7 +124,7 @@ const Toolbar = ({
                   className="photos-icon-button"
                   aria-label="Larger thumbnails"
                 >
-                  <Plus className="h-4 w-4" />
+                  <Plus className="h-5 w-5" />
                 </button>
               </Tooltip>
             </div>
@@ -148,9 +150,9 @@ const Toolbar = ({
                     }
                   >
                     {selectionMode ? (
-                      <CheckSquare className="w-4 h-4" />
+                      <CheckSquare className="h-5 w-5" />
                     ) : (
-                      <Square className="w-4 h-4" />
+                      <Square className="h-5 w-5" />
                     )}
                     {selectionMode && selectedCount > 0 && (
                       <span className="text-[11px]">{selectedCount}</span>
@@ -158,18 +160,19 @@ const Toolbar = ({
                   </button>
                 </Tooltip>
               )}
-              {onFilterClick && (
-                <Tooltip content="Filter Photos" position="bottom">
-                  <button
-                    onClick={onFilterClick}
-                    disabled={selectionMode}
-                    className="photos-icon-button"
-                    aria-label="Filter photos"
-                  >
-                    <Filter className="w-4 h-4" />
-                  </button>
-                </Tooltip>
+              {onSelectionModeToggle && onFilterClick && (
+                <span className="photos-group-divider" aria-hidden="true" />
               )}
+              {onFilterClick && <Tooltip content="Filter Photos" position="bottom">
+                <button
+                  onClick={onFilterClick}
+                  disabled={selectionMode}
+                  className="photos-icon-button"
+                  aria-label="Filter photos"
+                >
+                  <Filter className="w-5 h-5" />
+                </button>
+              </Tooltip>}
             </div>
           )}
           {hasLocationActions && (
@@ -182,21 +185,22 @@ const Toolbar = ({
                     className="photos-icon-button"
                     aria-label="View on map"
                   >
-                    <Map className="w-4 h-4" />
+                    <Map className="h-5 w-5" />
                   </button>
                 </Tooltip>
               )}
-              {onDirectoryChange && (
-                <Tooltip content="Change Directory" position="bottom">
-                  <button
-                    onClick={onDirectoryChange}
-                    className="photos-icon-button"
-                    aria-label="Change directory"
-                  >
-                    <FolderOpen className="w-4 h-4" />
-                  </button>
-                </Tooltip>
+              {onMapViewToggle && onDirectoryChange && (
+                <span className="photos-group-divider" aria-hidden="true" />
               )}
+              {onDirectoryChange && <Tooltip content="Change Directory" position="bottom">
+                <button
+                  onClick={onDirectoryChange}
+                  className="photos-icon-button"
+                  aria-label="Change directory"
+                >
+                  <FolderOpen className="w-5 h-5" />
+                </button>
+              </Tooltip>}
             </div>
           )}
         </div>

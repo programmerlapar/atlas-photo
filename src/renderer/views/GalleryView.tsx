@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type CSSProperties,
+  type UIEvent,
 } from 'react';
 import { useLocation } from 'react-router-dom';
 import { usePhotos } from '../hooks/usePhotos';
@@ -88,6 +89,16 @@ const GalleryView = () => {
     });
     return () => cancelAnimationFrame(frame);
   }, [location.key, location.state]);
+
+  useEffect(() => {
+    document.documentElement.dataset.galleryHeaderScrolled = String(
+      isHeaderScrolled
+    );
+
+    return () => {
+      delete document.documentElement.dataset.galleryHeaderScrolled;
+    };
+  }, [isHeaderScrolled]);
 
   useEffect(() => {
     // Load photos based on view mode
@@ -271,9 +282,16 @@ const GalleryView = () => {
     navigate('/albums');
   };
 
+  const handleGalleryScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => {
+      setIsHeaderScrolled(event.currentTarget.scrollTop > 12);
+    },
+    []
+  );
+
   if (isLoading && photos.length === 0) {
     return (
-      <div className="photos-gallery-page flex flex-col">
+      <div className="photos-gallery-page relative flex flex-col">
         <Toolbar
           onMapViewToggle={handleMapViewToggle}
           onDirectoryChange={handleDirectoryChange}
@@ -281,6 +299,7 @@ const GalleryView = () => {
           title={currentDirectory?.split(/[/\\]/).pop() || 'Photos'}
           subtitle="Preparing your photos"
           onBack={handleBackToAlbums}
+          overlay
         />
         <div className="photos-gallery-scroll flex-1 overflow-y-auto p-5">
           <div className="space-y-4 mb-6">
@@ -379,7 +398,7 @@ const GalleryView = () => {
 
   return (
     <div
-      className={`photos-gallery-page flex flex-col ${isHeaderScrolled ? 'photos-header-scrolled' : ''}`}
+      className="photos-gallery-page relative flex flex-col"
       style={{ '--photos-row-height': `${photoRowHeight}px` } as CSSProperties}
     >
       <Toolbar
@@ -397,7 +416,8 @@ const GalleryView = () => {
             : `${filteredPhotos.length} ${filteredPhotos.length === 1 ? 'photo' : 'photos'}`
         }
         onBack={handleBackToAlbums}
-        contextInContent
+        overlay
+        isScrolled={isHeaderScrolled}
         onPhotoSizeDecrease={() =>
           setPhotoRowHeight((height) => Math.max(104, height - 12))
         }
@@ -412,19 +432,9 @@ const GalleryView = () => {
       <div
         ref={galleryScrollRef}
         className="photos-gallery-scroll flex-1 overflow-y-auto"
-        onScroll={(event) =>
-          setIsHeaderScrolled(event.currentTarget.scrollTop > 4)
-        }
+        onScroll={handleGalleryScroll}
       >
         <div className="photos-gallery-content">
-          <div className="gallery-context">
-            <h1>{getViewTitle()}</h1>
-            <p>
-              {isAllView
-                ? 'All collections'
-                : `${filteredPhotos.length} ${filteredPhotos.length === 1 ? 'photo' : 'photos'}`}
-            </p>
-          </div>
           {filteredPhotos.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-lg text-[var(--text-tertiary)]">

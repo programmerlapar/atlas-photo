@@ -7,15 +7,17 @@ const WindowControls = () => {
   };
 
   return (
-    <div className="window-no-drag flex items-center gap-1 rounded-full border border-[var(--glass-border)] bg-[var(--glass-bg-2)] p-1 shadow-l1 backdrop-blur-xl">
+    <div className="window-no-drag photos-toolbar-group desktop-caption-control-group">
       <button onClick={() => controlWindow('minimize')} className="desktop-window-control" aria-label="Minimize window" title="Minimize">
-        <Minus className="h-3.5 w-3.5" />
+        <Minus className="h-5 w-5" />
       </button>
+      <span className="photos-group-divider" aria-hidden="true" />
       <button onClick={() => controlWindow('maximize')} className="desktop-window-control" aria-label="Maximize window" title="Maximize">
-        <Maximize2 className="h-3.5 w-3.5" />
+        <Maximize2 className="h-5 w-5" />
       </button>
+      <span className="photos-group-divider" aria-hidden="true" />
       <button onClick={() => controlWindow('close')} className="desktop-window-control desktop-window-control-close" aria-label="Close window" title="Close">
-        <X className="h-3.5 w-3.5" />
+        <X className="h-5 w-5" />
       </button>
     </div>
   );
