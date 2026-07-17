@@ -167,6 +167,24 @@ This document defines the complete UI/UX design system for PhotoMap, including d
 /* Use Tailwind spacing scale: p-1, p-2, p-3, p-4, p-5, p-6, p-8, p-12, p-16 */
 ```
 
+### Iconography
+
+Use Lucide icons with the following context-based scale. Icon size follows the
+control's role, not the screen it appears on, so equivalent controls remain
+visually consistent across Gallery, Albums, Detail, and Settings.
+
+| Context | Icon size | Control size | Examples |
+| ------- | --------- | ------------ | -------- |
+| Compact inline | 14px | N/A | Metadata actions, sidebar disclosure, status indicators |
+| Inline action | 16px | Text-button or field height | Form labels, menu items, text-button icons |
+| Icon-only action | 20px | 40px high, 42px wide | Toolbar actions, thumbnail-size controls, window controls |
+| Prominent navigation | 24px | 44px minimum target | Previous/next photo actions |
+| Empty or feature state | 32px+ | Contextual | Empty states, onboarding illustrations |
+
+- Keep icon-only controls at least 40px high so they have a comfortable pointer target.
+- Use a single visual treatment for related controls: 999px group radius, 1px divider, and 20px icons.
+- Do not resize an icon merely to make a control feel denser; use the compact-inline or inline-action context when appropriate.
+
 ### Component Radius Styles
 
 | Component     | Radius | Tailwind Class | Usage                                           |

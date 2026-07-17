@@ -667,7 +667,8 @@ a[href] {
   gap: 14px;
 }
 
-.photos-toolbar-group {
+.photos-toolbar-group,
+.albums-size-group {
   display: inline-flex;
   align-items: center;
   height: 40px;
@@ -695,6 +696,7 @@ a[href] {
 }
 
 .photos-icon-button,
+.albums-size-button,
 .photos-filter-control {
   display: inline-flex;
   height: 40px;
@@ -751,6 +753,10 @@ a[href] {
 html[data-gallery-header-scrolled='true']
   .desktop-titlebar-integrated
   .desktop-caption-control-group
+  .desktop-window-control,
+html[data-albums-header-scrolled='true']
+  .desktop-titlebar-integrated
+  .desktop-caption-control-group
   .desktop-window-control {
   color: rgba(255, 255, 255, 0.94);
 }
@@ -776,7 +782,9 @@ html[data-gallery-header-scrolled='true']
 /* Albums use the same dark/light photo surface, but retain their own
    collection-focused layout rather than inheriting generic dashboard cards. */
 .albums-view {
-  min-height: 100vh;
+  position: relative;
+  height: 100vh;
+  min-height: 542px;
   margin-top: -58px;
   background: var(--photos-main-bg);
   color: var(--photos-primary-text);
@@ -790,72 +798,48 @@ html[data-gallery-header-scrolled='true']
   scrollbar-width: thin;
 }
 
-.albums-content {
-  width: 100%;
-  padding: 0 22px 32px;
-}
-
-.albums-header {
-  display: flex;
+.albums-view > .photos-toolbar {
   position: sticky;
   top: 0;
-  z-index: 20;
-  min-height: 58px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  border-bottom: 1px solid transparent;
-  background: transparent;
-  padding: 7px 150px 7px 0;
-}
-
-.albums-header-scrolled .albums-header {
+  z-index: 50;
+  min-height: 74px;
   border-bottom-color: var(--photos-divider);
+  background: color-mix(in srgb, var(--photos-main-bg) 92%, transparent);
+  padding: 14px 170px 14px 20px;
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+}
+
+.albums-view > .photos-toolbar-overlay[data-scrolled='true'] {
+  border-bottom: 0;
+  color: rgba(255, 255, 255, 0.94);
   background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--photos-main-bg) 90%, transparent),
-    color-mix(in srgb, var(--photos-main-bg) 28%, transparent)
+    to bottom,
+    rgba(20, 20, 20, 0.46) 0%,
+    rgba(20, 20, 20, 0.25) 52%,
+    rgba(20, 20, 20, 0) 92%,
+    rgba(20, 20, 20, 0) 100%
   );
-  backdrop-filter: blur(16px) saturate(1.15);
+  backdrop-filter: blur(22px) saturate(1.2);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+  mask-image: linear-gradient(to bottom, #000 0 84%, transparent 100%);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0 84%,
+    transparent 100%
+  );
 }
 
-.albums-header-scrolled .albums-size-group {
-  border-color: var(--photos-control-border);
-  background: var(--photos-control-bg);
-}
-
-.albums-header button {
-  -webkit-app-region: no-drag;
-}
-
-.albums-header-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.albums-size-group {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  background: transparent;
-  padding: 2px;
-  backdrop-filter: blur(16px) saturate(1.1);
+.albums-content {
+  width: 100%;
+  padding: 22px 22px 32px;
 }
 
 .albums-size-button {
-  display: inline-flex;
-  height: 32px;
-  width: 32px;
-  align-items: center;
-  justify-content: center;
+  width: 42px;
   border: 0;
-  border-radius: 9px;
   background: transparent;
-  color: var(--photos-primary-text);
+  color: inherit;
 }
 
 .albums-size-button:hover:not(:disabled) {
@@ -1082,15 +1066,12 @@ html[data-gallery-header-scrolled='true']
 }
 
 @media (max-width: 760px) {
+  .albums-view > .photos-toolbar {
+    padding: 14px 170px 14px 20px;
+  }
+
   .albums-content {
-    padding: 0 14px 24px;
-  }
-  .albums-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-  .albums-header-actions {
-    justify-content: flex-start;
+    padding: 18px 14px 24px;
   }
 }
 

@@ -24,6 +24,8 @@ import { useMotionNavigate } from '../hooks/useMotionNavigate';
 import { usePreferencesStore } from '../stores/preferencesStore';
 import { encodeFilePath } from '../utils/photoId';
 import Skeleton from '../components/ui/Skeleton';
+import Tooltip from '../components/ui/Tooltip';
+import { Toolbar } from '../components/layout';
 
 /**
  * Album interface representing a directory/album
@@ -87,6 +89,21 @@ const AlbumsView = () => {
     loadAlbums();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]); // Refresh when navigating back to albums view
+
+  useEffect(() => {
+    document.documentElement.dataset.albumsHeaderScrolled = String(
+      isHeaderScrolled
+    );
+
+    return () => {
+      delete document.documentElement.dataset.albumsHeaderScrolled;
+    };
+  }, [isHeaderScrolled]);
+
+  const albumsSubtitle =
+    albums.length === 0
+      ? 'No albums yet. Add your first directory to get started.'
+      : `${albums.length} ${albums.length === 1 ? 'album' : 'albums'}`;
 
   /**
    * Loads all albums from recent directories
@@ -222,16 +239,18 @@ const AlbumsView = () => {
   if (isLoading) {
     return (
       <div
-        className={`albums-view ${isHeaderScrolled ? 'albums-header-scrolled' : ''}`}
+        className="albums-view"
         onScroll={(event) =>
-          setIsHeaderScrolled(event.currentTarget.scrollTop > 4)
+          setIsHeaderScrolled(event.currentTarget.scrollTop > 12)
         }
       >
+        <Toolbar
+          title="Albums"
+          subtitle="Preparing your collections"
+          overlay
+          isScrolled={isHeaderScrolled}
+        />
         <div className="albums-content space-y-6">
-          <div className="space-y-2">
-            <Skeleton height={32} width="200px" />
-            <Skeleton height={20} width="300px" />
-          </div>
           <div className="grid gap-4" style={getGridColumnsCSS()}>
             {Array.from({ length: 10 }).map((_, index) => (
               <Skeleton
@@ -248,30 +267,23 @@ const AlbumsView = () => {
 
   return (
     <div
-      className={`albums-view ${isHeaderScrolled ? 'albums-header-scrolled' : ''}`}
+      className="albums-view"
       onScroll={(event) =>
-        setIsHeaderScrolled(event.currentTarget.scrollTop > 4)
+        setIsHeaderScrolled(event.currentTarget.scrollTop > 12)
       }
     >
-      <div className="albums-content space-y-6">
-        {/* Header */}
-        <header className="albums-header">
-          <div className="window-drag-region min-w-0 flex-1 space-y-1">
-            <h1 className="text-xl font-semibold text-[var(--photos-primary-text)]">
-              Albums
-            </h1>
-            <p className="text-[13px] text-[var(--photos-secondary-text)]">
-              {albums.length === 0
-                ? 'No albums yet. Add your first directory to get started.'
-                : `${albums.length} ${albums.length === 1 ? 'album' : 'albums'}`}
-            </p>
-          </div>
-          <div className="window-no-drag albums-header-actions">
-            {albums.length > 0 && (
-              <div
-                className="albums-size-group"
-                aria-label="Album thumbnail size"
-              >
+      <Toolbar
+        title="Albums"
+        subtitle={albumsSubtitle}
+        overlay
+        isScrolled={isHeaderScrolled}
+        actions={
+          albums.length > 0 ? (
+            <div
+              className="albums-size-group"
+              aria-label="Album thumbnail size"
+            >
+              <Tooltip content="Smaller album thumbnails" position="bottom">
                 <button
                   onClick={() => adjustAlbumGridSize('smaller')}
                   className="albums-size-button"
@@ -279,8 +291,11 @@ const AlbumsView = () => {
                   aria-label="Smaller album thumbnails"
                   disabled={albumGridSize >= 100}
                 >
-                  <Minus className="w-4 h-4" />
+                  <Minus className="w-5 h-5" />
                 </button>
+              </Tooltip>
+              <span className="photos-group-divider" aria-hidden="true" />
+              <Tooltip content="Larger album thumbnails" position="bottom">
                 <button
                   onClick={() => adjustAlbumGridSize('larger')}
                   className="albums-size-button"
@@ -288,13 +303,14 @@ const AlbumsView = () => {
                   aria-label="Larger album thumbnails"
                   disabled={albumGridSize <= 0}
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-5 h-5" />
                 </button>
-              </div>
-            )}
-          </div>
-        </header>
-
+              </Tooltip>
+            </div>
+          ) : undefined
+        }
+      />
+      <div className="albums-content space-y-6">
         {/* Albums Grid */}
         {albums.length === 0 ? (
           <Card

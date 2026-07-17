@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import {
   ArrowLeft,
   Map,
@@ -27,6 +28,7 @@ export interface ToolbarProps {
   onPhotoSizeIncrease?: () => void;
   canDecreasePhotoSize?: boolean;
   canIncreasePhotoSize?: boolean;
+  actions?: ReactNode;
 }
 
 /**
@@ -51,13 +53,15 @@ const Toolbar = ({
   onPhotoSizeIncrease,
   canDecreasePhotoSize = true,
   canIncreasePhotoSize = true,
+  actions,
 }: ToolbarProps) => {
   const hasSelectionActions = Boolean(onSelectionModeToggle || onFilterClick);
   const hasLocationActions = Boolean(onMapViewToggle || onDirectoryChange);
   const hasToolbarActions = Boolean(
     (onPhotoSizeDecrease && onPhotoSizeIncrease) ||
     hasSelectionActions ||
-    hasLocationActions
+    hasLocationActions ||
+    actions
   );
 
   return (
@@ -203,6 +207,7 @@ const Toolbar = ({
               </Tooltip>}
             </div>
           )}
+          {actions}
         </div>
       )}
     </header>
