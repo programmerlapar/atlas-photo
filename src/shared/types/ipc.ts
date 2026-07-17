@@ -7,6 +7,7 @@ export interface IPCChannel {
     path: string
   ) => Promise<{ photos: unknown[]; error: string | null }>;
   'get-photos': () => Promise<unknown[]>;
+  'get-library-photos': () => Promise<unknown[]>;
   'get-photo-metadata': (path: string) => Promise<unknown>;
   'generate-thumbnail': (path: string) => Promise<unknown>;
 }

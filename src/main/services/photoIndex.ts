@@ -44,6 +44,18 @@ export class PhotoIndex {
     }
   }
 
+  /**
+   * Returns the last indexed photos for the supplied collections without
+   * re-scanning their folders. This keeps the Library view instant even when
+   * a user has several large collections.
+   */
+  async getStoredForDirectories(directoryPaths: string[]): Promise<Photo[]> {
+    const directories = (await this.load()).directories;
+    return directoryPaths.flatMap((directoryPath) =>
+      directories[directoryPath]?.photos ?? []
+    );
+  }
+
   async save(directoryPath: string, photos: Photo[]): Promise<void> {
     const directoryStats = await stat(directoryPath);
     const data = await this.load();

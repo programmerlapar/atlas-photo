@@ -154,7 +154,9 @@ const AppSidebar = () => {
               {albumPaths.map((path) => {
                 const name = path.split(/[/\\]/).filter(Boolean).pop() || path;
                 const isCurrentAlbum =
-                  location.pathname === '/gallery' && currentDirectory === path;
+                  location.pathname === '/gallery' &&
+                  !isAllPhotos &&
+                  currentDirectory === path;
                 return (
                   <button
                     key={path}

@@ -10,6 +10,7 @@ export interface ElectronAPI {
     path: string
   ) => Promise<{ photos: Photo[]; error: string | null }>;
   getPhotos: () => Promise<Photo[]>;
+  getLibraryPhotos: () => Promise<Photo[]>;
   getPhotoMetadata: (path: string) => Promise<unknown>;
   generateThumbnail: (
     path: string,

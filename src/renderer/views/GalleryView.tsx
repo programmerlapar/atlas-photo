@@ -45,6 +45,7 @@ const GalleryView = () => {
     loadingProgress,
     error,
     handleScanDirectory,
+    loadLibraryPhotos,
     loadPhotos,
     getLastDirectory,
   } = usePhotos();
@@ -58,6 +59,7 @@ const GalleryView = () => {
   const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
   const galleryScrollRef = useRef<HTMLDivElement>(null);
   const restoredLocationKey = useRef<string | null>(null);
+  const hasLoadedLibrary = useRef(false);
 
   // Check if we're in "All" view mode
   const isAllView = new URLSearchParams(location.search).get('view') === 'all';
@@ -101,28 +103,31 @@ const GalleryView = () => {
   }, [isHeaderScrolled]);
 
   useEffect(() => {
-    // Load photos based on view mode
-    const loadPhotosForView = async () => {
-      if (isAllView) {
-        // For "All" view, we would merge photos from all albums
-        // For now, this is a placeholder - we'll need to implement
-        // multi-album photo loading in the backend
-        // For MVP, we'll just load the current directory
-        const lastDirectory = await getLastDirectory();
-        if (lastDirectory && photos.length === 0 && !isLoading) {
-          loadPhotos();
-        }
-      } else {
-        // For single album view, load current directory
-        const lastDirectory = await getLastDirectory();
-        if (lastDirectory && photos.length === 0 && !isLoading) {
-          loadPhotos();
-        }
+    if (isAllView) {
+      if (!hasLoadedLibrary.current && !isLoading) {
+        hasLoadedLibrary.current = true;
+        void loadLibraryPhotos();
+      }
+      return;
+    }
+
+    hasLoadedLibrary.current = false;
+    const loadAlbumPhotos = async () => {
+      const lastDirectory = await getLastDirectory();
+      if (lastDirectory && photos.length === 0 && !isLoading) {
+        await loadPhotos();
       }
     };
 
-    loadPhotosForView();
-  }, [isAllView, getLastDirectory, isLoading, loadPhotos, photos.length]);
+    void loadAlbumPhotos();
+  }, [
+    getLastDirectory,
+    isAllView,
+    isLoading,
+    loadLibraryPhotos,
+    loadPhotos,
+    photos.length,
+  ]);
 
   // Get selected photos (must be declared before handlers that use it)
   const selectedPhotos = filteredPhotos.filter((photo) =>

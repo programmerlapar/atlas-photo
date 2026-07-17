@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { usePhotoStore } from '../stores/photoStore';
-import { scanDirectory, getPhotos } from '../services/api';
+import { scanDirectory, getLibraryPhotos, getPhotos } from '../services/api';
 import { cacheThumbnail } from '../cache/thumbCache';
 import type { Photo } from '../../../shared/types/photo';
 
@@ -126,6 +126,22 @@ export const usePhotos = () => {
     }
   };
 
+  /** Loads all saved collections from their persistent indexes. */
+  const loadLibraryPhotos = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setCurrentDirectory(null);
+
+      const photos = await getLibraryPhotos();
+      setPhotos(photos);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unknown error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   /**
    * Gets the last selected directory from Electron storage
    */
@@ -149,6 +165,7 @@ export const usePhotos = () => {
     loadingProgress,
     error,
     handleScanDirectory,
+    loadLibraryPhotos,
     loadPhotos,
     getLastDirectory,
     clearPhotos,

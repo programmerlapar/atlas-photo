@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Photo operations
   getPhotos: () => ipcRenderer.invoke('get-photos') as Promise<Photo[]>,
+  getLibraryPhotos: () =>
+    ipcRenderer.invoke('get-library-photos') as Promise<Photo[]>,
   getPhotoMetadata: (path: string) =>
     ipcRenderer.invoke('get-photo-metadata', path) as Promise<unknown>,
 

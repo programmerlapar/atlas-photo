@@ -39,6 +39,15 @@ export const getPhotos = async (): Promise<Photo[]> => {
   return window.electronAPI.getPhotos();
 };
 
+/** Gets the cached, deduplicated photos from every saved collection. */
+export const getLibraryPhotos = async (): Promise<Photo[]> => {
+  if (!window.electronAPI) {
+    throw new Error('Electron API not available');
+  }
+
+  return window.electronAPI.getLibraryPhotos();
+};
+
 /**
  * Gets metadata for a specific photo
  */

@@ -195,6 +195,22 @@ export const setupIpcHandlers = () => {
     return currentPhotos;
   });
 
+  // Library reads the existing per-collection index rather than scanning every
+  // saved folder on navigation. Individual album scans keep those indexes fresh.
+  ipcMain.handle('get-library-photos', async () => {
+    const recentDirs = (await storage.get<string[]>('recentDirectories')) || [];
+    const indexedPhotos = await photoIndex.getStoredForDirectories(recentDirs);
+    const uniquePhotos = new Map<string, Photo>();
+
+    for (const photo of indexedPhotos) {
+      // Collections may overlap because directory scans are recursive.
+      // Recent collections are read first, so retain their newer index entry.
+      if (!uniquePhotos.has(photo.path)) uniquePhotos.set(photo.path, photo);
+    }
+
+    return Array.from(uniquePhotos.values());
+  });
+
   // Get photo metadata handler
   ipcMain.handle('get-photo-metadata', async (_event, path: string) => {
     try {
