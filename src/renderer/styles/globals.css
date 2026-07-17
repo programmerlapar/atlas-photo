@@ -311,13 +311,26 @@ a[href] {
 
 .desktop-titlebar-integrated {
   z-index: 102;
+  right: 0;
+  left: auto;
+  width: 150px;
   border-bottom: 0;
   background: transparent;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
-.desktop-titlebar-integrated .window-no-drag {
-  pointer-events: auto;
+.desktop-caption-controls,
+.desktop-caption-controls * {
+  position: relative;
+  z-index: 1;
+  pointer-events: auto !important;
+  -webkit-app-region: no-drag !important;
+}
+
+.desktop-caption-controls {
+  position: absolute;
+  top: 12px;
+  right: 16px;
 }
 
 .desktop-window-control {
@@ -358,15 +371,29 @@ a[href] {
   border-radius: 0;
   background: var(--photos-sidebar-bg);
   box-shadow: 8px 0 24px rgba(0, 0, 0, 0.16);
+  view-transition-name: app-sidebar;
 }
 
 .desktop-sidebar-brand {
-  margin-bottom: 18px;
-  padding: 70px 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 58px;
+  margin-bottom: 10px;
+  padding: 8px 16px;
+}
+
+.desktop-sidebar-logo {
+  height: 26px;
+  width: 26px;
+  flex: 0 0 auto;
+  border-radius: 7px;
+  object-fit: cover;
 }
 
 .desktop-sidebar-item {
   display: flex;
+  width: 100%;
   align-items: center;
   gap: 10px;
   min-height: 36px;
@@ -389,6 +416,96 @@ a[href] {
 .desktop-sidebar-item-active {
   background: var(--photos-selected-bg);
   color: var(--photos-primary-text);
+}
+
+.desktop-sidebar-albums-row {
+  display: flex;
+  align-items: center;
+  border-radius: 9px;
+  transition: background-color 160ms var(--transition-ios);
+}
+
+.desktop-sidebar-albums-row:hover,
+.desktop-sidebar-albums-row:focus-within {
+  background: var(--photos-control-hover);
+}
+
+.desktop-sidebar-albums-row-active {
+  background: var(--photos-selected-bg);
+}
+
+.desktop-sidebar-albums-row .desktop-sidebar-item,
+.desktop-sidebar-albums-row .desktop-sidebar-item:hover,
+.desktop-sidebar-albums-row .desktop-sidebar-expand-button:hover {
+  background: transparent;
+}
+
+.desktop-sidebar-expand-button {
+  display: inline-flex;
+  height: 32px;
+  width: 28px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--photos-secondary-text);
+}
+
+.desktop-sidebar-expand-button:hover {
+  color: var(--photos-primary-text);
+}
+
+.desktop-sidebar-tree {
+  display: grid;
+  gap: 2px;
+  padding: 3px 8px 4px 30px;
+}
+
+.desktop-sidebar-tree-item {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  padding: 6px 8px;
+  color: var(--photos-secondary-text);
+  font-size: 13px;
+  text-align: left;
+}
+
+.desktop-sidebar-tree-item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.desktop-sidebar-tree-item:hover {
+  background: var(--photos-control-hover);
+  color: var(--photos-primary-text);
+}
+
+.desktop-sidebar-tree-item-active {
+  background: var(--photos-selected-bg);
+  color: var(--photos-primary-text);
+}
+
+.desktop-sidebar-footer {
+  position: relative;
+  margin-top: auto;
+  padding: 18px 8px 8px;
+}
+
+.desktop-sidebar-footer::before {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  left: 12px;
+  height: 1px;
+  background: var(--photos-divider);
+  content: '';
 }
 
 .desktop-sidebar-settings-panel {
@@ -429,6 +546,7 @@ a[href] {
 
 /* Photos-inspired gallery shell */
 .photos-gallery-page {
+  --photos-row-height: 128px;
   height: 100vh;
   min-height: 542px;
   margin-top: -58px;
@@ -437,16 +555,24 @@ a[href] {
   color: var(--photos-primary-text);
 }
 
+.map-page {
+  height: 100vh;
+  min-height: 542px;
+  margin-top: -58px;
+  overflow: hidden;
+  background: var(--photos-main-bg);
+}
+
 .photos-toolbar {
   z-index: 20;
   display: flex;
   min-height: 58px;
   align-items: center;
   gap: 16px;
-  border-bottom: 1px solid var(--photos-divider);
-  background: color-mix(in srgb, var(--photos-main-bg) 80%, transparent);
+  border-bottom: 1px solid transparent;
+  background: transparent;
   padding: 7px 150px 7px 18px;
-  backdrop-filter: blur(16px) saturate(1.15);
+  backdrop-filter: none;
   -webkit-app-region: drag;
 }
 
@@ -465,10 +591,25 @@ a[href] {
   display: flex;
   align-items: center;
   gap: 4px;
-  border: 1px solid var(--photos-control-border);
+  border: 1px solid transparent;
   border-radius: 12px;
-  background: var(--photos-control-bg);
+  background: transparent;
   padding: 2px;
+}
+
+.photos-header-scrolled .photos-toolbar {
+  border-bottom-color: var(--photos-divider);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--photos-main-bg) 90%, transparent),
+    color-mix(in srgb, var(--photos-main-bg) 28%, transparent)
+  );
+  backdrop-filter: blur(16px) saturate(1.15);
+}
+
+.photos-header-scrolled .photos-toolbar-group {
+  border-color: var(--photos-control-border);
+  background: var(--photos-control-bg);
 }
 
 .photos-icon-button,
@@ -540,10 +681,25 @@ a[href] {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  border-bottom: 1px solid var(--photos-divider);
-  background: var(--photos-main-bg);
+  border-bottom: 1px solid transparent;
+  background: transparent;
   padding: 7px 150px 7px 0;
   -webkit-app-region: drag;
+}
+
+.albums-header-scrolled .albums-header {
+  border-bottom-color: var(--photos-divider);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--photos-main-bg) 90%, transparent),
+    color-mix(in srgb, var(--photos-main-bg) 28%, transparent)
+  );
+  backdrop-filter: blur(16px) saturate(1.15);
+}
+
+.albums-header-scrolled .albums-size-group {
+  border-color: var(--photos-control-border);
+  background: var(--photos-control-bg);
 }
 
 .albums-header button {
@@ -555,6 +711,38 @@ a[href] {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
+}
+
+.albums-size-group {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  padding: 2px;
+  backdrop-filter: blur(16px) saturate(1.1);
+}
+
+.albums-size-button {
+  display: inline-flex;
+  height: 32px;
+  width: 32px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--photos-primary-text);
+}
+
+.albums-size-button:hover:not(:disabled) {
+  background: var(--photos-control-hover);
+}
+
+.albums-size-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
 }
 
 .albums-action-button {
@@ -596,6 +784,35 @@ a[href] {
 }
 .albums-add-button:hover:not(:disabled) {
   background: var(--color-primary-hover);
+}
+
+.albums-create-fab {
+  position: fixed;
+  right: 24px;
+  bottom: 22px;
+  z-index: 30;
+  display: inline-flex;
+  height: 40px;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 50%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-primary) 88%, transparent);
+  padding: 0 14px;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(16px) saturate(1.15);
+}
+
+.albums-create-fab:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.albums-create-fab:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .albums-size-panel {
@@ -719,6 +936,25 @@ a[href] {
 
 .photos-gallery-content {
   padding: 16px 18px 28px;
+}
+
+.gallery-context {
+  display: grid;
+  gap: 2px;
+  margin-bottom: 18px;
+}
+
+.gallery-context h1 {
+  color: var(--photos-primary-text);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 24px;
+}
+
+.gallery-context p {
+  color: var(--photos-secondary-text);
+  font-size: 13px;
+  line-height: 18px;
 }
 
 .photos-gallery-scroll {
@@ -855,13 +1091,13 @@ a[href] {
 }
 
 @media (min-width: 1200px) {
-  .photo-aspect-row {
+  .photos-gallery-page {
     --photos-row-height: 128px;
   }
 }
 
 @media (max-width: 1199px) {
-  .photo-aspect-row {
+  .photos-gallery-page {
     --photos-row-height: 122px;
   }
 }
@@ -885,7 +1121,7 @@ a[href] {
   .photos-filter-control {
     padding: 0 8px;
   }
-  .photo-aspect-row {
+  .photos-gallery-page {
     --photos-row-height: 112px;
     gap: 9px;
   }
@@ -1002,6 +1238,14 @@ a[href] {
 
 ::view-transition-new(root) {
   animation: photomap-route-enter 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* Keep navigation motion focused on the route content; the fixed sidebar
+   remains visually stable while albums and photos change on the right. */
+::view-transition-old(app-sidebar),
+::view-transition-new(app-sidebar) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 /* Animation utility classes */

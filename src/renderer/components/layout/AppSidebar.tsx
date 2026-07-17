@@ -1,16 +1,21 @@
 import {
+  ChevronDown,
+  ChevronRight,
   FolderOpen,
+  House,
   Images,
   Moon,
   Settings2,
   SlidersHorizontal,
   Sun,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useMotionNavigate } from '../../hooks/useMotionNavigate';
 import { useFilterStore, type GroupOption } from '../../stores/filterStore';
 import { useThemeStore } from '../../stores/themeStore';
+import { usePhotoStore } from '../../stores/photoStore';
+import { scanDirectory } from '../../services/api';
 
 /** Attached top-level navigation, intentionally limited to Library and Albums. */
 const AppSidebar = () => {
@@ -18,19 +23,82 @@ const AppSidebar = () => {
   const location = useLocation();
   const { theme, toggleTheme } = useThemeStore();
   const { groupBy, setGroupBy } = useFilterStore();
+  const {
+    currentDirectory,
+    setPhotos,
+    setCurrentDirectory,
+    setLoading,
+    setLoadingProgress,
+    setError,
+  } = usePhotoStore();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const isLibrary = location.pathname === '/gallery';
-  const isAlbums = location.pathname === '/albums' || location.pathname === '/';
+  const [isAlbumsExpanded, setIsAlbumsExpanded] = useState(true);
+  const [albumPaths, setAlbumPaths] = useState<string[]>(() => {
+    try {
+      const cached = localStorage.getItem('photomap-sidebar-albums');
+      return cached ? (JSON.parse(cached) as string[]) : [];
+    } catch {
+      return [];
+    }
+  });
+  const isAllPhotos =
+    new URLSearchParams(location.search).get('view') === 'all';
+  const isLibrary = location.pathname === '/gallery' && isAllPhotos;
+  const isAlbums =
+    location.pathname === '/albums' ||
+    location.pathname === '/' ||
+    (location.pathname === '/gallery' && !isAllPhotos);
+
+  useEffect(() => {
+    const loadAlbumPaths = async () => {
+      if (!window.electronAPI) return;
+      try {
+        const paths = await window.electronAPI.getRecentDirectories();
+        setAlbumPaths(paths);
+        localStorage.setItem('photomap-sidebar-albums', JSON.stringify(paths));
+      } catch (error) {
+        console.error('Unable to load sidebar albums:', error);
+      }
+    };
+    void loadAlbumPaths();
+  }, [location.pathname]);
+
+  const handleAlbumSelect = async (path: string) => {
+    navigate('/gallery');
+    setLoading(true);
+    setError(null);
+    if (currentDirectory !== path) setPhotos([]);
+    setCurrentDirectory(path);
+    setLoadingProgress({ stage: 'scanning', current: 0, total: 0 });
+    try {
+      const result = await scanDirectory(path);
+      if (result.error) setError(result.error);
+      else setPhotos(result.photos);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Unable to load album');
+    } finally {
+      setLoading(false);
+      setLoadingProgress(null);
+    }
+  };
+
+  const handleAlbumsHome = () => {
+    setIsAlbumsExpanded(true);
+    navigate('/albums');
+  };
 
   return (
     <aside className="desktop-sidebar" aria-label="Primary navigation">
       <div className="desktop-sidebar-brand">
-        <p className="text-sm font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
-          PhotoMap
-        </p>
-        <p className="mt-0.5 text-[11px] text-[var(--text-tertiary)]">
-          Your local library
-        </p>
+        <img src="/icons/logo.png" className="desktop-sidebar-logo" alt="" />
+        <div>
+          <p className="text-sm font-semibold tracking-[-0.01em] text-[var(--photos-primary-text)]">
+            PhotoMap
+          </p>
+          <p className="mt-0.5 text-[11px] text-[var(--photos-secondary-text)]">
+            Your local library
+          </p>
+        </div>
       </div>
 
       <nav className="space-y-1 px-2">
@@ -41,16 +109,71 @@ const AppSidebar = () => {
           <Images className="h-4 w-4" />
           <span>Library</span>
         </button>
-        <button
-          onClick={() => navigate('/albums')}
-          className={`desktop-sidebar-item ${isAlbums ? 'desktop-sidebar-item-active' : ''}`}
-        >
-          <FolderOpen className="h-4 w-4" />
-          <span>Albums</span>
-        </button>
+        <div className="desktop-sidebar-albums">
+          <div
+            className={`desktop-sidebar-albums-row ${
+              isAlbums ? 'desktop-sidebar-albums-row-active' : ''
+            }`}
+          >
+            <button
+              onClick={handleAlbumsHome}
+              className="desktop-sidebar-item flex-1"
+            >
+              <FolderOpen className="h-4 w-4" />
+              Albums
+            </button>
+            <button
+              onClick={() => setIsAlbumsExpanded((expanded) => !expanded)}
+              className="desktop-sidebar-expand-button"
+              aria-label={
+                isAlbumsExpanded ? 'Collapse albums' : 'Expand albums'
+              }
+              aria-expanded={isAlbumsExpanded}
+            >
+              {isAlbumsExpanded ? (
+                <ChevronDown className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronRight className="h-3.5 w-3.5" />
+              )}
+            </button>
+          </div>
+          {isAlbumsExpanded && (
+            <div className="desktop-sidebar-tree" aria-label="Saved albums">
+              <button
+                onClick={handleAlbumsHome}
+                className={`desktop-sidebar-tree-item ${
+                  location.pathname === '/albums' || location.pathname === '/'
+                    ? 'desktop-sidebar-tree-item-active'
+                    : ''
+                }`}
+                aria-current={isAlbums ? 'page' : undefined}
+              >
+                <House className="h-3.5 w-3.5" />
+                <span>All Albums</span>
+              </button>
+              {albumPaths.map((path) => {
+                const name = path.split(/[/\\]/).filter(Boolean).pop() || path;
+                const isCurrentAlbum =
+                  location.pathname === '/gallery' && currentDirectory === path;
+                return (
+                  <button
+                    key={path}
+                    onClick={() => void handleAlbumSelect(path)}
+                    className={`desktop-sidebar-tree-item ${isCurrentAlbum ? 'desktop-sidebar-tree-item-active' : ''}`}
+                    aria-current={isCurrentAlbum ? 'page' : undefined}
+                    title={path}
+                  >
+                    <FolderOpen className="h-3.5 w-3.5" />
+                    <span>{name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </nav>
 
-      <div className="relative mt-auto border-t border-[var(--border-subtle)] p-2">
+      <div className="desktop-sidebar-footer relative">
         {isSettingsOpen && (
           <div className="desktop-sidebar-settings-panel">
             <div className="mb-3 flex items-center justify-between px-1">

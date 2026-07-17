@@ -55,7 +55,7 @@ const App = () => {
     ['/albums', '/gallery', '/settings'].includes(location.pathname) ||
     (location.pathname === '/' && hasAlbums);
   const integratedToolbar =
-    ['/albums', '/gallery'].includes(location.pathname) ||
+    ['/albums', '/gallery', '/map'].includes(location.pathname) ||
     (location.pathname === '/' && hasAlbums);
 
   return (

@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from 'react';
 import { useLocation } from 'react-router-dom';
 import { usePhotos } from '../hooks/usePhotos';
 import { useFilterStore } from '../stores/filterStore';
@@ -46,6 +53,10 @@ const GalleryView = () => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
+  const [photoRowHeight, setPhotoRowHeight] = useState(128);
+  const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
+  const galleryScrollRef = useRef<HTMLDivElement>(null);
+  const restoredLocationKey = useRef<string | null>(null);
 
   // Check if we're in "All" view mode
   const isAllView = new URLSearchParams(location.search).get('view') === 'all';
@@ -57,6 +68,26 @@ const GalleryView = () => {
     () => applyFilters(photos),
     [applyFilters, photos]
   );
+
+  useEffect(() => {
+    const scrollTop = location.state?.restoreScrollTop;
+    if (
+      typeof scrollTop !== 'number' ||
+      restoredLocationKey.current === location.key
+    ) {
+      return;
+    }
+
+    restoredLocationKey.current = location.key;
+    const frame = requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (galleryScrollRef.current) {
+          galleryScrollRef.current.scrollTop = scrollTop;
+        }
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [location.key, location.state]);
 
   useEffect(() => {
     // Load photos based on view mode
@@ -208,10 +239,17 @@ const GalleryView = () => {
   const handlePhotoClick = useCallback(
     (photo: Photo) => {
       if (!selectionMode) {
-        navigate(`/detail/${encodePhotoId(photo.id)}`);
+        navigate(`/detail/${encodePhotoId(photo.id)}`, {
+          state: {
+            returnTo: {
+              pathname: `${location.pathname}${location.search}`,
+              scrollTop: galleryScrollRef.current?.scrollTop ?? 0,
+            },
+          },
+        });
       }
     },
-    [navigate, selectionMode]
+    [location.pathname, location.search, navigate, selectionMode]
   );
 
   const handleMapViewToggle = () => {
@@ -340,7 +378,10 @@ const GalleryView = () => {
   };
 
   return (
-    <div className="photos-gallery-page flex flex-col">
+    <div
+      className={`photos-gallery-page flex flex-col ${isHeaderScrolled ? 'photos-header-scrolled' : ''}`}
+      style={{ '--photos-row-height': `${photoRowHeight}px` } as CSSProperties}
+    >
       <Toolbar
         onMapViewToggle={handleMapViewToggle}
         onDirectoryChange={handleDirectoryChange}
@@ -356,12 +397,34 @@ const GalleryView = () => {
             : `${filteredPhotos.length} ${filteredPhotos.length === 1 ? 'photo' : 'photos'}`
         }
         onBack={handleBackToAlbums}
-        onViewAll={isAllView ? undefined : () => navigate('/gallery?view=all')}
+        contextInContent
+        onPhotoSizeDecrease={() =>
+          setPhotoRowHeight((height) => Math.max(104, height - 12))
+        }
+        onPhotoSizeIncrease={() =>
+          setPhotoRowHeight((height) => Math.min(168, height + 12))
+        }
+        canDecreasePhotoSize={photoRowHeight > 104}
+        canIncreasePhotoSize={photoRowHeight < 168}
       />
 
       {/* Main content */}
-      <div className="photos-gallery-scroll flex-1 overflow-y-auto">
+      <div
+        ref={galleryScrollRef}
+        className="photos-gallery-scroll flex-1 overflow-y-auto"
+        onScroll={(event) =>
+          setIsHeaderScrolled(event.currentTarget.scrollTop > 4)
+        }
+      >
         <div className="photos-gallery-content">
+          <div className="gallery-context">
+            <h1>{getViewTitle()}</h1>
+            <p>
+              {isAllView
+                ? 'All collections'
+                : `${filteredPhotos.length} ${filteredPhotos.length === 1 ? 'photo' : 'photos'}`}
+            </p>
+          </div>
           {filteredPhotos.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-lg text-[var(--text-tertiary)]">

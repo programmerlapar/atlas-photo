@@ -3,9 +3,9 @@ import { useLocation } from 'react-router-dom';
 import {
   FolderOpen,
   Plus,
+  Minus,
   Grid3x3,
   Image as ImageIcon,
-  SlidersHorizontal,
   ImagePlus,
   MoreHorizontal,
   Trash2,
@@ -48,7 +48,6 @@ const AlbumsView = () => {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
-  const [showSlider, setShowSlider] = useState(false);
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -59,6 +58,7 @@ const AlbumsView = () => {
   );
   const [isRemovingAlbum, setIsRemovingAlbum] = useState(false);
   const contextMenuRef = useRef<HTMLDivElement>(null);
+  const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
 
   /**
    * Gets responsive grid columns using CSS custom properties for continuous control
@@ -162,11 +162,9 @@ const AlbumsView = () => {
     void handleScanDirectory(album.path);
   };
 
-  /**
-   * Handles viewing all albums merged together
-   */
-  const handleViewAll = () => {
-    navigate('/gallery?view=all');
+  const adjustAlbumGridSize = (direction: 'larger' | 'smaller') => {
+    // The stored scale is inverse to visual size: lower means larger cards.
+    setAlbumGridSize(albumGridSize + (direction === 'larger' ? -10 : 10));
   };
 
   /**
@@ -223,7 +221,12 @@ const AlbumsView = () => {
 
   if (isLoading) {
     return (
-      <div className="albums-view">
+      <div
+        className={`albums-view ${isHeaderScrolled ? 'albums-header-scrolled' : ''}`}
+        onScroll={(event) =>
+          setIsHeaderScrolled(event.currentTarget.scrollTop > 4)
+        }
+      >
         <div className="albums-content space-y-6">
           <div className="space-y-2">
             <Skeleton height={32} width="200px" />
@@ -244,7 +247,12 @@ const AlbumsView = () => {
   }
 
   return (
-    <div className="albums-view">
+    <div
+      className={`albums-view ${isHeaderScrolled ? 'albums-header-scrolled' : ''}`}
+      onScroll={(event) =>
+        setIsHeaderScrolled(event.currentTarget.scrollTop > 4)
+      }
+    >
       <div className="albums-content space-y-6">
         {/* Header */}
         <header className="albums-header">
@@ -260,89 +268,32 @@ const AlbumsView = () => {
           </div>
           <div className="albums-header-actions">
             {albums.length > 0 && (
-              <>
+              <div
+                className="albums-size-group"
+                aria-label="Album thumbnail size"
+              >
                 <button
-                  onClick={() => setShowSlider(!showSlider)}
-                  className={`albums-action-button ${showSlider ? 'albums-action-button-active' : ''}`}
-                  title="Adjust album card size"
+                  onClick={() => adjustAlbumGridSize('smaller')}
+                  className="albums-size-button"
+                  title="Smaller album thumbnails"
+                  aria-label="Smaller album thumbnails"
+                  disabled={albumGridSize >= 100}
                 >
-                  <SlidersHorizontal className="w-4 h-4" />
-                  <span>Size</span>
+                  <Minus className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={handleViewAll}
-                  className="albums-action-button"
+                  onClick={() => adjustAlbumGridSize('larger')}
+                  className="albums-size-button"
+                  title="Larger album thumbnails"
+                  aria-label="Larger album thumbnails"
+                  disabled={albumGridSize <= 0}
                 >
-                  <Grid3x3 className="w-4 h-4" />
-                  <span>View All</span>
+                  <Plus className="w-4 h-4" />
                 </button>
-              </>
+              </div>
             )}
-            <button
-              onClick={handleAddAlbum}
-              disabled={isAdding}
-              className="albums-action-button albums-add-button"
-            >
-              <Plus className="w-4 h-4" />
-              <span>{isAdding ? 'Adding...' : 'Add Album'}</span>
-            </button>
           </div>
         </header>
-
-        {/* Size Slider */}
-        {showSlider && albums.length > 0 && (
-          <Card
-            variant="custom-glass"
-            padding="p-4"
-            shadow="l2"
-            rounded="md"
-            className="albums-size-panel flex items-center gap-4"
-          >
-            <div className="flex items-center gap-2 flex-1">
-              <SlidersHorizontal className="w-4 h-4 text-neutral-400" />
-              <span className="text-sm text-neutral-300">Album Size</span>
-            </div>
-            <div className="flex-1 max-w-xs">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-[var(--text-tertiary)]">
-                  Large
-                </span>
-                <span className="text-xs text-[var(--text-tertiary)]">
-                  Medium
-                </span>
-                <span className="text-xs text-[var(--text-tertiary)]">
-                  Compact
-                </span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                step="1"
-                value={albumGridSize}
-                onChange={(e) => {
-                  const value = parseInt((e.target as HTMLInputElement).value);
-                  setAlbumGridSize(value);
-                }}
-                className="w-full h-2 rounded-full appearance-none cursor-pointer accent-primary"
-                style={{
-                  background: `linear-gradient(to right, 
-                    var(--color-primary) 0%, 
-                    var(--color-primary) ${albumGridSize}%, 
-                    rgba(255,255,255,0.1) ${albumGridSize}%, 
-                    rgba(255,255,255,0.1) 100%)`,
-                }}
-              />
-              <div className="flex items-center justify-center mt-1">
-                <span className="text-xs text-[var(--text-tertiary)]">
-                  {albumGridSize < 34 && 'Large'}
-                  {albumGridSize >= 34 && albumGridSize <= 66 && 'Medium'}
-                  {albumGridSize > 66 && 'Compact'} ({albumGridSize})
-                </span>
-              </div>
-            </div>
-          </Card>
-        )}
 
         {/* Albums Grid */}
         {albums.length === 0 ? (
@@ -362,14 +313,6 @@ const AlbumsView = () => {
                 Add your first directory to start organizing your photos
               </p>
             </div>
-            <Button
-              onClick={handleAddAlbum}
-              variant="primary"
-              disabled={isAdding}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              {isAdding ? 'Adding...' : 'Add Your First Album'}
-            </Button>
           </Card>
         ) : (
           <div
@@ -555,6 +498,14 @@ const AlbumsView = () => {
           </div>
         )}
       </div>
+      <button
+        onClick={handleAddAlbum}
+        disabled={isAdding}
+        className="albums-create-fab"
+      >
+        <Plus className="h-4 w-4" />
+        <span>{isAdding ? 'Adding...' : 'Add Album'}</span>
+      </button>
     </div>
   );
 };

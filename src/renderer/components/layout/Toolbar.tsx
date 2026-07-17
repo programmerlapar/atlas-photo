@@ -4,8 +4,9 @@ import {
   FolderOpen,
   Filter,
   CheckSquare,
+  Minus,
+  Plus,
   Square,
-  ChevronDown,
 } from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
 
@@ -20,7 +21,11 @@ export interface ToolbarProps {
   title?: string;
   subtitle?: string;
   onBack?: () => void;
-  onViewAll?: () => void;
+  contextInContent?: boolean;
+  onPhotoSizeDecrease?: () => void;
+  onPhotoSizeIncrease?: () => void;
+  canDecreasePhotoSize?: boolean;
+  canIncreasePhotoSize?: boolean;
 }
 
 /**
@@ -39,8 +44,20 @@ const Toolbar = ({
   title,
   subtitle,
   onBack,
-  onViewAll,
+  contextInContent = false,
+  onPhotoSizeDecrease,
+  onPhotoSizeIncrease,
+  canDecreasePhotoSize = true,
+  canIncreasePhotoSize = true,
 }: ToolbarProps) => {
+  const hasSelectionActions = Boolean(onSelectionModeToggle || onFilterClick);
+  const hasLocationActions = Boolean(onMapViewToggle || onDirectoryChange);
+  const hasToolbarActions = Boolean(
+    (onPhotoSizeDecrease && onPhotoSizeIncrease) ||
+    hasSelectionActions ||
+    hasLocationActions
+  );
+
   return (
     <header className="photos-toolbar">
       <div className="flex min-w-0 flex-1 items-center gap-3">
@@ -57,16 +74,18 @@ const Toolbar = ({
             </button>
           </div>
         )}
-        <div className="min-w-0">
-          <h1 className="truncate text-[16px] font-semibold leading-5 text-[var(--photos-primary-text)]">
-            {title || currentDirectory?.split(/[/\\]/).pop() || 'Photos'}
-          </h1>
-          {subtitle && (
-            <p className="truncate text-xs leading-4 text-[var(--photos-secondary-text)]">
-              {subtitle}
-            </p>
-          )}
-        </div>
+        {!contextInContent && (
+          <div className="min-w-0">
+            <h1 className="truncate text-[16px] font-semibold leading-5 text-[var(--photos-primary-text)]">
+              {title || currentDirectory?.split(/[/\\]/).pop() || 'Photos'}
+            </h1>
+            {subtitle && (
+              <p className="truncate text-xs leading-4 text-[var(--photos-secondary-text)]">
+                {subtitle}
+              </p>
+            )}
+          </div>
+        )}
         {!title && currentDirectory && (
           <button
             onClick={onDirectoryChange}
@@ -79,78 +98,109 @@ const Toolbar = ({
       </div>
 
       {/* Right section - compact, related action groups */}
-      <div className="photos-toolbar-actions">
-        {onViewAll && (
-          <Tooltip content="View all collections" position="bottom">
-            <div className="photos-toolbar-group">
-              <button onClick={onViewAll} className="photos-filter-control">
-                All Photos
-                <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
-              </button>
+      {hasToolbarActions && (
+        <div className="photos-toolbar-actions">
+          {onPhotoSizeDecrease && onPhotoSizeIncrease && (
+            <div
+              className="photos-toolbar-group"
+              aria-label="Photo thumbnail size"
+            >
+              <Tooltip content="Smaller thumbnails" position="bottom">
+                <button
+                  onClick={onPhotoSizeDecrease}
+                  disabled={!canDecreasePhotoSize}
+                  className="photos-icon-button"
+                  aria-label="Smaller thumbnails"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+              </Tooltip>
+              <Tooltip content="Larger thumbnails" position="bottom">
+                <button
+                  onClick={onPhotoSizeIncrease}
+                  disabled={!canIncreasePhotoSize}
+                  className="photos-icon-button"
+                  aria-label="Larger thumbnails"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </Tooltip>
             </div>
-          </Tooltip>
-        )}
-        <div className="photos-toolbar-group">
-          {onSelectionModeToggle && (
-            <Tooltip
-              content={
-                selectionMode
-                  ? 'Exit Selection Mode (ESC)'
-                  : 'Enter Selection Mode'
-              }
-              position="bottom"
-            >
-              <button
-                onClick={onSelectionModeToggle}
-                className={`photos-icon-button ${selectionMode ? 'photos-icon-button-active' : ''}`}
-                aria-label={
-                  selectionMode ? 'Exit selection mode' : 'Enter selection mode'
-                }
-              >
-                {selectionMode ? (
-                  <CheckSquare className="w-4 h-4" />
-                ) : (
-                  <Square className="w-4 h-4" />
-                )}
-                {selectionMode && selectedCount > 0 && (
-                  <span className="text-[11px]">{selectedCount}</span>
-                )}
-              </button>
-            </Tooltip>
           )}
-          <Tooltip content="Filter Photos" position="bottom">
-            <button
-              onClick={onFilterClick}
-              disabled={selectionMode}
-              className="photos-icon-button"
-              aria-label="Filter photos"
-            >
-              <Filter className="w-4 h-4" />
-            </button>
-          </Tooltip>
+          {hasSelectionActions && (
+            <div className="photos-toolbar-group">
+              {onSelectionModeToggle && (
+                <Tooltip
+                  content={
+                    selectionMode
+                      ? 'Exit Selection Mode (ESC)'
+                      : 'Enter Selection Mode'
+                  }
+                  position="bottom"
+                >
+                  <button
+                    onClick={onSelectionModeToggle}
+                    className={`photos-icon-button ${selectionMode ? 'photos-icon-button-active' : ''}`}
+                    aria-label={
+                      selectionMode
+                        ? 'Exit selection mode'
+                        : 'Enter selection mode'
+                    }
+                  >
+                    {selectionMode ? (
+                      <CheckSquare className="w-4 h-4" />
+                    ) : (
+                      <Square className="w-4 h-4" />
+                    )}
+                    {selectionMode && selectedCount > 0 && (
+                      <span className="text-[11px]">{selectedCount}</span>
+                    )}
+                  </button>
+                </Tooltip>
+              )}
+              {onFilterClick && (
+                <Tooltip content="Filter Photos" position="bottom">
+                  <button
+                    onClick={onFilterClick}
+                    disabled={selectionMode}
+                    className="photos-icon-button"
+                    aria-label="Filter photos"
+                  >
+                    <Filter className="w-4 h-4" />
+                  </button>
+                </Tooltip>
+              )}
+            </div>
+          )}
+          {hasLocationActions && (
+            <div className="photos-toolbar-group">
+              {onMapViewToggle && (
+                <Tooltip content="View on Map" position="bottom">
+                  <button
+                    onClick={onMapViewToggle}
+                    disabled={selectionMode}
+                    className="photos-icon-button"
+                    aria-label="View on map"
+                  >
+                    <Map className="w-4 h-4" />
+                  </button>
+                </Tooltip>
+              )}
+              {onDirectoryChange && (
+                <Tooltip content="Change Directory" position="bottom">
+                  <button
+                    onClick={onDirectoryChange}
+                    className="photos-icon-button"
+                    aria-label="Change directory"
+                  >
+                    <FolderOpen className="w-4 h-4" />
+                  </button>
+                </Tooltip>
+              )}
+            </div>
+          )}
         </div>
-        <div className="photos-toolbar-group">
-          <Tooltip content="View on Map" position="bottom">
-            <button
-              onClick={onMapViewToggle}
-              disabled={selectionMode}
-              className="photos-icon-button"
-              aria-label="View on map"
-            >
-              <Map className="w-4 h-4" />
-            </button>
-          </Tooltip>
-          <Tooltip content="Change Directory" position="bottom">
-            <button
-              onClick={onDirectoryChange}
-              className="photos-icon-button"
-              aria-label="Change directory"
-            >
-              <FolderOpen className="w-4 h-4" />
-            </button>
-          </Tooltip>
-        </div>
-      </div>
+      )}
     </header>
   );
 };

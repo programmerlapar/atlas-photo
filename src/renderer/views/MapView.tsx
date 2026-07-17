@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
 import { usePhotos } from '../hooks/usePhotos';
 import { useMotionNavigate } from '../hooks/useMotionNavigate';
 import { encodePhotoId } from '../utils/photoId';
 import MapView from '../components/map/MapView';
 import PhotoClusterSheet from '../components/map/PhotoClusterSheet';
+import { Toolbar } from '../components/layout';
 import type { Photo } from '../../shared/types/photo';
 
 /**
@@ -21,7 +21,10 @@ const MapViewPage = () => {
 
   useEffect(() => {
     const reopenClusterPhotoIds = location.state?.reopenClusterPhotoIds;
-    if (!Array.isArray(reopenClusterPhotoIds) || !reopenClusterPhotoIds.every((id) => typeof id === 'string')) {
+    if (
+      !Array.isArray(reopenClusterPhotoIds) ||
+      !reopenClusterPhotoIds.every((id) => typeof id === 'string')
+    ) {
       return;
     }
 
@@ -40,23 +43,29 @@ const MapViewPage = () => {
     }
   }, [location.pathname, location.state, navigate, photos]);
 
-  const handlePhotoSelect = useCallback((photo: Photo) => {
-    navigate(`/detail/${encodePhotoId(photo.id)}`, {
-      state: {
-        returnTo: '/map',
-        clusterPhotoIds: nearbyPhotos?.map((nearbyPhoto) => nearbyPhoto.id),
-      },
-    });
-  }, [navigate, nearbyPhotos]);
+  const handlePhotoSelect = useCallback(
+    (photo: Photo) => {
+      navigate(`/detail/${encodePhotoId(photo.id)}`, {
+        state: {
+          returnTo: '/map',
+          clusterPhotoIds: nearbyPhotos?.map((nearbyPhoto) => nearbyPhoto.id),
+        },
+      });
+    },
+    [navigate, nearbyPhotos]
+  );
 
-  const handleClusterClick = useCallback((clusterPhotos: Photo[]) => {
-    if (clusterPhotos.length === 1) {
-      handlePhotoSelect(clusterPhotos[0]);
-      return;
-    }
+  const handleClusterClick = useCallback(
+    (clusterPhotos: Photo[]) => {
+      if (clusterPhotos.length === 1) {
+        handlePhotoSelect(clusterPhotos[0]);
+        return;
+      }
 
-    setNearbyPhotos(clusterPhotos);
-  }, [handlePhotoSelect]);
+      setNearbyPhotos(clusterPhotos);
+    },
+    [handlePhotoSelect]
+  );
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -68,27 +77,9 @@ const MapViewPage = () => {
   };
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-[var(--bg-primary)]">
-      {/* A compact floating context pill keeps the map visually unobstructed. */}
-      <header className="absolute left-4 right-24 top-3 z-[600] rounded-2xl border border-white/70 bg-white/72 shadow-[0_4px_20px_rgba(37,99,120,0.05)] backdrop-blur-2xl">
-        <div className="grid h-[68px] grid-cols-[44px_1fr_44px] items-center px-4">
-          <button
-            onClick={handleBack}
-            className="flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/55 text-[#123247] shadow-[0_2px_8px_rgba(37,99,120,0.12)] transition-smooth hover:bg-white/90 focus-visible:bg-white/90"
-            aria-label="Go back"
-            title="Go back"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="text-center text-[17px] font-semibold tracking-[-0.01em] text-[#123247]">
-            Map
-          </h1>
-          <div aria-hidden="true" />
-        </div>
-      </header>
-
-      {/* Map */}
-      <div className="h-full w-full relative">
+    <div className="map-page flex flex-col">
+      <Toolbar title="Map" subtitle="Photo locations" onBack={handleBack} />
+      <div className="relative min-h-0 flex-1">
         <MapView photos={photos} onClusterClick={handleClusterClick} />
         {nearbyPhotos && (
           <PhotoClusterSheet

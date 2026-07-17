@@ -26,6 +26,7 @@ export default defineConfig({
     },
   },
   renderer: {
+    publicDir: resolve(__dirname, 'public'),
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src/renderer'),

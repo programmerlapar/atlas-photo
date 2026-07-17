@@ -14,7 +14,7 @@ const AppChrome = ({
         integratedToolbar ? 'desktop-titlebar-integrated' : ''
       }`}
     >
-      <div className="window-no-drag absolute right-4 top-3">
+      <div className="window-no-drag desktop-caption-controls">
         <WindowControls />
       </div>
     </div>

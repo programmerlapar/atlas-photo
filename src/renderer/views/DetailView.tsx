@@ -222,6 +222,19 @@ const DetailView = () => {
       return;
     }
 
+    const returnTo = location.state?.returnTo;
+    if (
+      returnTo &&
+      typeof returnTo === 'object' &&
+      typeof returnTo.pathname === 'string'
+    ) {
+      navigate(returnTo.pathname, {
+        replace: true,
+        state: { restoreScrollTop: returnTo.scrollTop ?? 0 },
+      });
+      return;
+    }
+
     navigate('/gallery');
   };
 
