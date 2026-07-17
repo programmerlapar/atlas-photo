@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useParams } from 'react-router-dom';
 import {
   X,
   ChevronLeft,
@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { usePhotos } from '../hooks/usePhotos';
 import { useKeyboard } from '../hooks/useKeyboard';
+import { useMotionNavigate } from '../hooks/useMotionNavigate';
 import { encodePhotoId, decodePhotoId, encodeFilePath } from '../utils/photoId';
 import { sharePhoto, generateThumbnail, setAlbumCover } from '../services/api';
 import { isHeicFile } from '../../shared/constants/fileTypes';
@@ -28,7 +29,7 @@ import type { Photo } from '../../shared/types/photo';
  * Full-screen photo viewer with metadata panel and navigation
  */
 const DetailView = () => {
-  const navigate = useNavigate();
+  const navigate = useMotionNavigate();
   const location = useLocation();
   const { photoId } = useParams<{ photoId: string }>();
   const { photos, currentDirectory } = usePhotos();
@@ -613,44 +614,43 @@ const DetailView = () => {
           </>
         )}
 
-        {/* Zoom controls */}
-        {!isSlideShow && (
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 glass-surface-2 rounded-md shadow-l2 p-2 flex items-center gap-2">
-            <button
-              onClick={handleZoomOut}
-              disabled={zoom <= 1}
-              className="p-2 rounded hover:bg-[var(--glass-bg-1)] transition-smooth disabled:opacity-50"
-              aria-label="Zoom out"
-            >
-              <ZoomOut className="w-5 h-5 text-[var(--text-primary)]" />
-            </button>
-            <span className="text-sm text-[var(--text-primary)] min-w-[60px] text-center">
-              {Math.round(zoom * 100)}%
-            </span>
-            <button
-              onClick={handleZoomIn}
-              disabled={zoom >= 3}
-              className="p-2 rounded hover:bg-[var(--glass-bg-1)] transition-smooth disabled:opacity-50"
-              aria-label="Zoom in"
-            >
-              <ZoomIn className="w-5 h-5 text-[var(--text-primary)]" />
-            </button>
-            {zoom > 1 && (
+        {/* One shared glass control keeps zoom and slideshow actions from overlapping. */}
+        <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg-2)] p-2 shadow-l3 backdrop-blur-2xl">
+          {!isSlideShow && (
+            <>
               <button
-                onClick={handleResetZoom}
-                className="ml-2 px-3 py-1 text-xs text-[var(--text-primary)] hover:bg-[var(--glass-bg-1)] rounded transition-smooth"
+                onClick={handleZoomOut}
+                disabled={zoom <= 1}
+                className="p-2 rounded-xl hover:bg-[var(--glass-bg-1)] transition-smooth disabled:opacity-50"
+                aria-label="Zoom out"
               >
-                Reset
+                <ZoomOut className="w-5 h-5 text-[var(--text-primary)]" />
               </button>
-            )}
-          </div>
-        )}
-
-        {/* Slide show controls */}
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 glass-surface-2 rounded-md shadow-l2 p-3 flex items-center gap-3">
+              <span className="min-w-[50px] text-center text-sm text-[var(--text-primary)]">
+                {Math.round(zoom * 100)}%
+              </span>
+              <button
+                onClick={handleZoomIn}
+                disabled={zoom >= 3}
+                className="p-2 rounded-xl hover:bg-[var(--glass-bg-1)] transition-smooth disabled:opacity-50"
+                aria-label="Zoom in"
+              >
+                <ZoomIn className="w-5 h-5 text-[var(--text-primary)]" />
+              </button>
+              {zoom > 1 && (
+                <button
+                  onClick={handleResetZoom}
+                  className="px-2 py-1 text-xs text-[var(--text-primary)] hover:bg-[var(--glass-bg-1)] rounded-lg transition-smooth"
+                >
+                  Reset
+                </button>
+              )}
+              <span className="mx-1 h-5 w-px bg-[var(--border-default)]" aria-hidden="true" />
+            </>
+          )}
           <button
             onClick={handleSlideShowToggle}
-            className="p-2 rounded hover:bg-[var(--glass-bg-1)] transition-smooth"
+            className="p-2 rounded-xl hover:bg-[var(--glass-bg-1)] transition-smooth"
             aria-label={isSlideShow ? 'Pause slide show' : 'Play slide show'}
           >
             {isSlideShow ? (
@@ -660,7 +660,7 @@ const DetailView = () => {
             )}
           </button>
 
-          {isSlideShow && (
+          {isSlideShow ? (
             <>
               {/* Speed control */}
               <div className="flex items-center gap-2">
@@ -697,12 +697,11 @@ const DetailView = () => {
                 />
               </button>
 
-              {/* Photo counter */}
-              <span className="text-xs text-[var(--text-tertiary)] px-2">
-                {currentIndex + 1} / {photos.length}
-              </span>
             </>
-          )}
+          ) : null}
+          <span className="px-2 text-xs text-[var(--text-tertiary)]">
+            {currentIndex + 1} / {photos.length}
+          </span>
         </div>
 
         {/* Photo image */}

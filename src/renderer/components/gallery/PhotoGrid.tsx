@@ -74,7 +74,7 @@ const PhotoGrid = ({
     photos.forEach((photo) => {
       const date = photo.metadata?.date
         ? new Date(photo.metadata.date).toDateString()
-        : 'Unknown Date';
+        : 'Undated';
 
       if (!groups.has(date)) {
         groups.set(date, []);
@@ -83,8 +83,8 @@ const PhotoGrid = ({
     });
 
     return Array.from(groups.entries()).sort(([a], [b]) => {
-      if (a === 'Unknown Date') return 1;
-      if (b === 'Unknown Date') return -1;
+      if (a === 'Undated') return 1;
+      if (b === 'Undated') return -1;
       return new Date(b).getTime() - new Date(a).getTime();
     });
     // Thumbnail-path changes do not affect date grouping, so rebuilding every
@@ -120,7 +120,7 @@ const PhotoGrid = ({
    * Formats date for group header
    */
   const formatGroupDate = (dateString: string) => {
-    if (dateString === 'Unknown Date') return dateString;
+    if (dateString === 'Undated') return 'Undated photos';
     const date = new Date(dateString);
     const today = new Date();
     const yesterday = new Date(today);

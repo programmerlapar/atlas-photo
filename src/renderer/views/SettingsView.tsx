@@ -1,7 +1,7 @@
-import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, FolderOpen, Grid, Moon, Sun, Grid3x3 } from 'lucide-react';
 import { usePhotos } from '../hooks/usePhotos';
-import { useFilterStore } from '../stores/filterStore';
+import { useMotionNavigate } from '../hooks/useMotionNavigate';
+import { useFilterStore, type GroupOption, type SortOption } from '../stores/filterStore';
 import { useThemeStore } from '../stores/themeStore';
 import { usePreferencesStore } from '../stores/preferencesStore';
 import Button from '../components/ui/Button';
@@ -12,7 +12,7 @@ import RecentDirectories from '../components/layout/RecentDirectories';
  * Displays app settings and preferences
  */
 const SettingsView = () => {
-  const navigate = useNavigate();
+  const navigate = useMotionNavigate();
   const { currentDirectory, handleScanDirectory } = usePhotos();
   const { groupBy, sortBy, sortOrder, setGroupBy, setSortBy, setSortOrder } =
     useFilterStore();
@@ -97,7 +97,7 @@ const SettingsView = () => {
                 </label>
                 <select
                   value={groupBy}
-                  onChange={(e) => setGroupBy((e.target as HTMLSelectElement).value as any)}
+                  onChange={(e) => setGroupBy((e.target as HTMLSelectElement).value as GroupOption)}
                   className="w-full px-3 py-2 bg-[var(--glass-bg-1)] border border-[var(--border-default)] rounded-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="date">Date</option>
@@ -111,7 +111,7 @@ const SettingsView = () => {
                 </label>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy((e.target as HTMLSelectElement).value as any)}
+                  onChange={(e) => setSortBy((e.target as HTMLSelectElement).value as SortOption)}
                   className="w-full px-3 py-2 bg-[var(--glass-bg-1)] border border-[var(--border-default)] rounded-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="date">Date</option>

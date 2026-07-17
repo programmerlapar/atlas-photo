@@ -5,7 +5,6 @@ import { copyFile, unlink } from 'fs/promises';
 import { join, basename } from 'path';
 import { processPhotos } from '../services/photoProcessor';
 import { extractPhotoMetadata } from '../services/exifExtractor';
-import { generateThumbnail } from '../services/thumbnailGenerator';
 import { FileWatcher } from '../services/fileWatcher';
 import { Storage } from '../utils/storage';
 import { PhotoIndex } from '../services/photoIndex';
@@ -19,6 +18,7 @@ const fileWatcher = new FileWatcher();
 const storage = new Storage();
 const photoIndex = new PhotoIndex();
 const imageCache = new ImageCacheService();
+let backgroundThumbnailRun = 0;
 
 // Load last directory on startup
 (async () => {
@@ -43,10 +43,60 @@ const sendProgress = (progress: {
   });
 };
 
+const publishThumbnail = async (path: string, thumbnailPath: string): Promise<void> => {
+  const photo = currentPhotos.find((item) => item.path === path);
+  // A visible request may join a prefetch already in progress. Only publish
+  // once so the renderer is not forced through duplicate list updates.
+  if (!photo || photo.thumbnailPath === thumbnailPath) return;
+
+  photo.thumbnailPath = thumbnailPath;
+  if (currentDirectory) await photoIndex.upsert(currentDirectory, photo);
+
+  BrowserWindow.getAllWindows().forEach((window) => {
+    window.webContents.send('thumbnail-generated', { path, thumbnailPath });
+  });
+};
+
+const startBackgroundThumbnailPrefetch = (directoryPath: string, photos: Photo[]): void => {
+  const run = ++backgroundThumbnailRun;
+  const runPrefetch = async () => {
+    // One low-priority worker runs only after the UI settles. Foreground work
+    // queued by Gallery, Map, or Detail always moves ahead of the next item.
+    for (const photo of photos) {
+      if (run !== backgroundThumbnailRun || currentDirectory !== directoryPath) return;
+      if (photo.thumbnailPath) continue;
+
+      const thumbnailPath = await imageCache.getThumbnail(photo.path, 500, 'prefetch');
+      if (run !== backgroundThumbnailRun || currentDirectory !== directoryPath) return;
+      if (thumbnailPath) await publishThumbnail(photo.path, thumbnailPath);
+    }
+  };
+  // Let navigation, the first viewport, and user actions win before any
+  // optional conversion starts consuming CPU.
+  setTimeout(() => {
+    void runPrefetch().catch((error) => {
+      console.warn('Background thumbnail prefetch stopped.', error);
+    });
+  }, 1500);
+};
+
 /**
  * Sets up all IPC handlers for communication between main and renderer processes
  */
 export const setupIpcHandlers = () => {
+  ipcMain.handle('window-control', (event, action: 'minimize' | 'maximize' | 'close') => {
+    const window = BrowserWindow.fromWebContents(event.sender);
+    if (!window) return false;
+
+    if (action === 'minimize') window.minimize();
+    if (action === 'maximize') {
+      if (window.isMaximized()) window.unmaximize();
+      else window.maximize();
+    }
+    if (action === 'close') window.close();
+    return true;
+  });
+
   // Directory selection handler
   ipcMain.handle('select-directory', async () => {
     const result = await dialog.showOpenDialog({
@@ -119,6 +169,7 @@ export const setupIpcHandlers = () => {
 
       if (cachedPhotos) {
         currentPhotos = cachedPhotos;
+        startBackgroundThumbnailPrefetch(path, cachedPhotos);
         return { photos: cachedPhotos, error: null };
       }
 
@@ -127,6 +178,7 @@ export const setupIpcHandlers = () => {
 
       currentPhotos = photos;
       await photoIndex.save(path, photos);
+      startBackgroundThumbnailPrefetch(path, photos);
 
       return { photos, error: null };
     } catch (error) {
@@ -163,23 +215,12 @@ export const setupIpcHandlers = () => {
 
   // Generate thumbnail handler
   // Returns thumbnail path and updates the photo in currentPhotos
-  ipcMain.handle('generate-thumbnail', async (_event, path: string) => {
+  ipcMain.handle(
+    'generate-thumbnail',
+    async (_event, path: string, priority: 'visible' | 'prefetch' = 'visible') => {
     try {
-      const thumbnailPath = await imageCache.getThumbnail(path);
-      
-      // Update photo in currentPhotos if found
-      const photo = currentPhotos.find((p) => p.path === path);
-      if (photo && thumbnailPath) {
-        photo.thumbnailPath = thumbnailPath;
-        if (currentDirectory) await photoIndex.upsert(currentDirectory, photo);
-        
-        // Notify renderer that thumbnail was generated
-        const windows = BrowserWindow.getAllWindows();
-        windows.forEach((window) => {
-          window.webContents.send('thumbnail-generated', { path, thumbnailPath });
-        });
-      }
-      
+      const thumbnailPath = await imageCache.getThumbnail(path, 500, priority);
+      if (thumbnailPath) await publishThumbnail(path, thumbnailPath);
       return thumbnailPath;
     } catch (error) {
       console.error('Error generating thumbnail:', error);
@@ -239,11 +280,10 @@ export const setupIpcHandlers = () => {
       const indexedPhotos = await photoIndex.get(directoryPath);
       if (indexedPhotos) {
         const firstPhoto = indexedPhotos[0];
-        const thumbnailPath = firstPhoto.thumbnailPath || await imageCache.getThumbnail(firstPhoto.path);
-        if (thumbnailPath && !firstPhoto.thumbnailPath) {
-          firstPhoto.thumbnailPath = thumbnailPath;
-          await photoIndex.upsert(directoryPath, firstPhoto);
-        }
+        // The Collections screen must never block on decoding a full image.
+        // A missing cover simply uses its lightweight placeholder until the
+        // album is opened and normal thumbnail work begins.
+        const thumbnailPath = firstPhoto.thumbnailPath || null;
 
         return {
           photoCount: indexedPhotos.length,
@@ -277,7 +317,7 @@ export const setupIpcHandlers = () => {
       await storage.set('albumCovers', albumCovers);
       
       // Generate thumbnail for the cover photo
-      const thumbnailPath = await generateThumbnail(photoPath);
+      const thumbnailPath = await imageCache.getThumbnail(photoPath);
       
       return { success: true, thumbnailPath };
     } catch (error) {
@@ -296,10 +336,8 @@ export const setupIpcHandlers = () => {
         return { photoPath: null, thumbnailPath: null };
       }
 
-      // Generate thumbnail if not cached
-      const thumbnailPath = await generateThumbnail(coverPhotoPath);
-      
-      return { photoPath: coverPhotoPath, thumbnailPath };
+      // Do not make collection rendering wait on a custom-cover conversion.
+      return { photoPath: coverPhotoPath, thumbnailPath: null };
     } catch (error) {
       console.error('Error getting album cover:', error);
       return { photoPath: null, thumbnailPath: null };

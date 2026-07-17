@@ -1,6 +1,6 @@
 import sharp from 'sharp';
 import { mkdir, stat, readFile, writeFile, unlink } from 'fs/promises';
-import { join, dirname, basename } from 'path';
+import { join, basename } from 'path';
 import { existsSync } from 'fs';
 import { app } from 'electron';
 import { isMacOSMetadataFile } from '../../shared/constants/fileTypes';
@@ -152,11 +152,10 @@ export const generateThumbnail = async (
       const errorMessage =
         sharpError instanceof Error ? sharpError.message : String(sharpError);
       
-      console.error(`[Thumbnail] Sharp processing failed for ${filename}:`, {
+      console.warn(`[Thumbnail] Sharp processing failed for ${filename}:`, {
         error: errorMessage,
         photoPath,
         isHeic,
-        errorStack: sharpError instanceof Error ? sharpError.stack : undefined,
       });
       
       // Check if it's a HEIC/HEIF decoding error
@@ -175,13 +174,19 @@ export const generateThumbnail = async (
         errorMessage.includes('unsupported format');
       
       if (isHeicError || isHeic) {
+        const sharpDecoderUnavailable =
+          errorMessage.includes('No decoding plugin') ||
+          errorMessage.includes('compression format');
         console.warn(
-          `[Thumbnail] HEIC/HEIF thumbnail generation failed for ${filename}: ${errorMessage}. Attempting alternative approach...`
+          `[Thumbnail] Sharp could not decode ${filename}; using the HEIC fallback.`
         );
         
-        // Try alternative approach: use raw pixel data extraction
-        try {
-          console.log(`[Thumbnail] Attempting alternative HEIC conversion for: ${filename}`);
+        // A missing libheif decoder cannot be fixed by re-running Sharp with
+        // different flags. Skip that expensive duplicate attempt and go
+        // straight to the converter that supports this codec.
+        if (!sharpDecoderUnavailable) {
+          try {
+            console.log(`[Thumbnail] Attempting alternative HEIC conversion for: ${filename}`);
           
           // Try to extract using different sharp options
           const image = sharp(photoPath, {
@@ -218,10 +223,11 @@ export const generateThumbnail = async (
             }
           }
           
-          console.warn(`[Thumbnail] Alternative HEIC conversion also failed for: ${filename}`);
-        } catch (altError) {
-          const altErrorMsg = altError instanceof Error ? altError.message : String(altError);
-          console.error(`[Thumbnail] Alternative HEIC conversion failed: ${altErrorMsg}`);
+            console.warn(`[Thumbnail] Alternative HEIC conversion also failed for: ${filename}`);
+          } catch (altError) {
+            const altErrorMsg = altError instanceof Error ? altError.message : String(altError);
+            console.warn(`[Thumbnail] Alternative HEIC conversion failed: ${altErrorMsg}`);
+          }
         }
         
         // Try heic-convert library as final fallback

@@ -1,5 +1,7 @@
+import { useEffect, useState } from 'react';
 import { ImageOff, X } from 'lucide-react';
 import { encodeFilePath } from '../../utils/photoId';
+import { generateThumbnail } from '../../services/api';
 import type { Photo } from '../../../shared/types/photo';
 
 export interface PhotoClusterSheetProps {
@@ -9,7 +11,28 @@ export interface PhotoClusterSheetProps {
 }
 
 /** Browses the actual photos represented by a grouped map marker. */
-const PhotoClusterSheet = ({ photos, onClose, onPhotoSelect }: PhotoClusterSheetProps) => (
+const PhotoClusterSheet = ({ photos, onClose, onPhotoSelect }: PhotoClusterSheetProps) => {
+  const [generatedPaths, setGeneratedPaths] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    setGeneratedPaths({});
+    // Make the immediately visible sheet cells jump ahead of idle work. The
+    // rest continue through the shared background queue as the user browses.
+    void Promise.all(
+      photos.slice(0, 12).filter((photo) => !photo.thumbnailPath).map(async (photo) => {
+        const thumbnailPath = await generateThumbnail(photo.path, 'visible');
+        if (!cancelled && thumbnailPath) {
+          setGeneratedPaths((current) => ({ ...current, [photo.path]: thumbnailPath }));
+        }
+      })
+    );
+    return () => {
+      cancelled = true;
+    };
+  }, [photos]);
+
+  return (
   <div className="absolute inset-0 z-[2000]" role="dialog" aria-modal="true" aria-label="Photos in this map area">
     <button
       className="absolute inset-0 cursor-default bg-[#123247]/20 backdrop-blur-[1px]"
@@ -34,8 +57,10 @@ const PhotoClusterSheet = ({ photos, onClose, onPhotoSelect }: PhotoClusterSheet
         </button>
       </div>
       <div className="grid max-h-[calc(68vh-106px)] grid-cols-3 gap-3 overflow-y-auto p-4 sm:grid-cols-4 md:grid-cols-5">
-        {photos.map((photo, index) => (
-          <button
+        {photos.map((photo, index) => {
+          const thumbnailPath = photo.thumbnailPath || generatedPaths[photo.path];
+          return (
+            <button
             key={photo.id}
             onClick={() => onPhotoSelect(photo)}
             className="group relative aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-[#0A6E8C] to-[#123247] text-left shadow-[0_3px_10px_rgba(18,50,71,0.16)] transition-smooth hover:-translate-y-0.5 hover:shadow-[0_7px_16px_rgba(18,50,71,0.22)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0A6E8C]"
@@ -44,9 +69,9 @@ const PhotoClusterSheet = ({ photos, onClose, onPhotoSelect }: PhotoClusterSheet
             <div className="absolute inset-0 flex items-center justify-center">
               <ImageOff className="h-6 w-6 text-white/80" />
             </div>
-            {photo.thumbnailPath && (
+            {thumbnailPath && (
               <img
-                src={`photomap://${encodeFilePath(photo.thumbnailPath)}`}
+                src={`photomap://${encodeFilePath(thumbnailPath)}`}
                 alt=""
                 className="absolute inset-0 h-full w-full object-cover"
                 onError={(event) => {
@@ -62,11 +87,13 @@ const PhotoClusterSheet = ({ photos, onClose, onPhotoSelect }: PhotoClusterSheet
             <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#123247]/80 to-transparent px-2 pb-2 pt-6 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
               {photo.filename}
             </span>
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
     </section>
   </div>
-);
+  );
+};
 
 export default PhotoClusterSheet;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { useThemeStore } from './stores/themeStore';
 import WelcomeScreen from './views/WelcomeScreen';
 import AlbumsView from './views/AlbumsView';
@@ -7,6 +7,7 @@ import GalleryView from './views/GalleryView';
 import DetailView from './views/DetailView';
 import MapViewPage from './views/MapView';
 import SettingsView from './views/SettingsView';
+import { AppChrome } from './components/layout';
 
 /**
  * Root application component
@@ -14,6 +15,7 @@ import SettingsView from './views/SettingsView';
  */
 const App = () => {
   const { theme } = useThemeStore();
+  const location = useLocation();
   const [hasAlbums, setHasAlbums] = useState<boolean | null>(null);
 
   // Apply theme to document on mount and theme change
@@ -49,8 +51,13 @@ const App = () => {
     );
   }
 
+  const showSidebar = ['/albums', '/gallery', '/settings'].includes(location.pathname)
+    || (location.pathname === '/' && hasAlbums);
+
   return (
     <div className="min-h-screen bg-(--bg-primary) transition-colors duration-300">
+      <AppChrome showSidebar={showSidebar} />
+      <main className={`desktop-route-content ${showSidebar ? 'desktop-route-content-with-sidebar' : ''}`}>
       <Routes>
         <Route
           path="/"
@@ -62,6 +69,7 @@ const App = () => {
         <Route path="/map" element={<MapViewPage />} />
         <Route path="/settings" element={<SettingsView />} />
       </Routes>
+      </main>
     </div>
   );
 };

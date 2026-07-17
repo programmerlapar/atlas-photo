@@ -1,5 +1,6 @@
 import type React from 'react';
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useThemeStore } from '../../stores/themeStore';
 
 export interface LiquidGlassProps {
 	/**
@@ -98,6 +99,8 @@ export interface LiquidGlassProps {
 	 * Additional CSS classes to apply to the container
 	 */
 	className?: string;
+	/** Allow overlays such as header tooltips to escape the glass bounds. */
+	clipContent?: boolean;
 	/**
 	 * Child elements to render inside the glass container
 	 */
@@ -150,7 +153,7 @@ const LiquidGlass: React.FC<LiquidGlassProps> = ({
 	saturation = 1.1,
 	shadowIntensity = 0.25,
 	displacementScale = 1,
-	elasticity = 0.6,
+	elasticity: _elasticity = 0.6,
 	swirlIntensity = 8,
 	swirlScale = 1.0,
 	swirlRadius = 1.0,
@@ -160,8 +163,11 @@ const LiquidGlass: React.FC<LiquidGlassProps> = ({
 	shiningBorder = false,
 	shiningIntensity = 0.8,
 	className = '',
+	clipContent = true,
 	children,
 }) => {
+	const { theme } = useThemeStore();
+	const isLightTheme = theme === 'light';
 	const containerRef = useRef<HTMLDivElement>(null);
 	const svgRef = useRef<SVGSVGElement>(null);
 	const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -197,29 +203,6 @@ const LiquidGlass: React.FC<LiquidGlassProps> = ({
 	const length = useCallback((x: number, y: number) => {
 		return Math.sqrt(x * x + y * y);
 	}, []);
-
-	/**
-	 * Calculate signed distance field (SDF) for a rounded rectangle
-	 * Used to generate the displacement map shape
-	 * @param x - X coordinate
-	 * @param y - Y coordinate
-	 * @param w - Width
-	 * @param h - Height
-	 * @param radius - Corner radius
-	 * @returns Signed distance value
-	 */
-	const roundedRectSDF = useCallback(
-		(x: number, y: number, w: number, h: number, radius: number) => {
-			const qx = Math.abs(x) - w + radius;
-			const qy = Math.abs(y) - h + radius;
-			return (
-				Math.min(Math.max(qx, qy), 0) +
-				length(Math.max(qx, 0), Math.max(qy, 0)) -
-				radius
-			);
-		},
-		[length],
-	);
 
 	/**
 	 * Update the shader displacement map based on current dimensions and parameters
@@ -393,13 +376,14 @@ const LiquidGlass: React.FC<LiquidGlassProps> = ({
 	}, [
 		width,
 		height,
+		borderRadius,
+		edgeThicknessPx,
 		canvasDPI,
 		displacementScale,
-		elasticity,
 		swirlIntensity,
 		swirlScale,
 		swirlRadius,
-		roundedRectSDF,
+		length,
 		smoothStep,
 	]);
 
@@ -480,7 +464,7 @@ const LiquidGlass: React.FC<LiquidGlassProps> = ({
 			{/* Glass Container */}
 			<div
 				ref={containerRef}
-				className={`relative w-full h-full overflow-hidden ${className}`}
+				className={`relative w-full h-full ${clipContent ? 'overflow-hidden' : 'overflow-visible'} ${className}`}
 				style={{
 					borderRadius: `${borderRadius}px`,
 					zIndex: zIndex,
@@ -488,11 +472,18 @@ const LiquidGlass: React.FC<LiquidGlassProps> = ({
 			>
 				{/* Backdrop layer with blur and displacement filter */}
 				<div
-					className="absolute inset-0 pointer-events-none bg-white/2"
+					className="absolute inset-0 pointer-events-none"
 					style={{
-						backdropFilter: `blur(${blur}px) contrast(${contrast}) brightness(${brightness}) saturate(${saturation})`,
-						WebkitBackdropFilter: `blur(${blur}px) contrast(${contrast}) brightness(${brightness}) saturate(${saturation})`,
-						filter: `url(#${id}_filter)`,
+						backgroundColor: isLightTheme
+							? 'rgba(255, 255, 255, 0.76)'
+							: 'rgba(255, 255, 255, 0.02)',
+						backdropFilter: isLightTheme
+							? `blur(${Math.min(blur, 24)}px) saturate(1.08)`
+							: `blur(${blur}px) contrast(${contrast}) brightness(${brightness}) saturate(${saturation})`,
+						WebkitBackdropFilter: isLightTheme
+							? `blur(${Math.min(blur, 24)}px) saturate(1.08)`
+							: `blur(${blur}px) contrast(${contrast}) brightness(${brightness}) saturate(${saturation})`,
+						filter: isLightTheme ? 'none' : `url(#${id}_filter)`,
 						borderRadius: `${borderRadius}px`,
 					}}
 				/>
@@ -502,17 +493,17 @@ const LiquidGlass: React.FC<LiquidGlassProps> = ({
 					style={{
 						borderRadius: `${borderRadius}px`,
 						boxShadow: `
-							0 2px 8px rgba(0, 0, 0, ${shadowIntensity * 0.4}), 
-							0 4px 16px rgba(0, 0, 0, ${shadowIntensity * 0.3}), 
-							0 0 0 0.5px rgba(255, 255, 255, 0.08),
-							inset 0 1px 2px rgba(255, 255, 255, 0.1),
-							inset 0 -1px 2px rgba(0, 0, 0, 0.1)
+							0 2px 8px rgba(0, 0, 0, ${isLightTheme ? shadowIntensity * 0.072 : shadowIntensity * 0.4}),
+							0 4px 16px rgba(0, 0, 0, ${isLightTheme ? shadowIntensity * 0.048 : shadowIntensity * 0.3}),
+							0 0 0 0.5px ${isLightTheme ? 'rgba(31, 41, 51, 0.12)' : 'rgba(255, 255, 255, 0.08)'},
+							inset 0 1px 2px rgba(255, 255, 255, ${isLightTheme ? 0.6 : 0.1}),
+							inset 0 -1px 2px rgba(0, 0, 0, ${isLightTheme ? 0.04 : 0.1})
 						`,
 					}}
 				/>
 				{/* Subtle light reflection/sheen overlay on top edges */}
 				<div
-					className="absolute top-0 left-0 right-0 h-[40%] pointer-events-none z-1 bg-gradient-to-b from-white/12 via-white/4 to-transparent"
+					className={`absolute top-0 left-0 right-0 h-[40%] pointer-events-none z-1 bg-gradient-to-b ${isLightTheme ? 'from-white/70 via-white/20' : 'from-white/12 via-white/4'} to-transparent`}
 					style={{
 						borderRadius: `${borderRadius}px ${borderRadius}px 0 0`,
 					}}
@@ -558,19 +549,15 @@ const LiquidGlass: React.FC<LiquidGlassProps> = ({
 				)}
 				{/* Content wrapper with text shadow */}
 				<div 
-					className={`relative z-2 ${
-						textShadow === false 
-							? '' 
-							: typeof textShadow === 'string'
-								? ''
-								: '**:drop-shadow-sm'
-					}`}
+					className="relative z-2"
 					style={{ 
 						// Apply text shadow to all text inside (inherited property)
 						textShadow: textShadow === false 
 							? 'none' 
 							: typeof textShadow === 'string' 
 								? textShadow 
+							: isLightTheme
+								? '0 1px 1px rgba(255, 255, 255, 0.55)'
 								: '0 1px 2px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.4)',
 					}}
 				>
@@ -582,4 +569,3 @@ const LiquidGlass: React.FC<LiquidGlassProps> = ({
 };
 
 export default LiquidGlass;
-

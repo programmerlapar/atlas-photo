@@ -4,13 +4,17 @@ import type { Photo } from '../../shared/types/photo';
  * Type definitions for Electron API exposed via preload script
  */
 export interface ElectronAPI {
+  windowControl: (action: 'minimize' | 'maximize' | 'close') => Promise<boolean>;
   selectDirectory: () => Promise<string | null>;
   scanDirectory: (
     path: string
   ) => Promise<{ photos: Photo[]; error: string | null }>;
   getPhotos: () => Promise<Photo[]>;
   getPhotoMetadata: (path: string) => Promise<unknown>;
-  generateThumbnail: (path: string) => Promise<string | null>;
+  generateThumbnail: (
+    path: string,
+    priority?: 'visible' | 'prefetch'
+  ) => Promise<string | null>;
   getCurrentDirectory: () => Promise<string | null>;
   getRecentDirectories: () => Promise<string[]>;
   removeRecentDirectory: (path: string) => Promise<{

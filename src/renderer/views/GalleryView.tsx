@@ -1,13 +1,14 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { usePhotos } from '../hooks/usePhotos';
 import { useFilterStore } from '../stores/filterStore';
 import { useKeyboard } from '../hooks/useKeyboard';
+import { useMotionNavigate } from '../hooks/useMotionNavigate';
 import { encodePhotoId } from '../utils/photoId';
-import { Loader2, FolderOpen, ArrowLeft, Grid3x3 } from 'lucide-react';
+import { Loader2, FolderOpen } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
-import { LiquidGlass, FloatingLiquidContainer } from '../components/ui';
+import { FloatingLiquidContainer } from '../components/ui';
 import { PhotoGrid } from '../components/gallery';
 import BatchOperationsBar from '../components/gallery/BatchOperationsBar';
 import { Toolbar, StatusBar } from '../components/layout';
@@ -27,7 +28,7 @@ import type { Photo } from '../../../shared/types/photo';
  * Displays photos in a grid layout with iOS Photos-style interface
  */
 const GalleryView = () => {
-  const navigate = useNavigate();
+  const navigate = useMotionNavigate();
   const location = useLocation();
   const {
     photos,
@@ -45,21 +46,12 @@ const GalleryView = () => {
   const [selectionMode, setSelectionMode] = useState(false);
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [isProcessingBatch, setIsProcessingBatch] = useState(false);
-  const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Check if we're in "All" view mode
   const isAllView = new URLSearchParams(location.search).get('view') === 'all';
 
   const {
-    searchQuery,
-    sortBy,
-    sortOrder,
     groupBy,
-    setSearchQuery,
-    setSortBy,
-    setSortOrder,
-    setGroupBy,
-    clearFilters,
     applyFilters,
   } = useFilterStore();
 
@@ -110,7 +102,7 @@ const GalleryView = () => {
   };
 
   // Toggle photo selection
-  const handleTogglePhotoSelect = (photo: Photo) => {
+  const handleTogglePhotoSelect = useCallback((photo: Photo) => {
     setSelectedPhotoIds((prev) => {
       if (prev.includes(photo.id)) {
         return prev.filter((id) => id !== photo.id);
@@ -118,16 +110,11 @@ const GalleryView = () => {
         return [...prev, photo.id];
       }
     });
-  };
+  }, []);
 
   // Select all photos
   const handleSelectAll = () => {
     setSelectedPhotoIds(filteredPhotos.map((photo) => photo.id));
-  };
-
-  // Deselect all photos
-  const handleDeselectAll = () => {
-    setSelectedPhotoIds([]);
   };
 
   // Batch share photos
@@ -202,18 +189,10 @@ const GalleryView = () => {
   // Keyboard navigation
   useKeyboard(
     {
-      onSlash: () => {
-        if (!selectionMode) {
-          searchInputRef.current?.focus();
-        }
-      },
       onEscape: () => {
         if (selectionMode) {
           setSelectionMode(false);
           setSelectedPhotoIds([]);
-        } else {
-          setSearchQuery('');
-          clearFilters();
         }
       },
       onCtrlA: (e) => {
@@ -226,22 +205,14 @@ const GalleryView = () => {
     true
   );
 
-  const handlePhotoClick = (photo: Photo) => {
+  const handlePhotoClick = useCallback((photo: Photo) => {
     if (!selectionMode) {
       navigate(`/detail/${encodePhotoId(photo.id)}`);
     }
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
+  }, [navigate, selectionMode]);
 
   const handleMapViewToggle = () => {
     navigate('/map');
-  };
-
-  const handleSettingsClick = () => {
-    navigate('/settings');
   };
 
   const handleDirectoryChange = async () => {
@@ -263,14 +234,12 @@ const GalleryView = () => {
     return (
       <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col">
         <Toolbar
-          ref={searchInputRef}
-          onSearch={handleSearch}
           onMapViewToggle={handleMapViewToggle}
-          onSettingsClick={handleSettingsClick}
           onDirectoryChange={handleDirectoryChange}
           onFilterClick={() => setShowFilterPanel(!showFilterPanel)}
-          currentDirectory={currentDirectory || undefined}
-          searchQuery={searchQuery}
+          title={currentDirectory?.split(/[/\\]/).pop() || 'Photos'}
+          subtitle="Preparing your photos"
+          onBack={handleBackToAlbums}
         />
         <div className="flex-1 overflow-y-auto p-6">
           <div className="space-y-4 mb-6">
@@ -365,71 +334,27 @@ const GalleryView = () => {
 
   return (
     <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col">
-      {/* Header with back button (Liquid Glass) */}
-      <LiquidGlass
-        borderRadius={0}
-        blur={8}
-        contrast={1.08}
-        brightness={1.0}
-        saturation={1.0}
-        shadowIntensity={0.2}
-        displacementScale={0.2}
-        textShadow={false}
-        className="sticky top-0 z-20 border-b border-[var(--border-default)]"
-      >
-        <div className="flex items-center gap-4 px-6 py-3">
-          <button
-            onClick={handleBackToAlbums}
-            className="p-2 rounded hover:bg-[var(--glass-bg-1)] transition-smooth"
-            aria-label="Back to albums"
-            title="Back to albums"
-          >
-            <ArrowLeft className="w-5 h-5 text-[var(--text-primary)]" />
-          </button>
-          <div className="flex-1">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">{getViewTitle()}</h2>
-            {isAllView && (
-              <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
-                Merged view of all albums
-              </p>
-            )}
-          </div>
-          {!isAllView && (
-            <Button
-              onClick={() => navigate('/gallery?view=all')}
-              variant="secondary"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Grid3x3 className="w-4 h-4" />
-              <span>View All</span>
-            </Button>
-          )}
-        </div>
-      </LiquidGlass>
-
-      {/* Toolbar */}
       <Toolbar
-        ref={searchInputRef}
-        onSearch={handleSearch}
         onMapViewToggle={handleMapViewToggle}
-        onSettingsClick={handleSettingsClick}
         onDirectoryChange={handleDirectoryChange}
         onFilterClick={() => setShowFilterPanel(!showFilterPanel)}
         onSelectionModeToggle={handleToggleSelectionMode}
         selectionMode={selectionMode}
         selectedCount={selectedPhotoIds.length}
         currentDirectory={currentDirectory || undefined}
-        searchQuery={searchQuery}
+        title={getViewTitle()}
+        subtitle={isAllView ? 'All collections' : `${filteredPhotos.length} ${filteredPhotos.length === 1 ? 'photo' : 'photos'}`}
+        onBack={handleBackToAlbums}
+        onViewAll={isAllView ? undefined : () => navigate('/gallery?view=all')}
       />
 
       {/* Main content */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-6 pb-24">
-          {filteredPhotos.length === 0 && searchQuery ? (
+          {filteredPhotos.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-lg text-[var(--text-tertiary)]">
-                No photos found matching &quot;{searchQuery}&quot;
+                No photos match the current filters
               </p>
             </div>
           ) : (

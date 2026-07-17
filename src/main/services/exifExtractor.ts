@@ -1,4 +1,5 @@
 import exifr from 'exifr';
+import { stat } from 'fs/promises';
 import { basename } from 'path';
 import { isMacOSMetadataFile } from '../../shared/constants/fileTypes';
 import type {
@@ -29,12 +30,13 @@ export const extractPhotoMetadata = async (
       // Extract date/time
       ifd0: true,
       // Extract all available data
-      translateKeys: false,
+      translateKeys: true,
       translateValues: false,
+      reviveValues: true,
     });
 
     if (!exifData) {
-      return null;
+      return getFilesystemDate(photoPath);
     }
 
     const metadata: PhotoMetadata = {};
@@ -53,14 +55,21 @@ export const extractPhotoMetadata = async (
       metadata.location = location;
     }
 
-    // Extract date
-    if (exifData.DateTimeOriginal || exifData.DateTime || exifData.CreateDate) {
-      const dateString =
-        exifData.DateTimeOriginal || exifData.DateTime || exifData.CreateDate;
-      if (dateString) {
-        metadata.date = new Date(dateString);
-      }
-    }
+    // Exifr revives the standard EXIF values to Date instances when keys are
+    // translated. Standard EXIF covers the normal camera/HEIC path without
+    // paying the cost of parsing the much larger XMP block for every photo.
+    const data = exifData as Record<string, unknown>;
+    const date = findValidDate(
+      data.DateTimeOriginal,
+      data.DateTimeDigitized,
+      data.CreateDate,
+      data.DateTime,
+      data.ModifyDate,
+      data.MediaCreateDate,
+      data.TrackCreateDate,
+      data.DateCreated
+    );
+    metadata.date = date ?? (await getFilesystemDate(photoPath))?.date;
 
     // Extract camera information
     if (exifData.Make || exifData.Model) {
@@ -95,8 +104,15 @@ export const extractPhotoMetadata = async (
       }
     }
 
-    // Store all EXIF data for reference
-    metadata.exif = exifData;
+    // Keep Detail's EXIF reference compact. Persisting the entire raw/XMP
+    // payload for hundreds of files made index writes and navigation sluggish.
+    metadata.exif = Object.fromEntries(
+      Object.entries(data).filter(([key]) => [
+        'DateTimeOriginal', 'DateTimeDigitized', 'CreateDate', 'DateTime', 'ModifyDate',
+        'Make', 'Model', 'ISO', 'FNumber', 'ExposureTime', 'FocalLength',
+        'latitude', 'longitude', 'GPSAltitude',
+      ].includes(key))
+    );
 
     return metadata;
   } catch (error) {
@@ -105,6 +121,25 @@ export const extractPhotoMetadata = async (
     if (!isMacOSMetadataFile(filename)) {
       console.error(`Error extracting metadata from ${photoPath}:`, error);
     }
+    return getFilesystemDate(photoPath);
+  }
+};
+
+const findValidDate = (...values: unknown[]): Date | undefined => {
+  for (const value of values) {
+    const date = value instanceof Date ? value : new Date(String(value));
+    if (Number.isFinite(date.getTime())) return date;
+  }
+  return undefined;
+};
+
+/** Last-resort grouping date when a source genuinely contains no capture EXIF. */
+const getFilesystemDate = async (photoPath: string): Promise<PhotoMetadata | null> => {
+  try {
+    const fileStats = await stat(photoPath);
+    const timestamp = fileStats.birthtimeMs > 0 ? fileStats.birthtimeMs : fileStats.mtimeMs;
+    return Number.isFinite(timestamp) ? { date: new Date(timestamp) } : null;
+  } catch {
     return null;
   }
 };

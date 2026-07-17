@@ -1,4 +1,4 @@
-import { Share2, Download, Trash2, X } from 'lucide-react';
+import { Share2, Download, Trash2, X, Loader2 } from 'lucide-react';
 import Button from '../ui/Button';
 import Tooltip from '../ui/Tooltip';
 import type { Photo } from '../../../shared/types/photo';
@@ -27,16 +27,16 @@ const BatchOperationsBar = ({
   const count = selectedPhotos.length;
 
   return (
-    <div className="glass-surface-2 border-t border-white/10 sticky bottom-0 z-20">
-      <div className="flex items-center justify-between h-16 px-6">
-        {/* Left section - Selection count */}
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-[var(--text-primary)] font-medium">
-            {count} {count === 1 ? 'photo' : 'photos'} selected
-          </span>
+    <div className="fixed inset-x-4 bottom-5 z-40 flex justify-center pointer-events-none">
+      <div className="pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-2 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg-3)] px-3 py-2 shadow-l3 backdrop-blur-2xl animate-scale-in">
+        <div className="flex h-9 items-center rounded-xl bg-[var(--glass-bg-1)] px-3 text-sm font-semibold text-[var(--text-primary)]">
+          {isProcessing ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin text-primary" aria-hidden="true" />
+          ) : null}
+          {isProcessing
+            ? 'Working...'
+            : `${count} ${count === 1 ? 'photo' : 'photos'} selected`}
         </div>
-
-        {/* Right section - Actions */}
         <div className="flex items-center gap-2">
           <Tooltip content="Share selected photos" position="top">
             <Button
@@ -44,7 +44,7 @@ const BatchOperationsBar = ({
               variant="secondary"
               size="sm"
               disabled={isProcessing || count === 0}
-              className="transition-smooth hover-lift"
+              className="transition-smooth"
             >
               <Share2 className="w-4 h-4 mr-2" />
               Share
@@ -56,7 +56,7 @@ const BatchOperationsBar = ({
               variant="secondary"
               size="sm"
               disabled={isProcessing || count === 0}
-              className="transition-smooth hover-lift"
+              className="transition-smooth"
             >
               <Download className="w-4 h-4 mr-2" />
               Export
@@ -80,7 +80,7 @@ const BatchOperationsBar = ({
               variant="secondary"
               size="sm"
               disabled={isProcessing}
-              className="transition-smooth hover-lift"
+              className="transition-smooth"
             >
               <X className="w-4 h-4" />
             </Button>

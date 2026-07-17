@@ -1,8 +1,6 @@
-import { forwardRef } from 'react';
 import {
-  Search,
+  ArrowLeft,
   Map,
-  Settings,
   FolderOpen,
   Filter,
   Moon,
@@ -16,64 +14,80 @@ import Tooltip from '../ui/Tooltip';
 import { LiquidGlass } from '../ui';
 
 export interface ToolbarProps {
-  onSearch?: (query: string) => void;
   onMapViewToggle?: () => void;
-  onSettingsClick?: () => void;
   onDirectoryChange?: () => void;
   onFilterClick?: () => void;
   onSelectionModeToggle?: () => void;
   selectionMode?: boolean;
   selectedCount?: number;
   currentDirectory?: string;
-  searchQuery?: string;
+  title?: string;
+  subtitle?: string;
+  onBack?: () => void;
+  onViewAll?: () => void;
 }
 
 /**
  * Toolbar component for the gallery view
- * Includes search, map view toggle, settings, and directory change buttons
+ * A single compact header for Gallery navigation and actions.
  */
-const Toolbar = forwardRef<HTMLInputElement, ToolbarProps>(
-  (
-    {
-      onSearch,
-      onMapViewToggle,
-      onSettingsClick,
-      onDirectoryChange,
-      onFilterClick,
-      onSelectionModeToggle,
-      selectionMode = false,
-      selectedCount = 0,
-      currentDirectory,
-      searchQuery = '',
-    },
-    ref
-  ) => {
-    const { theme, toggleTheme } = useThemeStore();
-    const isDarkMode = theme === 'dark';
+const Toolbar = ({
+  onMapViewToggle,
+  onDirectoryChange,
+  onFilterClick,
+  onSelectionModeToggle,
+  selectionMode = false,
+  selectedCount = 0,
+  currentDirectory,
+  title,
+  subtitle,
+  onBack,
+  onViewAll,
+}: ToolbarProps) => {
+  const { theme, toggleTheme } = useThemeStore();
+  const isDarkMode = theme === 'dark';
 
-    return (
+  return (
       <LiquidGlass
-        borderRadius={0}
-        blur={100}          // Strong frosted effect
-        contrast={1.2}
-        brightness={1.05}
-        saturation={1.1}
-        shadowIntensity={0.3}
+        borderRadius={24}
+        blur={20}
+        contrast={1.04}
+        brightness={1.02}
+        saturation={1.05}
+        shadowIntensity={0.2}
+        displacementScale={0.2}
+        clipContent={false}
         // displacementScale={1}  // Enable swirl effect
         // elasticity={0.6}
         // swirlIntensity={50}
         // swirlScale={1}  // Larger swirl (zoomed out) - try values 0.3-2.0
         // swirlRadius={20}
         // edgeThicknessPx={10}
-        className="border-b border-[var(--border-default)] sticky top-0 z-10"
+        className="sticky top-3 z-30 mx-4 border border-[var(--glass-border)]"
       >
         <div className="flex items-center justify-between h-16 px-6 gap-4">
-          {/* Left section - Directory breadcrumb */}
+          {/* Left section - Gallery context */}
           <div className="flex items-center gap-4 flex-1 min-w-0">
-            {currentDirectory && (
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[var(--text-primary)] transition-smooth hover:bg-[var(--glass-bg-1)]"
+                aria-label="Back to collections"
+                title="Back to collections"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            )}
+            <div className="min-w-0">
+              <h1 className="truncate text-base font-semibold text-[var(--text-primary)]">
+                {title || currentDirectory?.split(/[/\\]/).pop() || 'Photos'}
+              </h1>
+              {subtitle && <p className="truncate text-xs text-[var(--text-tertiary)]">{subtitle}</p>}
+            </div>
+            {!title && currentDirectory && (
               <button
                 onClick={onDirectoryChange}
-                className="text-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] truncate max-w-xs"
+                className="sr-only"
                 title={currentDirectory}
               >
                 {currentDirectory.split(/[/\\]/).pop()}
@@ -81,23 +95,15 @@ const Toolbar = forwardRef<HTMLInputElement, ToolbarProps>(
             )}
           </div>
 
-          {/* Center section - Search */}
-          <div className="flex-1 max-w-md">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-tertiary)]" />
-              <input
-                type="text"
-                placeholder="Search photos..."
-                value={searchQuery}
-                onChange={(e) => onSearch?.(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-[var(--glass-bg-1)] border border-[var(--border-default)] rounded-sm text-[var(--text-primary)] placeholder-[var(--text-tertiary)] focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-smooth"
-                ref={ref}
-              />
-            </div>
-          </div>
-
           {/* Right section - Actions */}
           <div className="flex items-center gap-2">
+            {onViewAll && (
+              <Tooltip content="View all collections" position="bottom">
+                <Button onClick={onViewAll} variant="secondary" size="sm" className="transition-smooth hover-lift">
+                  All Photos
+                </Button>
+              </Tooltip>
+            )}
             {onSelectionModeToggle && (
               <Tooltip
                 content={selectionMode ? 'Exit Selection Mode (ESC)' : 'Enter Selection Mode'}
@@ -169,23 +175,10 @@ const Toolbar = forwardRef<HTMLInputElement, ToolbarProps>(
                 <FolderOpen className="w-4 h-4" />
               </Button>
             </Tooltip>
-            <Tooltip content="Settings" position="bottom">
-              <Button
-                onClick={onSettingsClick}
-                variant="secondary"
-                size="sm"
-                className="transition-smooth hover-lift"
-              >
-                <Settings className="w-4 h-4" />
-              </Button>
-            </Tooltip>
           </div>
         </div>
       </LiquidGlass>
-    );
-  }
-);
-
-Toolbar.displayName = 'Toolbar';
+  );
+};
 
 export default Toolbar;

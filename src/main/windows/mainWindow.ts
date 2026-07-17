@@ -26,7 +26,10 @@ export const createMainWindow = (): BrowserWindow => {
       // Allow custom protocols to work
       webSecurity: true, // Keep web security enabled for security
     },
-    titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
+    // The renderer owns the title area so the same liquid-glass chrome works
+    // consistently on macOS and Windows.
+    frame: false,
+    titleBarStyle: 'hidden',
   });
 
   // Load the app

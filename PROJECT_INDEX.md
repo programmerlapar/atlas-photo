@@ -45,6 +45,8 @@ Thumbnail generator with sharp cache integrated for HEIC/EXR/etc. fallback chain
 - `ImageCacheService` deduplicates thumbnail requests and limits generation concurrency; `thumbCache.ts` caches thumbnail paths in the renderer.
 - `photoProcessor.ts` parses cold-import EXIF in an eight-worker pool. `usePhotos.ts` batches thumbnail updates so large galleries do not rerender once per image.
 - `PhotoGrid` mounts an initial screenful and adds more cards only as the user nears the end; `PhotoCard` uses a stable thumbnail surface. `DetailView` opens from its thumbnail before the original is ready.
+- `ImageCacheService` now has visible and idle priority lanes. A single cancellable background worker fills the current album in every view, while Gallery, Detail, and Map-sheet requests move ahead. `PhotoIndex` coalesces thumbnail persistence instead of serializing the whole index for every image.
+- `PhotoIndex` version 2 migrates the stored v1 raw EXIF capture tags in place, avoiding a cold scan. The extractor now reads translated EXIF dates, keeps persisted metadata compact, and falls back to the filesystem timestamp only if a source has no embedded date.
 - Targeted lint passes. Pending acceptance validation: measure cold and warm behavior with a 5,000-photo library.
 
 ## Bucket 2 Implementation â€” 2026-07-16
@@ -59,3 +61,13 @@ Thumbnail generator with sharp cache integrated for HEIC/EXR/etc. fallback chain
 **Cluster interaction:** Selecting a multi-photo map marker opens `PhotoClusterSheet`, a bottom-sheet browser for all photos represented by that marker. A selected photo records Map as its return context, so Detail Close returns to Map instead of Gallery.
 
 **Bucket 2 status:** Wrapped on 2026-07-16. Targeted map lint passes; perform one final interactive check with the user's large library before release.
+
+## Bucket 3 Implementation — 2026-07-16
+
+- `useMotionNavigate` applies the project zoom-in/fade-in and zoom-out/fade-out navigation language through Chromium View Transitions, with a reduced-motion fallback. It now covers all primary application views.
+- Welcome uses a quiet zoom/fade entry; Gallery selection uses a responsive floating liquid-glass action bar with working feedback; PhotoCard selection no longer scale-pops.
+- Detail has one consolidated glass toolbar for zoom, slideshow, speed, loop, reset, and position controls, removing the former overlapping bottom controls.
+- Albums visibly name each folder-based collection and provide a safe collection-only removal confirmation. Gallery uses one header (navigation, context, and actions), has no free-text search field, and labels missing capture dates as “Undated photos”.
+- Gallery cards are memoized and thumbnail store updates are batched. Map geometry is memoized independently from marker thumbnails, so image completion no longer reconstructs the Leaflet cluster layer. Light-mode liquid glass uses a clean frosted surface and unclipped header tooltips.
+- Collections do not generate covers while loading. Thumbnail conversion starts after a short idle delay and uses one worker; EXIF extraction uses four workers to preserve interaction responsiveness. Light-mode shadows are reduced by 60%.
+- Targeted lint passes. Pending interactive validation: the primary route sequence, narrow/wide selection actions, and Detail controls.

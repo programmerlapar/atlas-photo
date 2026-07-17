@@ -43,6 +43,8 @@ Thumbnail generator with sharp cache integrated for HEIC/EXR/etc. fallback chain
 - Persistent `PhotoIndex` restores processed directory contents without repeat EXIF work; IPC, file-watcher, thumbnail, and deletion paths synchronize it.
 - Cold EXIF parsing uses a bounded worker pool. Thumbnail generation is deduplicated, concurrency-limited, and cached in both main and renderer flows.
 - Albums avoid recursive background scans for unindexed recents. Large galleries demand-load card batches near the scroll boundary, and detail opens from a thumbnail preview before the original image is ready.
+- Thumbnail requests use visible/idle priority lanes. One cancellable idle worker continues the current album in any view while Gallery, Detail, and Map-sheet images take precedence; index persistence coalesces thumbnail updates.
+- Index version 2 migrates v1 raw EXIF capture dates in place, avoiding a cold rescan; new imports retain translated EXIF dates and use a filesystem-date fallback only for files that genuinely have no embedded date.
 - Pending acceptance validation: measure cold and warm behavior with a 5,000-photo library.
 
 ## Bucket 2 Implementation â€” 2026-07-16
@@ -57,3 +59,12 @@ Thumbnail generator with sharp cache integrated for HEIC/EXR/etc. fallback chain
 **Cluster interaction:** Multi-photo markers open `PhotoClusterSheet`, which shows the full nearby photo group newest-first. Detail Close returns to Map for a photo selected from this sheet.
 
 **Bucket 2 status:** Wrapped on 2026-07-16. Targeted map lint passes; one final interactive check with the user's large library remains before release.
+
+## Bucket 3 Implementation — 2026-07-16
+
+- `useMotionNavigate` provides the shared zoom-and-fade route behavior with a reduced-motion fallback across primary views.
+- Welcome, Gallery selection, and Detail controls were refined: quiet entry motion, floating liquid-glass batch actions, fade-only selection indicators, and one consolidated Detail control bar.
+- Collections use folder names, offer collection-only removal with an explicit source-photo guarantee, and Gallery now has one consolidated header without free-text search. Missing capture dates display as “Undated photos”.
+- Light-mode glass has a clean restrained frosted treatment, header tooltips are no longer clipped, and Gallery/Map thumbnail completion avoids rebuilding unchanged cards or Leaflet geometry.
+- Collections do not decode cover images while loading; one delayed idle thumbnail worker and four EXIF workers protect interaction responsiveness. Light-mode shadows are reduced by 60%.
+- Targeted lint passes. Pending interactive validation: primary route navigation, selection actions, and Detail zoom/slideshow controls.

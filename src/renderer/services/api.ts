@@ -53,12 +53,15 @@ export const getPhotoMetadata = async (path: string): Promise<unknown> => {
 /**
  * Generates a thumbnail for a photo
  */
-export const generateThumbnail = async (path: string): Promise<string | null> => {
+export const generateThumbnail = async (
+  path: string,
+  priority: 'visible' | 'prefetch' = 'visible'
+): Promise<string | null> => {
   if (!window.electronAPI) {
     throw new Error('Electron API not available');
   }
 
-  return window.electronAPI.generateThumbnail(path);
+  return window.electronAPI.generateThumbnail(path, priority);
 };
 
 /**
@@ -164,4 +167,13 @@ export const getAlbumCover = async (albumPath: string) => {
   }
 
   return window.electronAPI.getAlbumCover(albumPath);
+};
+
+/** Removes a folder from PhotoMap Collections without touching its source files. */
+export const removeRecentDirectory = async (directoryPath: string) => {
+  if (!window.electronAPI) {
+    throw new Error('Electron API not available');
+  }
+
+  return window.electronAPI.removeRecentDirectory(directoryPath);
 };

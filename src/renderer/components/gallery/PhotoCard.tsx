@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { memo, useState, useEffect, useRef } from 'react';
 import { MapPin, Calendar, Check } from 'lucide-react';
 import { encodeFilePath } from '../../utils/photoId';
 import { isHeicFile } from '../../../shared/constants/fileTypes';
@@ -230,14 +230,14 @@ const PhotoCard = ({
         {/* Selection indicator */}
         {selectionMode && (
           <div
-            className={`absolute top-2 left-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-smooth animate-scale-in ${
+            className={`absolute top-2 left-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-smooth ${
               isSelected
                 ? 'bg-primary border-primary shadow-lg'
                 : 'bg-black/50 border-white/70 hover:bg-black/70'
             }`}
           >
             {isSelected && (
-              <Check className="w-4 h-4 text-[var(--text-primary)] animate-scale-in" />
+              <Check className="w-4 h-4 text-[var(--text-primary)]" />
             )}
           </div>
         )}
@@ -262,4 +262,4 @@ const PhotoCard = ({
   );
 };
 
-export default PhotoCard;
+export default memo(PhotoCard);

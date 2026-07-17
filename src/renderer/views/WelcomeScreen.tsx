@@ -1,10 +1,10 @@
 import { MapPin, Lock, Sparkles, Camera, Globe, Shield, Loader2 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import { selectDirectory } from '../services/api';
 import { usePhotos } from '../hooks/usePhotos';
+import { useMotionNavigate } from '../hooks/useMotionNavigate';
 import RecentDirectories from '../components/layout/RecentDirectories';
 
 /**
@@ -13,7 +13,7 @@ import RecentDirectories from '../components/layout/RecentDirectories';
  * Uses Liquid Glass Card component for elevated surfaces
  */
 const WelcomeScreen = () => {
-  const navigate = useNavigate();
+  const navigate = useMotionNavigate();
   const { handleScanDirectory, currentDirectory } = usePhotos();
   const [isSelecting, setIsSelecting] = useState(false);
 
@@ -47,14 +47,14 @@ const WelcomeScreen = () => {
         padding="p-8 md:p-12"
         shadow="l3"
         rounded="xl"
-        className="max-w-3xl w-full space-y-10 animate-slide-up"
+        className="max-w-3xl w-full space-y-10 animate-scale-in"
       >
         {/* Welcome message with compelling headline */}
         <div className="text-center space-y-6">
           <div className="space-y-3">
             <div className="flex items-center justify-center gap-2 mb-2">
               <Camera className="w-8 h-8 text-[var(--color-primary)]" />
-              <Sparkles className="w-6 h-6 text-[var(--color-primary)] animate-pulse" />
+              <Sparkles className="w-6 h-6 text-[var(--color-primary)]" />
             </div>
             <h1 className="text-5xl md:text-6xl font-bold text-[var(--text-primary)] leading-tight">
               Relive Your Memories

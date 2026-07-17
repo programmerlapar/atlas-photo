@@ -38,9 +38,9 @@ export const processPhotos = async (
     onProgress({ stage: 'metadata', current: 0, total: photos.length });
   }
 
-  // EXIF parsing is CPU/IO bound. A small pool makes cold imports practical
-  // without opening thousands of parsers for a large library.
-  const workerCount = Math.min(8, Math.max(1, photos.length));
+  // EXIF parsing runs JavaScript work in the main process. Four workers retain
+  // good import throughput without saturating the machine and delaying clicks.
+  const workerCount = Math.min(4, Math.max(1, photos.length));
   let nextIndex = 0;
   let completed = 0;
   const processNext = async (): Promise<void> => {

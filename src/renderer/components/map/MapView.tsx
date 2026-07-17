@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import * as Leaflet from 'leaflet';
 import { DivIcon, LatLngBounds } from 'leaflet';
@@ -101,9 +101,11 @@ const getPhotoTimestamp = (photo: Photo): number => {
  */
 const ClusteredPhotoMarkers = ({
   photos,
+  thumbnailPaths,
   onClusterClick,
 }: {
   photos: Photo[];
+  thumbnailPaths: Record<string, string>;
   onClusterClick?: (clusterPhotos: Photo[]) => void;
 }) => {
   const map = useMap();
@@ -174,19 +176,24 @@ const ClusteredPhotoMarkers = ({
     const icons = new Map<string, DivIcon>();
     const markerSize = 80;
     for (const cluster of clusters) {
-      const signature = `${cluster.photo.thumbnailPath || ''}:${cluster.count}:${markerSize}`;
+      const thumbnailPath = thumbnailPaths[cluster.photo.path] || cluster.photo.thumbnailPath;
+      const signature = `${thumbnailPath || ''}:${cluster.count}:${markerSize}`;
       const cached = iconCache.current.get(cluster.id);
       if (cached?.signature === signature) {
         icons.set(cluster.id, cached.icon);
         continue;
       }
 
-      const icon = PhotoMarker.createIcon(cluster.photo, cluster.count, markerSize);
+      const icon = PhotoMarker.createIcon(
+        thumbnailPath ? { ...cluster.photo, thumbnailPath } : cluster.photo,
+        cluster.count,
+        markerSize
+      );
       iconCache.current.set(cluster.id, { signature, icon });
       icons.set(cluster.id, icon);
     }
     return icons;
-  }, [clusters]);
+  }, [clusters, thumbnailPaths]);
 
   // Keep removed markers mounted briefly so merging markers fade away instead
   // of abruptly disappearing while their nearby photos resolve into view.
@@ -233,7 +240,12 @@ const ClusteredPhotoMarkers = ({
           opacity={cluster.phase === 'entering' || cluster.phase === 'leaving' ? 0 : 1}
           interactive={cluster.phase !== 'leaving'}
           eventHandlers={{
-            click: () => onClusterClick?.(cluster.photos),
+            click: () => onClusterClick?.(
+              cluster.photos.map((photo) => {
+                const thumbnailPath = thumbnailPaths[photo.path] || photo.thumbnailPath;
+                return thumbnailPath ? { ...photo, thumbnailPath } : photo;
+              })
+            ),
           }}
         />
       ))}
@@ -303,14 +315,54 @@ export interface MapViewProps {
 const MapView = ({ photos, onClusterClick }: MapViewProps) => {
   const [isMapReady, setIsMapReady] = useState(false);
   const [thumbnailPaths, setThumbnailPaths] = useState<Record<string, string>>({});
+  const pendingThumbnailPaths = useRef(new Map<string, string>());
+  const thumbnailFlushTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const photosWithLocation = useMemo(
-    () => photos.filter((photo) => photo.metadata?.location !== undefined),
+  const locationSignature = useMemo(
+    () => photos
+      .filter((photo) => photo.metadata?.location)
+      .map((photo) => `${photo.id}:${photo.metadata!.location!.latitude}:${photo.metadata!.location!.longitude}`)
+      .join('|'),
     [photos]
   );
-  const mapPhotoKey = photosWithLocation.map((photo) => photo.id).join('|');
+  const [photosWithLocation, setPhotosWithLocation] = useState(() =>
+    photos.filter((photo) => photo.metadata?.location !== undefined)
+  );
+
+  // Thumbnail paths must not rebuild map geometry. Keep the stable location
+  // set until an id/coordinate actually changes.
+  useEffect(() => {
+    setPhotosWithLocation(photos.filter((photo) => photo.metadata?.location !== undefined));
+  }, [locationSignature]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const mapPhotoKey = useMemo(
+    () => photosWithLocation.map((photo) => photo.id).join('|'),
+    [photosWithLocation]
+  );
 
   useEffect(() => {
+    const flushThumbnailPaths = () => {
+      thumbnailFlushTimer.current = null;
+      const updates = Object.fromEntries(pendingThumbnailPaths.current);
+      pendingThumbnailPaths.current.clear();
+      setThumbnailPaths((current) => {
+        let changed = false;
+        for (const [path, thumbnailPath] of Object.entries(updates)) {
+          if (current[path] !== thumbnailPath) {
+            changed = true;
+            break;
+          }
+        }
+        return changed ? { ...current, ...updates } : current;
+      });
+    };
+    const queueThumbnailPath = (path: string, thumbnailPath: string) => {
+      pendingThumbnailPaths.current.set(path, thumbnailPath);
+      if (thumbnailFlushTimer.current === null) {
+        thumbnailFlushTimer.current = setTimeout(flushThumbnailPaths, 350);
+      }
+    };
+
     let cancelled = false;
     const cachedPaths: Record<string, string> = {};
     const missingPhotos = photosWithLocation.filter((photo) => {
@@ -330,32 +382,22 @@ const MapView = ({ photos, onClusterClick }: MapViewProps) => {
     const loadNext = async (): Promise<void> => {
       while (!cancelled && nextIndex < missingPhotos.length) {
         const photo = missingPhotos[nextIndex++];
-        const thumbnailPath = await generateThumbnail(photo.path);
-        if (!cancelled && thumbnailPath) {
-          setThumbnailPaths((current) =>
-            current[photo.path] === thumbnailPath
-              ? current
-              : { ...current, [photo.path]: thumbnailPath }
-          );
-        }
+        const thumbnailPath = await generateThumbnail(photo.path, 'prefetch');
+        if (!cancelled && thumbnailPath) queueThumbnailPath(photo.path, thumbnailPath);
       }
     };
 
-    void Promise.all(Array.from({ length: Math.min(4, missingPhotos.length) }, loadNext));
+    void loadNext();
     return () => {
       cancelled = true;
     };
-    // Re-run only when the map's photo set changes, not as each thumbnail lands.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapPhotoKey]);
+    // Re-run only when the map's geometry changes, not as thumbnails land.
+  }, [mapPhotoKey, photosWithLocation]);
 
-  const mapPhotos = useMemo(
-    () => photosWithLocation.map((photo) => ({
-      ...photo,
-      thumbnailPath: photo.thumbnailPath || thumbnailPaths[photo.path] || getCachedThumbnail(photo.path),
-    })),
-    [photosWithLocation, thumbnailPaths]
-  );
+  useEffect(() => () => {
+    if (thumbnailFlushTimer.current !== null) clearTimeout(thumbnailFlushTimer.current);
+  }, []);
+
   if (photosWithLocation.length === 0) {
     return (
       <div className="w-full h-full bg-[var(--bg-primary)] flex items-center justify-center">
@@ -421,7 +463,11 @@ const MapView = ({ photos, onClusterClick }: MapViewProps) => {
         />
         <MapBoundsFitter photos={photosWithLocation} />
         <SmoothWheelZoom />
-        <ClusteredPhotoMarkers photos={mapPhotos} onClusterClick={onClusterClick} />
+        <ClusteredPhotoMarkers
+          photos={photosWithLocation}
+          thumbnailPaths={thumbnailPaths}
+          onClusterClick={onClusterClick}
+        />
       </MapContainer>
       <div className="absolute bottom-2 right-2 z-[450] rounded-full border border-white/70 bg-white/72 px-2.5 py-1 text-[10px] font-medium text-[#527080] shadow-[0_2px_8px_rgba(37,99,120,0.12)] backdrop-blur-md">
         <a
@@ -463,4 +509,20 @@ const MapView = ({ photos, onClusterClick }: MapViewProps) => {
   );
 };
 
-export default MapView;
+const hasSameMapGeometry = (left: Photo[], right: Photo[]): boolean => {
+  const leftLocations = left.filter((photo) => photo.metadata?.location);
+  const rightLocations = right.filter((photo) => photo.metadata?.location);
+  return leftLocations.length === rightLocations.length && leftLocations.every((photo, index) => {
+    const candidate = rightLocations[index];
+    return photo.id === candidate.id
+      && photo.metadata!.location!.latitude === candidate.metadata!.location!.latitude
+      && photo.metadata!.location!.longitude === candidate.metadata!.location!.longitude;
+  });
+};
+
+// Ignore thumbnail-only store updates from the parent. This component owns
+// compact marker-image batches, so Leaflet never rebuilds its spatial layer.
+export default memo(MapView, (previous, next) =>
+  previous.onClusterClick === next.onClusterClick
+  && hasSameMapGeometry(previous.photos, next.photos)
+);

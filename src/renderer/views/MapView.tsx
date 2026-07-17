@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { usePhotos } from '../hooks/usePhotos';
+import { useMotionNavigate } from '../hooks/useMotionNavigate';
 import { encodePhotoId } from '../utils/photoId';
 import MapView from '../components/map/MapView';
 import PhotoClusterSheet from '../components/map/PhotoClusterSheet';
@@ -12,7 +13,7 @@ import type { Photo } from '../../shared/types/photo';
  * Full-screen map showing photo locations
  */
 const MapViewPage = () => {
-  const navigate = useNavigate();
+  const navigate = useMotionNavigate();
   const location = useLocation();
   const { photos } = usePhotos();
   const [nearbyPhotos, setNearbyPhotos] = useState<Photo[] | null>(null);
@@ -39,23 +40,23 @@ const MapViewPage = () => {
     }
   }, [location.pathname, location.state, navigate, photos]);
 
-  const handleClusterClick = (clusterPhotos: Photo[]) => {
-    if (clusterPhotos.length === 1) {
-      handlePhotoSelect(clusterPhotos[0]);
-      return;
-    }
-
-    setNearbyPhotos(clusterPhotos);
-  };
-
-  const handlePhotoSelect = (photo: Photo) => {
+  const handlePhotoSelect = useCallback((photo: Photo) => {
     navigate(`/detail/${encodePhotoId(photo.id)}`, {
       state: {
         returnTo: '/map',
         clusterPhotoIds: nearbyPhotos?.map((nearbyPhoto) => nearbyPhoto.id),
       },
     });
-  };
+  }, [navigate, nearbyPhotos]);
+
+  const handleClusterClick = useCallback((clusterPhotos: Photo[]) => {
+    if (clusterPhotos.length === 1) {
+      handlePhotoSelect(clusterPhotos[0]);
+      return;
+    }
+
+    setNearbyPhotos(clusterPhotos);
+  }, [handlePhotoSelect]);
 
   const handleBack = () => {
     if (window.history.length > 1) {

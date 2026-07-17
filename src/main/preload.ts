@@ -4,6 +4,8 @@ import type { Photo } from '../../shared/types/photo';
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
 contextBridge.exposeInMainWorld('electronAPI', {
+  windowControl: (action: 'minimize' | 'maximize' | 'close') =>
+    ipcRenderer.invoke('window-control', action) as Promise<boolean>,
   // Directory operations
   selectDirectory: () =>
     ipcRenderer.invoke('select-directory') as Promise<string | null>,
@@ -19,8 +21,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('get-photo-metadata', path) as Promise<unknown>,
 
   // Thumbnail operations
-  generateThumbnail: (path: string) =>
-    ipcRenderer.invoke('generate-thumbnail', path) as Promise<string | null>,
+  generateThumbnail: (path: string, priority?: 'visible' | 'prefetch') =>
+    ipcRenderer.invoke('generate-thumbnail', path, priority) as Promise<string | null>,
 
   // Directory state
   getCurrentDirectory: () =>

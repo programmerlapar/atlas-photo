@@ -59,7 +59,9 @@ export const usePhotos = () => {
         const updates = Object.fromEntries(queuedThumbnails);
         queuedThumbnails.clear();
         updatePhotoThumbnails(updates);
-      }, 120);
+      // Completing a thumbnail should never force the whole album/map through
+      // a render per file. Cards still update from their own request promise.
+      }, 300);
     });
 
     // Cleanup listeners on unmount
