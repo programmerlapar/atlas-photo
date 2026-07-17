@@ -50,13 +50,13 @@ const GalleryView = () => {
   // Check if we're in "All" view mode
   const isAllView = new URLSearchParams(location.search).get('view') === 'all';
 
-  const {
-    groupBy,
-    applyFilters,
-  } = useFilterStore();
+  const { groupBy, applyFilters } = useFilterStore();
 
   // Apply filters and sorting (must be declared before handlers that use it)
-  const filteredPhotos = useMemo(() => applyFilters(photos), [applyFilters, photos]);
+  const filteredPhotos = useMemo(
+    () => applyFilters(photos),
+    [applyFilters, photos]
+  );
 
   useEffect(() => {
     // Load photos based on view mode
@@ -205,11 +205,14 @@ const GalleryView = () => {
     true
   );
 
-  const handlePhotoClick = useCallback((photo: Photo) => {
-    if (!selectionMode) {
-      navigate(`/detail/${encodePhotoId(photo.id)}`);
-    }
-  }, [navigate, selectionMode]);
+  const handlePhotoClick = useCallback(
+    (photo: Photo) => {
+      if (!selectionMode) {
+        navigate(`/detail/${encodePhotoId(photo.id)}`);
+      }
+    },
+    [navigate, selectionMode]
+  );
 
   const handleMapViewToggle = () => {
     navigate('/map');
@@ -232,7 +235,7 @@ const GalleryView = () => {
 
   if (isLoading && photos.length === 0) {
     return (
-      <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col">
+      <div className="photos-gallery-page flex flex-col">
         <Toolbar
           onMapViewToggle={handleMapViewToggle}
           onDirectoryChange={handleDirectoryChange}
@@ -241,23 +244,23 @@ const GalleryView = () => {
           subtitle="Preparing your photos"
           onBack={handleBackToAlbums}
         />
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="photos-gallery-scroll flex-1 overflow-y-auto p-5">
           <div className="space-y-4 mb-6">
             <Skeleton height={24} width="200px" />
             <Skeleton height={20} width="150px" />
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+          <div className="photo-aspect-row">
             {Array.from({ length: 20 }).map((_, index) => (
               <Skeleton
                 key={index}
                 height="100%"
-                className="aspect-square"
+                className="h-32 w-40"
                 variant="rectangular"
               />
             ))}
           </div>
         </div>
-        <div className="fixed bottom-0 left-0 right-0 glass-surface-2 border-t border-[var(--border-default)] p-4">
+        <div className="photos-loading-status">
           <div className="flex items-center justify-center gap-4">
             <Loader2 className="w-5 h-5 text-primary animate-spin" />
             <div className="text-center space-y-1">
@@ -285,7 +288,9 @@ const GalleryView = () => {
     return (
       <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
         <div className="glass-surface-2 rounded-md shadow-l2 p-8 max-w-md text-center space-y-4">
-          <p className="text-lg text-[var(--color-error)] font-semibold">Error</p>
+          <p className="text-lg text-[var(--color-error)] font-semibold">
+            Error
+          </p>
           <p className="text-[var(--text-secondary)]">{error}</p>
           <Button onClick={handleBackToAlbums} variant="secondary">
             Go Back to Albums
@@ -307,7 +312,9 @@ const GalleryView = () => {
         >
           <FolderOpen className="w-16 h-16 mx-auto text-[var(--text-tertiary)]" />
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-[var(--text-primary)]">No Photos Found</h2>
+            <h2 className="text-2xl font-bold text-[var(--text-primary)]">
+              No Photos Found
+            </h2>
             <p className="text-[var(--text-tertiary)]">
               Select a directory to start browsing your photos
             </p>
@@ -333,7 +340,7 @@ const GalleryView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col">
+    <div className="photos-gallery-page flex flex-col">
       <Toolbar
         onMapViewToggle={handleMapViewToggle}
         onDirectoryChange={handleDirectoryChange}
@@ -343,14 +350,18 @@ const GalleryView = () => {
         selectedCount={selectedPhotoIds.length}
         currentDirectory={currentDirectory || undefined}
         title={getViewTitle()}
-        subtitle={isAllView ? 'All collections' : `${filteredPhotos.length} ${filteredPhotos.length === 1 ? 'photo' : 'photos'}`}
+        subtitle={
+          isAllView
+            ? 'All collections'
+            : `${filteredPhotos.length} ${filteredPhotos.length === 1 ? 'photo' : 'photos'}`
+        }
         onBack={handleBackToAlbums}
         onViewAll={isAllView ? undefined : () => navigate('/gallery?view=all')}
       />
 
       {/* Main content */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="p-6 pb-24">
+      <div className="photos-gallery-scroll flex-1 overflow-y-auto">
+        <div className="photos-gallery-content">
           {filteredPhotos.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-lg text-[var(--text-tertiary)]">
@@ -368,19 +379,20 @@ const GalleryView = () => {
               groupBy={groupBy}
             />
           )}
+          {!selectionMode && <StatusBar photos={photos} />}
         </div>
       </div>
 
       {/* Filter Panel */}
       {showFilterPanel && (
-        <div className="fixed right-0 top-16 bottom-12 z-30">
+        <div className="photos-filter-panel z-30">
           <FilterPanel onClose={() => setShowFilterPanel(false)} />
         </div>
       )}
 
       {/* Metadata Preview (on hover) */}
       {hoveredPhoto && (
-        <div className="fixed bottom-24 left-6 z-20 pointer-events-none">
+        <div className="photos-hover-preview pointer-events-none">
           <FloatingLiquidContainer className="w-fit">
             <MetadataPreview photo={hoveredPhoto} />
           </FloatingLiquidContainer>
@@ -401,9 +413,6 @@ const GalleryView = () => {
           isProcessing={isProcessingBatch}
         />
       )}
-
-      {/* Status Bar */}
-      {!selectionMode && <StatusBar photos={photos} />}
     </div>
   );
 };

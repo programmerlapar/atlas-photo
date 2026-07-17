@@ -33,31 +33,25 @@ const StatusBar = ({ photos }: StatusBarProps) => {
       : null;
 
   return (
-    <div className="glass-surface-2 border-t border-[var(--border-default)] sticky bottom-0 z-10 shadow-l2">
-      <div className="flex items-center justify-between h-12 px-6">
-        {/* Left section - Counts */}
-        <div className="flex items-center gap-6 text-sm text-[var(--text-tertiary)]">
-          <div className="flex items-center gap-2">
-            <span>{photos.length}</span>
-            <span>{photos.length === 1 ? 'photo' : 'photos'}</span>
-          </div>
-          {photosWithLocation > 0 && (
-            <div className="flex items-center gap-2">
-              <MapPin className="w-4 h-4" />
-              <span>{photosWithLocation} with location</span>
-            </div>
-          )}
-        </div>
-
-        {/* Right section - Date range */}
+    <footer className="photos-status" aria-label="Photo collection summary">
+      <p className="photos-status-primary">
+        {photos.length} {photos.length === 1 ? 'photo' : 'photos'}
+      </p>
+      <div className="photos-status-secondary">
+        {photosWithLocation > 0 && (
+          <span>
+            <MapPin className="h-3.5 w-3.5" />
+            {photosWithLocation} with location
+          </span>
+        )}
         {dateRange && (
-          <div className="flex items-center gap-2 text-sm text-[var(--text-tertiary)]">
-            <Calendar className="w-4 h-4" />
-            <span>{dateRange}</span>
-          </div>
+          <span>
+            <Calendar className="h-3.5 w-3.5" />
+            {dateRange}
+          </span>
         )}
       </div>
-    </div>
+    </footer>
   );
 };
 

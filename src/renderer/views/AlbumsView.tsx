@@ -1,9 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { FolderOpen, Plus, Grid3x3, Image as ImageIcon, SlidersHorizontal, ImagePlus, MoreHorizontal, Trash2, X } from 'lucide-react';
+import {
+  FolderOpen,
+  Plus,
+  Grid3x3,
+  Image as ImageIcon,
+  SlidersHorizontal,
+  ImagePlus,
+  MoreHorizontal,
+  Trash2,
+  X,
+} from 'lucide-react';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
-import { selectDirectory, getAlbumInfo, getAlbumCover, removeRecentDirectory } from '../services/api';
+import {
+  selectDirectory,
+  getAlbumInfo,
+  getAlbumCover,
+  removeRecentDirectory,
+} from '../services/api';
 import { usePhotos } from '../hooks/usePhotos';
 import { useMotionNavigate } from '../hooks/useMotionNavigate';
 import { usePreferencesStore } from '../stores/preferencesStore';
@@ -34,18 +49,24 @@ const AlbumsView = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [showSlider, setShowSlider] = useState(false);
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; album: Album } | null>(null);
-  const [albumPendingRemoval, setAlbumPendingRemoval] = useState<Album | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    x: number;
+    y: number;
+    album: Album;
+  } | null>(null);
+  const [albumPendingRemoval, setAlbumPendingRemoval] = useState<Album | null>(
+    null
+  );
   const [isRemovingAlbum, setIsRemovingAlbum] = useState(false);
   const contextMenuRef = useRef<HTMLDivElement>(null);
 
   /**
    * Gets responsive grid columns using CSS custom properties for continuous control
    * This provides smoother transitions between sizes
-   * 
+   *
    * Size 0 = large (largest cards ~400px, fewest columns)
    * Size 100 = compact (smallest cards ~150px, most columns)
-   * 
+   *
    * Note: Inverted from original - slider at 0 = large cards, slider at 100 = compact cards
    * This matches user feedback that "large ones is the compact ones"
    */
@@ -53,7 +74,7 @@ const AlbumsView = () => {
     // Calculate card size: 0 = 400px (large), 100 = 150px (compact)
     // Size decreases as slider value increases (large to compact)
     const cardSize = 400 - (albumGridSize / 100) * 250; // 400 to 150
-    
+
     // Use CSS custom property for smooth transitions
     // CSS Grid transitions work better with CSS variables
     return {
@@ -75,23 +96,24 @@ const AlbumsView = () => {
     try {
       setIsLoading(true);
       const recentDirs = await window.electronAPI.getRecentDirectories();
-      
+
       // Convert directories to albums with info
       const albumsData: Album[] = await Promise.all(
         recentDirs.map(async (path: string) => {
           const folderName = path.split(/[/\\]/).filter(Boolean).pop();
           const name = folderName?.trim() || 'Untitled Collection';
-          
+
           const [customCover, albumInfo] = await Promise.all([
             getAlbumCover(path),
             getAlbumInfo(path),
           ]);
-          
+
           return {
             path,
             name,
             photoCount: albumInfo.photoCount,
-            thumbnailPath: customCover.thumbnailPath || albumInfo.thumbnailPath || undefined,
+            thumbnailPath:
+              customCover.thumbnailPath || albumInfo.thumbnailPath || undefined,
           };
         })
       );
@@ -162,7 +184,9 @@ const AlbumsView = () => {
     try {
       const result = await removeRecentDirectory(albumPendingRemoval.path);
       if (result.success) {
-        setAlbums((current) => current.filter((album) => album.path !== albumPendingRemoval.path));
+        setAlbums((current) =>
+          current.filter((album) => album.path !== albumPendingRemoval.path)
+        );
         setAlbumPendingRemoval(null);
       } else {
         console.error('Unable to remove collection:', result.error);
@@ -181,7 +205,10 @@ const AlbumsView = () => {
   // Close context menu on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (contextMenuRef.current && !contextMenuRef.current.contains(event.target as Node)) {
+      if (
+        contextMenuRef.current &&
+        !contextMenuRef.current.contains(event.target as Node)
+      ) {
         setContextMenu(null);
       }
     };
@@ -194,21 +221,21 @@ const AlbumsView = () => {
     }
   }, [contextMenu]);
 
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col p-6">
-        <div className="max-w-7xl mx-auto w-full space-y-8">
+      <div className="albums-view">
+        <div className="albums-content space-y-6">
           <div className="space-y-2">
             <Skeleton height={32} width="200px" />
             <Skeleton height={20} width="300px" />
           </div>
-          <div
-            className="grid gap-4"
-            style={getGridColumnsCSS()}
-          >
+          <div className="grid gap-4" style={getGridColumnsCSS()}>
             {Array.from({ length: 10 }).map((_, index) => (
-              <Skeleton key={index} height="200px" className="aspect-square rounded-md" />
+              <Skeleton
+                key={index}
+                height="200px"
+                className="aspect-square rounded-md"
+              />
             ))}
           </div>
         </div>
@@ -217,54 +244,50 @@ const AlbumsView = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col p-6">
-      <div className="max-w-7xl mx-auto w-full space-y-8">
+    <div className="albums-view">
+      <div className="albums-content space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <header className="albums-header">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold text-[var(--text-primary)]">Albums</h1>
-            <p className="text-[var(--text-tertiary)]">
+            <h1 className="text-xl font-semibold text-[var(--photos-primary-text)]">
+              Albums
+            </h1>
+            <p className="text-[13px] text-[var(--photos-secondary-text)]">
               {albums.length === 0
                 ? 'No albums yet. Add your first directory to get started.'
                 : `${albums.length} ${albums.length === 1 ? 'album' : 'albums'}`}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="albums-header-actions">
             {albums.length > 0 && (
               <>
-                <Button
+                <button
                   onClick={() => setShowSlider(!showSlider)}
-                  variant="secondary"
-                  size="md"
-                  className="flex items-center gap-2"
+                  className={`albums-action-button ${showSlider ? 'albums-action-button-active' : ''}`}
                   title="Adjust album card size"
                 >
                   <SlidersHorizontal className="w-4 h-4" />
                   <span>Size</span>
-                </Button>
-                <Button
+                </button>
+                <button
                   onClick={handleViewAll}
-                  variant="secondary"
-                  size="md"
-                  className="flex items-center gap-2"
+                  className="albums-action-button"
                 >
                   <Grid3x3 className="w-4 h-4" />
                   <span>View All</span>
-                </Button>
+                </button>
               </>
             )}
-            <Button
+            <button
               onClick={handleAddAlbum}
-              variant="primary"
-              size="md"
               disabled={isAdding}
-              className="flex items-center gap-2"
+              className="albums-action-button albums-add-button"
             >
               <Plus className="w-4 h-4" />
               <span>{isAdding ? 'Adding...' : 'Add Album'}</span>
-            </Button>
+            </button>
           </div>
-        </div>
+        </header>
 
         {/* Size Slider */}
         {showSlider && albums.length > 0 && (
@@ -273,7 +296,7 @@ const AlbumsView = () => {
             padding="p-4"
             shadow="l2"
             rounded="md"
-            className="flex items-center gap-4"
+            className="albums-size-panel flex items-center gap-4"
           >
             <div className="flex items-center gap-2 flex-1">
               <SlidersHorizontal className="w-4 h-4 text-neutral-400" />
@@ -281,9 +304,15 @@ const AlbumsView = () => {
             </div>
             <div className="flex-1 max-w-xs">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-[var(--text-tertiary)]">Large</span>
-                <span className="text-xs text-[var(--text-tertiary)]">Medium</span>
-                <span className="text-xs text-[var(--text-tertiary)]">Compact</span>
+                <span className="text-xs text-[var(--text-tertiary)]">
+                  Large
+                </span>
+                <span className="text-xs text-[var(--text-tertiary)]">
+                  Medium
+                </span>
+                <span className="text-xs text-[var(--text-tertiary)]">
+                  Compact
+                </span>
               </div>
               <input
                 type="range"
@@ -295,13 +324,13 @@ const AlbumsView = () => {
                   const value = parseInt((e.target as HTMLInputElement).value);
                   setAlbumGridSize(value);
                 }}
-                className="w-full h-2 bg-[var(--glass-bg-1)] rounded-full appearance-none cursor-pointer accent-primary"
+                className="w-full h-2 rounded-full appearance-none cursor-pointer accent-primary"
                 style={{
                   background: `linear-gradient(to right, 
                     var(--color-primary) 0%, 
                     var(--color-primary) ${albumGridSize}%, 
                     rgba(255,255,255,0.1) ${albumGridSize}%, 
-                    rgba(255,255,255,0.1) 100%)`
+                    rgba(255,255,255,0.1) 100%)`,
                 }}
               />
               <div className="flex items-center justify-center mt-1">
@@ -322,23 +351,29 @@ const AlbumsView = () => {
             padding="p-12"
             shadow="l2"
             rounded="md"
-            className="max-w-md mx-auto text-center space-y-6"
+            className="albums-empty-state max-w-md mx-auto text-center space-y-6"
           >
             <FolderOpen className="w-16 h-16 mx-auto text-neutral-400" />
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-[var(--text-primary)]">No Albums Yet</h2>
+              <h2 className="text-2xl font-bold text-[var(--text-primary)]">
+                No Albums Yet
+              </h2>
               <p className="text-[var(--text-tertiary)]">
                 Add your first directory to start organizing your photos
               </p>
             </div>
-            <Button onClick={handleAddAlbum} variant="primary" disabled={isAdding}>
+            <Button
+              onClick={handleAddAlbum}
+              variant="primary"
+              disabled={isAdding}
+            >
               <Plus className="w-4 h-4 mr-2" />
               {isAdding ? 'Adding...' : 'Add Your First Album'}
             </Button>
           </Card>
         ) : (
           <div
-            className="grid gap-4 grid-resize-transition"
+            className="albums-grid grid gap-4 grid-resize-transition"
             style={getGridColumnsCSS()}
           >
             {albums.map((album) => (
@@ -348,19 +383,22 @@ const AlbumsView = () => {
                 padding="p-0"
                 shadow="l1"
                 rounded="md"
-                className="overflow-hidden cursor-pointer hover:shadow-l2 hover:-translate-y-1 album-card-transition group relative"
+                className="album-card overflow-hidden cursor-pointer album-card-transition group relative"
                 onClick={() => handleAlbumClick(album)}
                 onContextMenu={(e) => handleAlbumContextMenu(e, album)}
               >
                 {/* Album Thumbnail */}
-                <div className="aspect-square bg-gradient-to-br from-primary/20 to-primary/5 relative overflow-hidden">
+                <div className="aspect-[4/3] bg-gradient-to-br from-primary/20 to-primary/5 relative overflow-hidden">
                   {album.thumbnailPath ? (
                     <img
                       src={`photomap://${encodeFilePath(album.thumbnailPath)}`}
                       alt={album.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        console.error('[AlbumsView] Error loading album thumbnail:', album.thumbnailPath);
+                        console.error(
+                          '[AlbumsView] Error loading album thumbnail:',
+                          album.thumbnailPath
+                        );
                         // Fallback to icon if image fails to load
                         e.currentTarget.style.display = 'none';
                       }}
@@ -380,10 +418,15 @@ const AlbumsView = () => {
                   <button
                     onClick={(event) => {
                       event.stopPropagation();
-                      const bounds = event.currentTarget.getBoundingClientRect();
-                      setContextMenu({ x: bounds.right - 184, y: bounds.bottom + 6, album });
+                      const bounds =
+                        event.currentTarget.getBoundingClientRect();
+                      setContextMenu({
+                        x: bounds.right - 184,
+                        y: bounds.bottom + 6,
+                        album,
+                      });
                     }}
-                    className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full border border-white/30 bg-black/35 text-white shadow-sm backdrop-blur-md transition-colors hover:bg-black/55 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                    className="album-card-more"
                     aria-label={`More options for ${album.name}`}
                     title="Collection options"
                   >
@@ -392,11 +435,14 @@ const AlbumsView = () => {
                 </div>
 
                 {/* Album Info */}
-                <div className="p-4 space-y-2">
-                  <h3 className="text-sm font-semibold text-[var(--text-primary)] truncate" title={album.name}>
+                <div className="album-card-info">
+                  <h3
+                    className="text-[15px] font-semibold text-[var(--photos-primary-text)] truncate"
+                    title={album.name}
+                  >
                     {album.name}
                   </h3>
-                  <div className="flex items-center gap-2 text-xs text-[var(--text-tertiary)]">
+                  <div className="flex items-center gap-2 text-xs text-[var(--photos-secondary-text)]">
                     <Grid3x3 className="w-3 h-3" />
                     <span>
                       {album.photoCount > 0
@@ -452,7 +498,12 @@ const AlbumsView = () => {
           </div>
         )}
         {albumPendingRemoval && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="remove-collection-title">
+          <div
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="remove-collection-title"
+          >
             <button
               className="absolute inset-0 bg-black/55 backdrop-blur-sm"
               onClick={() => !isRemovingAlbum && setAlbumPendingRemoval(null)}
@@ -470,15 +521,33 @@ const AlbumsView = () => {
               <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-red-500/15 text-red-300">
                 <Trash2 className="h-5 w-5" />
               </div>
-              <h2 id="remove-collection-title" className="text-lg font-semibold text-[var(--text-primary)]">
+              <h2
+                id="remove-collection-title"
+                className="text-lg font-semibold text-[var(--text-primary)]"
+              >
                 Remove “{albumPendingRemoval.name}”?
               </h2>
               <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">
-                This only removes the collection from PhotoMap. Your {albumPendingRemoval.photoCount === 1 ? 'photo and its folder stay' : 'photos and their folder stay'} exactly where they are.
+                This only removes the collection from PhotoMap. Your{' '}
+                {albumPendingRemoval.photoCount === 1
+                  ? 'photo and its folder stay'
+                  : 'photos and their folder stay'}{' '}
+                exactly where they are.
               </p>
               <div className="mt-6 flex justify-end gap-3">
-                <Button variant="secondary" onClick={() => setAlbumPendingRemoval(null)} disabled={isRemovingAlbum}>Cancel</Button>
-                <Button variant="primary" onClick={handleRemoveAlbum} disabled={isRemovingAlbum} className="bg-red-600 hover:bg-red-500">
+                <Button
+                  variant="secondary"
+                  onClick={() => setAlbumPendingRemoval(null)}
+                  disabled={isRemovingAlbum}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="primary"
+                  onClick={handleRemoveAlbum}
+                  disabled={isRemovingAlbum}
+                  className="bg-red-600 hover:bg-red-500"
+                >
                   {isRemovingAlbum ? 'Removing...' : 'Remove Collection'}
                 </Button>
               </div>

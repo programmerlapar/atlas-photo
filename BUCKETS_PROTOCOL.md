@@ -56,6 +56,7 @@ Touching files: GalleryView.tsx (renderer/views), DetailView.tsx (renderer/views
 - Collections now use their imported folder name (or `Untitled Collection` only if no usable folder name exists), retain accurate indexed photo counts when a custom cover is set, and expose an explicit “Remove from Collections” confirmation that guarantees source photos and folders remain untouched.
 - Gallery has one consolidated liquid-glass header for back navigation, album context, actions, and View All. The unsupported free-text “Search photos” control was removed; undated groups are labelled “Undated photos” instead of “Unknown Date”.
 - Light-mode glass now uses a bright, restrained frosted surface without the dark displacement/filter artifact. Header blur is capped at 20 px; all light-mode surface and glass shadows are reduced by 60%; header tooltips escape the glass boundary and appear above controls. Interactive buttons/links consistently show a pointer cursor.
+- Desktop shell follow-up: the Electron window is frameless with renderer-owned minimize, maximize, and close controls. Library and Albums live in a compact floating glass sidebar, Settings is a sidebar popover, Gallery and Map headers are floating glass pills, and the inherited `**:drop-shadow-sm` filter was removed.
 
 **Manual validation remaining:** verify route motion from Welcome → Albums → Gallery → Detail and back, selection actions on narrow and wide windows, Detail zoom/slideshow controls, and reduced-motion behavior.
 

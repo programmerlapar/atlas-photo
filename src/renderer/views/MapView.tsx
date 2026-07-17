@@ -68,9 +68,9 @@ const MapViewPage = () => {
   };
 
   return (
-    <div className="w-full h-screen bg-[var(--bg-primary)] flex flex-col relative">
-      {/* A single contextual back action is more reliable than a duplicate Gallery button. */}
-      <header className="z-10 border-b border-white/70 bg-white/72 backdrop-blur-2xl shadow-[0_4px_20px_rgba(37,99,120,0.12)]">
+    <div className="relative h-screen w-full overflow-hidden bg-[var(--bg-primary)]">
+      {/* A compact floating context pill keeps the map visually unobstructed. */}
+      <header className="absolute left-4 right-24 top-3 z-[600] rounded-2xl border border-white/70 bg-white/72 shadow-[0_4px_20px_rgba(37,99,120,0.05)] backdrop-blur-2xl">
         <div className="grid h-[68px] grid-cols-[44px_1fr_44px] items-center px-4">
           <button
             onClick={handleBack}
@@ -88,7 +88,7 @@ const MapViewPage = () => {
       </header>
 
       {/* Map */}
-      <div className="flex-1 relative">
+      <div className="h-full w-full relative">
         <MapView photos={photos} onClusterClick={handleClusterClick} />
         {nearbyPhotos && (
           <PhotoClusterSheet

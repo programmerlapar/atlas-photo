@@ -51,24 +51,33 @@ const App = () => {
     );
   }
 
-  const showSidebar = ['/albums', '/gallery', '/settings'].includes(location.pathname)
-    || (location.pathname === '/' && hasAlbums);
+  const showSidebar =
+    ['/albums', '/gallery', '/settings'].includes(location.pathname) ||
+    (location.pathname === '/' && hasAlbums);
+  const integratedToolbar =
+    ['/albums', '/gallery'].includes(location.pathname) ||
+    (location.pathname === '/' && hasAlbums);
 
   return (
-    <div className="min-h-screen bg-(--bg-primary) transition-colors duration-300">
-      <AppChrome showSidebar={showSidebar} />
-      <main className={`desktop-route-content ${showSidebar ? 'desktop-route-content-with-sidebar' : ''}`}>
-      <Routes>
-        <Route
-          path="/"
-          element={hasAlbums ? <AlbumsView /> : <WelcomeScreen />}
-        />
-        <Route path="/albums" element={<AlbumsView />} />
-        <Route path="/gallery" element={<GalleryView />} />
-        <Route path="/detail/:photoId" element={<DetailView />} />
-        <Route path="/map" element={<MapViewPage />} />
-        <Route path="/settings" element={<SettingsView />} />
-      </Routes>
+    <div className="app-root min-h-screen transition-colors duration-300">
+      <AppChrome
+        showSidebar={showSidebar}
+        integratedToolbar={integratedToolbar}
+      />
+      <main
+        className={`desktop-route-content ${showSidebar ? 'desktop-route-content-with-sidebar' : ''}`}
+      >
+        <Routes>
+          <Route
+            path="/"
+            element={hasAlbums ? <AlbumsView /> : <WelcomeScreen />}
+          />
+          <Route path="/albums" element={<AlbumsView />} />
+          <Route path="/gallery" element={<GalleryView />} />
+          <Route path="/detail/:photoId" element={<DetailView />} />
+          <Route path="/map" element={<MapViewPage />} />
+          <Route path="/settings" element={<SettingsView />} />
+        </Routes>
       </main>
     </div>
   );

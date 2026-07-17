@@ -52,7 +52,9 @@ const DetailView = () => {
   const slideShowIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // State for lazy thumbnail generation
-  const [thumbnailPath, setThumbnailPath] = useState<string | undefined>(undefined);
+  const [thumbnailPath, setThumbnailPath] = useState<string | undefined>(
+    undefined
+  );
   const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false);
   const generatingRef = useRef(false);
   const [fullImagePath, setFullImagePath] = useState<string | null>(null);
@@ -71,16 +73,16 @@ const DetailView = () => {
       if (routePhoto) {
         setSelectedPhoto(routePhoto);
         setCurrentIndex(routePhotoIndex);
-        
+
         // Reset thumbnail state when photo changes
         setThumbnailPath(routePhoto.thumbnailPath);
         setIsGeneratingThumbnail(false);
         generatingRef.current = false;
-        
+
         // For HEIC files without thumbnails, try to generate thumbnail lazily
         const isHeic = isHeicFile(routePhoto.filename);
         const isHeicWithoutThumbnail = isHeic && !routePhoto.thumbnailPath;
-        
+
         if (isHeicWithoutThumbnail) {
           setImageError(true);
           setIsLoading(false);
@@ -97,14 +99,14 @@ const DetailView = () => {
   // Lazy thumbnail generation for HEIC files in detail view
   useEffect(() => {
     if (!selectedPhoto) return;
-    
+
     const isHeic = isHeicFile(selectedPhoto.filename);
     const needsThumbnail = isHeic && !thumbnailPath && !generatingRef.current;
-    
+
     if (needsThumbnail) {
       generatingRef.current = true;
       setIsGeneratingThumbnail(true);
-      
+
       // Generate thumbnail lazily
       generateThumbnail(selectedPhoto.path)
         .then((path: unknown) => {
@@ -120,7 +122,10 @@ const DetailView = () => {
           generatingRef.current = false;
         })
         .catch((error) => {
-          console.error(`[DetailView] Error generating thumbnail for ${selectedPhoto.filename}:`, error);
+          console.error(
+            `[DetailView] Error generating thumbnail for ${selectedPhoto.filename}:`,
+            error
+          );
           setImageError(true);
           setIsLoading(false);
           setIsGeneratingThumbnail(false);
@@ -134,13 +139,15 @@ const DetailView = () => {
   useEffect(() => {
     setFullImagePath(null);
     setIsFullImageReady(false);
-    if (!selectedPhoto || isHeicFile(selectedPhoto.filename) || !thumbnailPath) return;
+    if (!selectedPhoto || isHeicFile(selectedPhoto.filename) || !thumbnailPath)
+      return;
 
     let cancelled = false;
     const preloadTimer = setTimeout(() => {
       const original = new Image();
       original.onload = () => {
-        if (!cancelled) setFullImagePath(`photomap://${encodeFilePath(selectedPhoto.path)}`);
+        if (!cancelled)
+          setFullImagePath(`photomap://${encodeFilePath(selectedPhoto.path)}`);
       };
       original.src = `photomap://${encodeFilePath(selectedPhoto.path)}`;
     }, 0);
@@ -153,7 +160,10 @@ const DetailView = () => {
 
   // Update thumbnail path when photo prop changes
   useEffect(() => {
-    if (selectedPhoto?.thumbnailPath && selectedPhoto.thumbnailPath !== thumbnailPath) {
+    if (
+      selectedPhoto?.thumbnailPath &&
+      selectedPhoto.thumbnailPath !== thumbnailPath
+    ) {
       setThumbnailPath(selectedPhoto.thumbnailPath);
     }
   }, [selectedPhoto?.thumbnailPath, thumbnailPath]);
@@ -545,7 +555,7 @@ const DetailView = () => {
 
   return (
     <div
-      className="fixed inset-0 bg-[var(--bg-primary)] z-50 flex"
+      className="detail-viewer fixed inset-x-0 bottom-0 top-[58px] z-50 flex"
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseUp}
@@ -563,7 +573,7 @@ const DetailView = () => {
         {currentIndex > 0 && (
           <button
             onClick={handlePrevious}
-            className="absolute left-4 z-10 glass-surface-2 rounded-full p-3 hover:bg-[var(--glass-bg-1)] transition-smooth shadow-l2"
+            className="detail-nav-button absolute left-4 z-10"
             aria-label="Previous photo"
           >
             <ChevronLeft className="w-6 h-6 text-[var(--text-primary)]" />
@@ -573,46 +583,44 @@ const DetailView = () => {
         {currentIndex < photos.length - 1 && (
           <button
             onClick={handleNext}
-            className="absolute right-4 z-10 glass-surface-2 rounded-full p-3 hover:bg-[var(--glass-bg-1)] transition-smooth shadow-l2"
+            className="detail-nav-button absolute right-4 z-10"
             aria-label="Next photo"
           >
             <ChevronRight className="w-6 h-6 text-[var(--text-primary)]" />
           </button>
         )}
 
-        {/* Close button */}
-        <button
-          onClick={handleClose}
-          className="absolute top-4 right-4 z-10 glass-surface-2 rounded-full p-3 hover:bg-[var(--glass-bg-1)] transition-smooth shadow-l2"
-          aria-label="Close"
-        >
-          <X className="w-6 h-6 text-[var(--text-primary)]" />
-        </button>
-
-        {/* Share button */}
-        {selectedPhoto && (
-          <>
-            <button
-              onClick={handleShare}
-              className="absolute top-4 right-20 z-10 glass-surface-2 rounded-full p-3 hover:bg-[var(--glass-bg-1)] transition-smooth shadow-l2"
-              aria-label="Share photo"
-              title="Share photo"
-            >
-              <Share2 className="w-6 h-6 text-[var(--text-primary)]" />
-            </button>
-            {/* Set as Album Cover button - only show when viewing an album (not "All" view) */}
-            {currentDirectory && (
+        <div className="detail-top-actions absolute right-4 top-4 z-10">
+          {selectedPhoto && (
+            <>
+              {currentDirectory && (
+                <button
+                  onClick={handleSetAsAlbumCover}
+                  className="detail-icon-button"
+                  aria-label="Set as album cover"
+                  title="Set as album cover"
+                >
+                  <ImagePlus className="w-5 h-5" />
+                </button>
+              )}
               <button
-                onClick={handleSetAsAlbumCover}
-                className="absolute top-4 right-36 z-10 glass-surface-2 rounded-full p-3 hover:bg-[var(--glass-bg-1)] transition-smooth shadow-l2"
-                aria-label="Set as album cover"
-                title="Set as album cover"
+                onClick={handleShare}
+                className="detail-icon-button"
+                aria-label="Share photo"
+                title="Share photo"
               >
-                <ImagePlus className="w-6 h-6 text-[var(--text-primary)]" />
+                <Share2 className="w-5 h-5" />
               </button>
-            )}
-          </>
-        )}
+            </>
+          )}
+          <button
+            onClick={handleClose}
+            className="detail-icon-button"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         {/* One shared glass control keeps zoom and slideshow actions from overlapping. */}
         <div className="absolute bottom-5 left-1/2 z-10 flex -translate-x-1/2 items-center gap-2 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg-2)] p-2 shadow-l3 backdrop-blur-2xl">
@@ -645,7 +653,10 @@ const DetailView = () => {
                   Reset
                 </button>
               )}
-              <span className="mx-1 h-5 w-px bg-[var(--border-default)]" aria-hidden="true" />
+              <span
+                className="mx-1 h-5 w-px bg-[var(--border-default)]"
+                aria-hidden="true"
+              />
             </>
           )}
           <button
@@ -692,11 +703,12 @@ const DetailView = () => {
               >
                 <RotateCw
                   className={`w-4 h-4 ${
-                    slideShowLoop ? 'text-primary' : 'text-[var(--text-tertiary)]'
+                    slideShowLoop
+                      ? 'text-primary'
+                      : 'text-[var(--text-tertiary)]'
                   }`}
                 />
               </button>
-
             </>
           ) : null}
           <span className="px-2 text-xs text-[var(--text-tertiary)]">
@@ -711,14 +723,18 @@ const DetailView = () => {
               <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           )}
-          {imageError || (selectedPhoto && isHeicFile(selectedPhoto.filename) && !thumbnailPath && !isGeneratingThumbnail) ? (
+          {imageError ||
+          (selectedPhoto &&
+            isHeicFile(selectedPhoto.filename) &&
+            !thumbnailPath &&
+            !isGeneratingThumbnail) ? (
             <div className="text-center space-y-4 p-8">
               <p className="text-lg text-[var(--text-tertiary)]">
                 {isGeneratingThumbnail
                   ? 'Generating thumbnail...'
                   : selectedPhoto && isHeicFile(selectedPhoto.filename)
-                  ? 'HEIC files cannot be displayed directly in Chromium. Please open with system app.'
-                  : 'Failed to load photo'}
+                    ? 'HEIC files cannot be displayed directly in Chromium. Please open with system app.'
+                    : 'Failed to load photo'}
               </p>
               {isGeneratingThumbnail && (
                 <div className="flex items-center justify-center">
@@ -726,83 +742,99 @@ const DetailView = () => {
                 </div>
               )}
               <div className="flex items-center justify-center gap-3">
-                {selectedPhoto && isHeicFile(selectedPhoto.filename) && !isGeneratingThumbnail && (
-                  <Button
-                    onClick={async () => {
-                      if (selectedPhoto) {
-                        console.log(`[DetailView] Opening HEIC file with system app: ${selectedPhoto.path}`);
-                        await sharePhoto(selectedPhoto.path); // Opens with system default app
-                      }
-                    }}
-                    variant="primary"
-                  >
-                    Open with System App
-                  </Button>
-                )}
-                {selectedPhoto && !isHeicFile(selectedPhoto.filename) && !isGeneratingThumbnail && (
-                  <Button
-                    onClick={() => {
-                      setImageError(false);
-                      setIsLoading(true);
-                    }}
-                    variant="secondary"
-                  >
-                    Retry
-                  </Button>
-                )}
+                {selectedPhoto &&
+                  isHeicFile(selectedPhoto.filename) &&
+                  !isGeneratingThumbnail && (
+                    <Button
+                      onClick={async () => {
+                        if (selectedPhoto) {
+                          console.log(
+                            `[DetailView] Opening HEIC file with system app: ${selectedPhoto.path}`
+                          );
+                          await sharePhoto(selectedPhoto.path); // Opens with system default app
+                        }
+                      }}
+                      variant="primary"
+                    >
+                      Open with System App
+                    </Button>
+                  )}
+                {selectedPhoto &&
+                  !isHeicFile(selectedPhoto.filename) &&
+                  !isGeneratingThumbnail && (
+                    <Button
+                      onClick={() => {
+                        setImageError(false);
+                        setIsLoading(true);
+                      }}
+                      variant="secondary"
+                    >
+                      Retry
+                    </Button>
+                  )}
               </div>
             </div>
-          ) : selectedPhoto && (
-            <img
-              ref={imageRef}
-              src={
-                // Paint the cached gallery thumbnail first. The original is
-                // overlaid only after it has been preloaded in the background.
-                thumbnailPath
-                  ? `photomap://${encodeFilePath(thumbnailPath)}`
-                  : `photomap://${encodeFilePath(selectedPhoto.path)}`
-              }
-              alt={selectedPhoto.filename}
-              className={`max-w-full max-h-full object-contain transition-smooth ${
-                zoom > 1 ? 'cursor-move' : 'cursor-default'
-              } ${isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'}`}
-              style={{
-                transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
-              }}
-              onLoad={() => {
-                setIsLoading(false);
-                setImageError(false);
-                setIsGeneratingThumbnail(false);
-              }}
-              onError={(e) => {
-                const isHeic = isHeicFile(selectedPhoto.filename);
-                const src = thumbnailPath
-                  ? `photomap://${encodeFilePath(thumbnailPath)}`
-                  : `photomap://${encodeFilePath(selectedPhoto.path)}`;
-                
-                // For HEIC files without thumbnails, show error
-                // For HEIC files with thumbnails, this shouldn't happen (thumbnails are JPEGs)
-                if (isHeic && !thumbnailPath) {
-                  console.warn(`[DetailView] HEIC file without thumbnail: ${selectedPhoto.filename}`, {
-                    src,
-                    photoPath: selectedPhoto.path,
-                    isGenerating: isGeneratingThumbnail,
-                    note: isGeneratingThumbnail ? 'Thumbnail generation in progress...' : 'HEIC file needs thumbnail generation',
-                  });
-                } else {
-                  console.error(`[DetailView] Image load error for: ${selectedPhoto.filename}`, {
-                    error: e,
-                    src,
-                    photoPath: selectedPhoto.path,
-                    hasThumbnail: !!thumbnailPath,
-                    isHeic,
-                  });
+          ) : (
+            selectedPhoto && (
+              <img
+                ref={imageRef}
+                src={
+                  // Paint the cached gallery thumbnail first. The original is
+                  // overlaid only after it has been preloaded in the background.
+                  thumbnailPath
+                    ? `photomap://${encodeFilePath(thumbnailPath)}`
+                    : `photomap://${encodeFilePath(selectedPhoto.path)}`
                 }
-                setIsLoading(false);
-                setImageError(true);
-              }}
-              draggable={false}
-            />
+                alt={selectedPhoto.filename}
+                className={`max-w-full max-h-full object-contain transition-smooth ${
+                  zoom > 1 ? 'cursor-move' : 'cursor-default'
+                } ${isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'}`}
+                style={{
+                  transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
+                }}
+                onLoad={() => {
+                  setIsLoading(false);
+                  setImageError(false);
+                  setIsGeneratingThumbnail(false);
+                }}
+                onError={(e) => {
+                  const isHeic = isHeicFile(selectedPhoto.filename);
+                  const src = thumbnailPath
+                    ? `photomap://${encodeFilePath(thumbnailPath)}`
+                    : `photomap://${encodeFilePath(selectedPhoto.path)}`;
+
+                  // For HEIC files without thumbnails, show error
+                  // For HEIC files with thumbnails, this shouldn't happen (thumbnails are JPEGs)
+                  if (isHeic && !thumbnailPath) {
+                    console.warn(
+                      `[DetailView] HEIC file without thumbnail: ${selectedPhoto.filename}`,
+                      {
+                        src,
+                        photoPath: selectedPhoto.path,
+                        isGenerating: isGeneratingThumbnail,
+                        note: isGeneratingThumbnail
+                          ? 'Thumbnail generation in progress...'
+                          : 'HEIC file needs thumbnail generation',
+                      }
+                    );
+                  } else {
+                    console.error(
+                      `[DetailView] Image load error for: ${selectedPhoto.filename}`,
+                      {
+                        error: e,
+                        src,
+                        photoPath: selectedPhoto.path,
+                        hasThumbnail: !!thumbnailPath,
+                        isHeic,
+                      }
+                    );
+                  }
+                  setIsLoading(false);
+                  setImageError(true);
+                }}
+                draggable={false}
+              />
+            )
           )}
           {selectedPhoto && fullImagePath && (
             <img

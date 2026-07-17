@@ -12,7 +12,7 @@ export const createMainWindow = (): BrowserWindow => {
     height: 800,
     minWidth: 1024,
     minHeight: 600,
-    backgroundColor: '#0A2A4A', // Midnight Blue
+    backgroundColor: '#FFFFFF',
     show: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -68,7 +68,9 @@ export const createMainWindow = (): BrowserWindow => {
   if (isDev) {
     // Override console methods to filter CSP warnings after page loads
     mainWindow.webContents.on('did-finish-load', () => {
-      mainWindow.webContents.executeJavaScript(`
+      mainWindow.webContents
+        .executeJavaScript(
+          `
         (function() {
           const originalWarn = console.warn;
           console.warn = function(...args) {
@@ -81,9 +83,11 @@ export const createMainWindow = (): BrowserWindow => {
             originalWarn.apply(console, args);
           };
         })();
-      `).catch(() => {
-        // Ignore if script execution fails
-      });
+      `
+        )
+        .catch(() => {
+          // Ignore if script execution fails
+        });
     });
   }
 

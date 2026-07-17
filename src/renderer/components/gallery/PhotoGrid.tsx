@@ -14,7 +14,9 @@ export interface PhotoGridProps {
 
 /**
  * Photo grid component with responsive layout and grouping
- * Follows iOS Photos-style design with adaptive columns
+ * Uses an aspect-aware, wrapped thumbnail flow. PhotoCard updates its own
+ * ratio from the loaded thumbnail, so portrait and landscape assets retain
+ * their natural visual proportions without a new layout dependency.
  */
 const PhotoGrid = ({
   photos,
@@ -46,7 +48,9 @@ const PhotoGrid = ({
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setVisibleCount((current) => Math.min(current + renderBatchSize, photos.length));
+          setVisibleCount((current) =>
+            Math.min(current + renderBatchSize, photos.length)
+          );
         }
       },
       { rootMargin: '600px' }
@@ -55,9 +59,10 @@ const PhotoGrid = ({
     return () => observer.disconnect();
   }, [photos.length, visibleCount]);
 
-  const loadMoreMarker = visibleCount < photos.length ? (
-    <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
-  ) : null;
+  const loadMoreMarker =
+    visibleCount < photos.length ? (
+      <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
+    ) : null;
 
   const visiblePhotoIds = useMemo(
     () => new Set(photos.slice(0, visibleCount).map((photo) => photo.id)),
@@ -142,16 +147,16 @@ const PhotoGrid = ({
 
   if (groupBy === 'date' && groupedByDate) {
     return (
-      <div className="space-y-8">
+      <div className="photos-gallery-groups">
         {groupedByDate.map(([date, groupPhotos]) => {
-          const visiblePhotos = groupPhotos.filter((photo) => visiblePhotoIds.has(photo.id));
+          const visiblePhotos = groupPhotos.filter((photo) =>
+            visiblePhotoIds.has(photo.id)
+          );
           if (visiblePhotos.length === 0) return null;
           return (
-            <div key={date} className="space-y-4">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)] px-2">
-                {formatGroupDate(date)}
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            <section key={date} className="photo-date-group">
+              <h3 className="photo-date-heading">{formatGroupDate(date)}</h3>
+              <div className="photo-aspect-row">
                 {visiblePhotos.map((photo) => (
                   <PhotoCard
                     key={photo.id}
@@ -164,7 +169,7 @@ const PhotoGrid = ({
                   />
                 ))}
               </div>
-            </div>
+            </section>
           );
         })}
         {loadMoreMarker}
@@ -174,18 +179,20 @@ const PhotoGrid = ({
 
   if (groupBy === 'location' && groupedByLocation) {
     return (
-      <div className="space-y-8">
+      <div className="photos-gallery-groups">
         {groupedByLocation.map(([location, groupPhotos]) => {
-          const visiblePhotos = groupPhotos.filter((photo) => visiblePhotoIds.has(photo.id));
+          const visiblePhotos = groupPhotos.filter((photo) =>
+            visiblePhotoIds.has(photo.id)
+          );
           if (visiblePhotos.length === 0) return null;
           return (
-            <div key={location} className="space-y-4">
-              <h3 className="text-lg font-semibold text-[var(--text-primary)] px-2">
+            <section key={location} className="photo-date-group">
+              <h3 className="photo-date-heading">
                 {location === 'No Location'
                   ? 'No Location'
                   : `Location: ${location}`}
               </h3>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+              <div className="photo-aspect-row">
                 {visiblePhotos.map((photo) => (
                   <PhotoCard
                     key={photo.id}
@@ -198,7 +205,7 @@ const PhotoGrid = ({
                   />
                 ))}
               </div>
-            </div>
+            </section>
           );
         })}
         {loadMoreMarker}
@@ -208,7 +215,7 @@ const PhotoGrid = ({
 
   // No grouping - display all photos in a single grid
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+    <div className="photo-aspect-row">
       {photos.slice(0, visibleCount).map((photo) => (
         <PhotoCard
           key={photo.id}

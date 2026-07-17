@@ -15,7 +15,7 @@ interface ThemeState {
 export const useThemeStore = create<ThemeState>((set) => {
   // Load theme from localStorage on initialization
   const storedTheme = localStorage.getItem('photomap-theme') as Theme | null;
-  const initialTheme = storedTheme || 'dark'; // Default to dark mode
+  const initialTheme = storedTheme || 'light'; // Photos-inspired light surface by default
 
   // Apply theme to document immediately
   if (typeof document !== 'undefined') {
