@@ -60,7 +60,7 @@ const Toolbar = ({
 
   return (
     <header className="photos-toolbar">
-      <div className="flex min-w-0 flex-1 items-center gap-3">
+      <div className="window-drag-region flex min-w-0 flex-1 items-center gap-3">
         {/* Left section - Gallery context */}
         {onBack && (
           <div className="photos-toolbar-group shrink-0">
@@ -99,7 +99,7 @@ const Toolbar = ({
 
       {/* Right section - compact, related action groups */}
       {hasToolbarActions && (
-        <div className="photos-toolbar-actions">
+        <div className="window-no-drag photos-toolbar-actions">
           {onPhotoSizeDecrease && onPhotoSizeIncrease && (
             <div
               className="photos-toolbar-group"

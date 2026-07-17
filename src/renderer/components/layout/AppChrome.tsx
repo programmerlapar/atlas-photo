@@ -10,11 +10,12 @@ const AppChrome = ({
 }) => (
   <>
     <div
-      className={`window-drag-region desktop-titlebar ${
+      className={`desktop-titlebar ${
         integratedToolbar ? 'desktop-titlebar-integrated' : ''
       }`}
     >
-      <div className="window-no-drag desktop-caption-controls">
+      <div className="window-drag-region desktop-titlebar-drag" aria-hidden="true" />
+      <div className="desktop-caption-controls">
         <WindowControls />
       </div>
     </div>

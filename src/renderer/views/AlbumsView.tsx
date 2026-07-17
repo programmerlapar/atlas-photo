@@ -256,7 +256,7 @@ const AlbumsView = () => {
       <div className="albums-content space-y-6">
         {/* Header */}
         <header className="albums-header">
-          <div className="space-y-1">
+          <div className="window-drag-region min-w-0 flex-1 space-y-1">
             <h1 className="text-xl font-semibold text-[var(--photos-primary-text)]">
               Albums
             </h1>
@@ -266,7 +266,7 @@ const AlbumsView = () => {
                 : `${albums.length} ${albums.length === 1 ? 'album' : 'albums'}`}
             </p>
           </div>
-          <div className="albums-header-actions">
+          <div className="window-no-drag albums-header-actions">
             {albums.length > 0 && (
               <div
                 className="albums-size-group"
