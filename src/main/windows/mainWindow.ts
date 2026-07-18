@@ -19,8 +19,6 @@ export const createMainWindow = (): BrowserWindow => {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: false, // Disable sandbox to allow custom protocol access
-      // Disable cache to prevent permission errors on Windows
-      cache: false,
       // Use session cache instead of disk cache
       partition: 'persist:main',
       // Allow custom protocols to work

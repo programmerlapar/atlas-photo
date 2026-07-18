@@ -37,10 +37,7 @@ export const registerCustomProtocol = () => {
 
         // Verify file exists
         if (existsSync(filePath)) {
-          const isHeic = filePath.toLowerCase().endsWith('.heic') || filePath.toLowerCase().endsWith('.heif');
-          const isJpg = filePath.toLowerCase().endsWith('.jpg') || filePath.toLowerCase().endsWith('.jpeg');
-          
-          callback({ path: filePath });
+        callback({ path: filePath });
         } else {
           console.error('[Protocol] File not found:', filePath);
           callback({ error: -2 }); // FILE_NOT_FOUND

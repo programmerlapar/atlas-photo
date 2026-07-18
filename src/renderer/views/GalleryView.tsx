@@ -29,7 +29,7 @@ import {
   batchExportPhotos,
   batchDeletePhotos,
 } from '../services/api';
-import type { Photo } from '../../../shared/types/photo';
+import type { Photo } from '../../shared/types/photo';
 
 /**
  * Main gallery view component

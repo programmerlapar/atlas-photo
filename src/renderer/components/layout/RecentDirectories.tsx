@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { FolderOpen, X, Clock } from 'lucide-react';
-import Button from '../ui/Button';
 import Tooltip from '../ui/Tooltip';
 
 export interface RecentDirectoriesProps {

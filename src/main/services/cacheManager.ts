@@ -1,4 +1,5 @@
-import { existsSync, stat, unlink } from 'fs/promises';
+import { stat, unlink } from 'fs/promises';
+import { existsSync } from 'fs';
 import { readdir } from 'fs/promises';
 import { join } from 'path';
 import { app } from 'electron';

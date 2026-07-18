@@ -28,7 +28,7 @@ export const extractPhotoMetadata = async (
       // Extract camera information
       exif: true,
       // Extract date/time
-      ifd0: true,
+      ifd0: {},
       // Extract all available data
       translateKeys: true,
       translateValues: false,

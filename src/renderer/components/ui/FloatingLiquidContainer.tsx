@@ -35,7 +35,6 @@ const FloatingLiquidContainer: React.FC<FloatingLiquidContainerProps> = ({
   textShadow,
   shiningBorder,
   shiningIntensity,
-  animation,
 }) => {
   return (
     <LiquidGlass
@@ -55,7 +54,6 @@ const FloatingLiquidContainer: React.FC<FloatingLiquidContainerProps> = ({
       textShadow={textShadow}
       shiningBorder={shiningBorder}
       shiningIntensity={shiningIntensity}
-      animation={animation}
       className={className}
     >
       {children}

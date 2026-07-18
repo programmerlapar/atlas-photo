@@ -1,4 +1,4 @@
-import type { Photo } from '../../../shared/types/photo';
+import type { Photo } from '../../shared/types/photo';
 
 export interface Cluster {
   center: { latitude: number; longitude: number };

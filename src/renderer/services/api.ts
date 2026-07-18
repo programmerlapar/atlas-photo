@@ -1,4 +1,4 @@
-import type { Photo } from '../../../shared/types/photo';
+import type { Photo } from '../../shared/types/photo';
 
 /**
  * IPC API client for communicating with Electron main process

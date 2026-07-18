@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import type { Photo } from '../../shared/types/photo';
+import type { Photo } from '../shared/types/photo';
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Photo } from '../../../shared/types/photo';
+import type { Photo } from '../../shared/types/photo';
 
 interface PhotoState {
   photos: Photo[];

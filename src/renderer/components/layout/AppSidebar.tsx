@@ -61,7 +61,7 @@ const AppSidebar = () => {
       }
     };
     void loadAlbumPaths();
-  }, [location.pathname]);
+  }, []);
 
   const handleAlbumSelect = async (path: string) => {
     navigate('/gallery');
@@ -73,7 +73,12 @@ const AppSidebar = () => {
     try {
       const result = await scanDirectory(path);
       if (result.error) setError(result.error);
-      else setPhotos(result.photos);
+      else {
+        setPhotos(result.photos);
+        setAlbumPaths((prev) =>
+          prev.includes(path) ? prev : [path, ...prev]
+        );
+      }
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Unable to load album');
     } finally {
@@ -151,7 +156,13 @@ const AppSidebar = () => {
                 <House className="h-3.5 w-3.5" />
                 <span>All Albums</span>
               </button>
-              {albumPaths.map((path) => {
+              {[...albumPaths]
+                .sort((a, b) => {
+                  const nameA = a.split(/[/\\]/).filter(Boolean).pop() || a;
+                  const nameB = b.split(/[/\\]/).filter(Boolean).pop() || b;
+                  return nameA.localeCompare(nameB);
+                })
+                .map((path) => {
                 const name = path.split(/[/\\]/).filter(Boolean).pop() || path;
                 const isCurrentAlbum =
                   location.pathname === '/gallery' &&

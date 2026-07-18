@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Photo } from '../../../shared/types/photo';
+import type { Photo } from '../../shared/types/photo';
 
 export type SortOption = 'date' | 'name' | 'location' | 'size';
 export type GroupOption = 'date' | 'location' | 'none';

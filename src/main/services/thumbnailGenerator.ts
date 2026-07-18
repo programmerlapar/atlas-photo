@@ -1,10 +1,18 @@
 import sharp from 'sharp';
-import { mkdir, stat, readFile, writeFile, unlink } from 'fs/promises';
+import { mkdir, stat, readFile, writeFile, unlink, open } from 'fs/promises';
 import { join, basename } from 'path';
 import { existsSync } from 'fs';
 import { app } from 'electron';
 import { isMacOSMetadataFile } from '../../shared/constants/fileTypes';
 import convert from 'heic-convert';
+
+async function readBytes(filePath: string, count: number): Promise<Buffer> {
+  const fh = await open(filePath, 'r');
+  const buf = Buffer.alloc(count);
+  await fh.read(buf, 0, count, 0);
+  await fh.close();
+  return buf;
+}
 
 /**
  * Generates a thumbnail for a photo file
@@ -52,7 +60,7 @@ export const generateThumbnail = async (
       if (thumbnailStats.mtimeMs >= photoStats.mtimeMs) {
         // Validate that the cached thumbnail is a valid JPEG
         try {
-          const fileBuffer = await readFile(thumbnailPath, { start: 0, end: 2 });
+          const fileBuffer = await readBytes(thumbnailPath, 2);
           const isJPEG = fileBuffer[0] === 0xFF && fileBuffer[1] === 0xD8;
           
           if (isJPEG && thumbnailStats.size > 0) {
@@ -126,7 +134,7 @@ export const generateThumbnail = async (
       }
 
       // Verify it's a valid JPEG by reading the file header
-      const fileBuffer = await readFile(thumbnailPath, { start: 0, end: 2 });
+      const fileBuffer = await readBytes(thumbnailPath, 2);
       const isJPEG = fileBuffer[0] === 0xFF && fileBuffer[1] === 0xD8;
       if (!isJPEG) {
         throw new Error(`Thumbnail file is not a valid JPEG: ${thumbnailPath}`);
@@ -214,7 +222,7 @@ export const generateThumbnail = async (
           if (existsSync(thumbnailPath)) {
             const thumbStats = await stat(thumbnailPath);
             if (thumbStats.size > 0) {
-              const fileBuffer = await readFile(thumbnailPath, { start: 0, end: 2 });
+              const fileBuffer = await readBytes(thumbnailPath, 2);
               const isJPEG = fileBuffer[0] === 0xFF && fileBuffer[1] === 0xD8;
               if (isJPEG) {
                 console.log(`[Thumbnail] Alternative HEIC conversion succeeded: ${thumbnailPath}`);
@@ -273,7 +281,7 @@ export const generateThumbnail = async (
           if (existsSync(thumbnailPath)) {
             const thumbStats = await stat(thumbnailPath);
             if (thumbStats.size > 0) {
-              const fileBuffer = await readFile(thumbnailPath, { start: 0, end: 2 });
+              const fileBuffer = await readBytes(thumbnailPath, 2);
               const isJPEG = fileBuffer[0] === 0xFF && fileBuffer[1] === 0xD8;
               if (isJPEG) {
                 console.log(`[Thumbnail] heic-convert succeeded: ${thumbnailPath}`);

@@ -482,8 +482,8 @@ const DetailView = () => {
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       // Pinch gesture - start zooming
-      const distance = getTouchDistance(e.touches);
-      const center = getTouchCenter(e.touches);
+      const distance = getTouchDistance(e.touches as unknown as TouchList);
+      const center = getTouchCenter(e.touches as unknown as TouchList);
       setPinchStart({
         distance,
         centerX: center.x,
@@ -502,8 +502,8 @@ const DetailView = () => {
     if (e.touches.length === 2 && pinchStart) {
       // Pinch-to-zoom in progress
       e.preventDefault();
-      const currentDistance = getTouchDistance(e.touches);
-      const center = getTouchCenter(e.touches);
+      const currentDistance = getTouchDistance(e.touches as unknown as TouchList);
+      const center = getTouchCenter(e.touches as unknown as TouchList);
       const scale = currentDistance / pinchStart.distance;
       const newZoom = Math.max(1, Math.min(3, pinchStart.initialZoom * scale));
 

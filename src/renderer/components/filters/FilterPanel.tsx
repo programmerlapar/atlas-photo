@@ -1,4 +1,4 @@
-import { X, Calendar, MapPin, FileType, SortAsc, SortDesc } from 'lucide-react';
+import { X, Calendar, FileType, SortAsc, SortDesc } from 'lucide-react';
 import { useFilterStore } from '../../stores/filterStore';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
@@ -13,17 +13,13 @@ export interface FilterPanelProps {
  */
 const FilterPanel = ({ onClose }: FilterPanelProps) => {
   const {
-    searchQuery,
     dateRange,
     fileTypes,
-    locationFilter,
     sortBy,
     sortOrder,
     groupBy,
-    setSearchQuery,
     setDateRange,
     setFileTypes,
-    setLocationFilter,
     setSortBy,
     setSortOrder,
     setGroupBy,

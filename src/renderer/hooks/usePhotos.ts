@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { usePhotoStore } from '../stores/photoStore';
 import { scanDirectory, getLibraryPhotos, getPhotos } from '../services/api';
 import { cacheThumbnail } from '../cache/thumbCache';
-import type { Photo } from '../../../shared/types/photo';
+import type { Photo } from '../../shared/types/photo';
 
 /**
  * Hook for managing photos and directory scanning
