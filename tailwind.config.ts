@@ -8,33 +8,38 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Primary colors
+        // Primary colors - Bright Sky Blue (from logo)
         primary: {
-          DEFAULT: '#1EC8E6',
-          dark: '#1AB8D6',
-          hover: '#1AB8D6',
-          pressed: '#17A8C6',
+          DEFAULT: '#58a0ff',
+          dark: '#4890f0',
+          hover: '#68a8ff',
+          pressed: '#4080e0',
+          mid: '#4080c8',
         },
-        // Secondary colors
+        // Secondary colors - Deep Indigo (from logo)
         secondary: {
-          DEFAULT: '#0A2A4A',
+          DEFAULT: '#303090',
         },
-        // Accent colors
+        // Accent colors - Coral Salmon (from logo)
         accent: {
-          DEFAULT: '#314D6E',
+          DEFAULT: '#ff8888',
         },
-        // Neutral grayscale
+        // Tertiary colors - Violet (from logo)
+        tertiary: {
+          DEFAULT: '#5840c8',
+        },
+        // Neutral grayscale (indigo-tinted)
         neutral: {
-          50: '#FAFBFC',
-          100: '#F0F2F4',
-          200: '#E2E6EA',
-          300: '#CBD2D9',
-          400: '#9AA5B1',
-          500: '#7B8794',
-          600: '#616E7C',
-          700: '#3E4C59',
-          800: '#323F4B',
-          900: '#1F2933',
+          50: '#f0f1f8',
+          100: '#d8daf0',
+          200: '#b8bce0',
+          300: '#9094c8',
+          400: '#6e72a8',
+          500: '#545888',
+          600: '#3e4068',
+          700: '#2a2c50',
+          800: '#1e2040',
+          900: '#121428',
         },
         // Semantic colors
         success: {

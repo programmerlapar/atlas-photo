@@ -2,8 +2,8 @@
 
 /* Leaflet CSS overrides for the bright geographic map surface */
 .leaflet-container {
-  background-color: #e8f3f7;
-  color: #123247;
+  background-color: #e8eaf8;
+  color: #1a1c38;
 }
 
 .leaflet-control-zoom {
@@ -14,33 +14,33 @@
 .leaflet-control-zoom a {
   background-color: rgba(255, 255, 255, 0.92) !important;
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(80, 128, 145, 0.2) !important;
-  color: #123247 !important;
+  border: 1px solid rgba(48, 48, 144, 0.2) !important;
+  color: #1a1c38 !important;
 }
 
 .leaflet-control-zoom a:hover {
-  background-color: #e6f7fb !important;
+  background-color: #e8eaf8 !important;
 }
 
 .leaflet-popup-content-wrapper {
   background-color: rgba(255, 255, 255, 0.94) !important;
   backdrop-filter: blur(16px);
-  border: 1px solid rgba(80, 128, 145, 0.2) !important;
+  border: 1px solid rgba(48, 48, 144, 0.2) !important;
   border-radius: 16px !important;
-  color: #123247 !important;
+  color: #1a1c38 !important;
 }
 
 .leaflet-popup-tip {
   background-color: rgba(255, 255, 255, 0.94) !important;
-  border: 1px solid rgba(80, 128, 145, 0.2) !important;
+  border: 1px solid rgba(48, 48, 144, 0.2) !important;
 }
 
 .leaflet-popup-close-button {
-  color: #527080 !important;
+  color: #545888 !important;
 }
 
 .leaflet-popup-close-button:hover {
-  color: #1ec8e6 !important;
+  color: #58a0ff !important;
 }
 
 /* Leaflet owns the outer icon transform for geographic positioning. Animate

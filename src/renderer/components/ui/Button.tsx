@@ -27,11 +27,11 @@ const Button = ({
   // rounded-sm = 14px (button radius)
   // Motion: 200ms with ease-ios, respects prefers-reduced-motion
   const baseClasses =
-    'font-semibold rounded-sm transition-all duration-[200ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] focus:outline-none focus:ring-2 focus:ring-[#1EC8E6] focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed';
+    'font-semibold rounded-sm transition-all duration-[200ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:ring-offset-1 disabled:opacity-50 disabled:cursor-not-allowed';
 
   const variantClasses = {
     primary:
-      'bg-[#1EC8E6] text-white hover:bg-[#1AB8D6] hover:scale-[1.02] active:scale-[0.98] active:bg-[#17A8C6] disabled:hover:scale-100',
+      'bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary-hover)] hover:scale-[1.02] active:scale-[0.98] active:bg-[var(--color-primary-pressed)] disabled:hover:scale-100',
     secondary:
       'border border-[var(--border-default)] bg-transparent text-[var(--text-primary)] hover:bg-[var(--glass-bg-1)] active:bg-[var(--glass-bg-2)] disabled:hover:bg-transparent',
   };

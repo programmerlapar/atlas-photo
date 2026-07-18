@@ -11,7 +11,7 @@ export const createClusterIcon = (count: number): DivIcon => {
         width: 48px;
         height: 48px;
         border-radius: 50%;
-        background: #1EC8E6;
+        background: #58a0ff;
         border: 3px solid rgba(255, 255, 255, 0.3);
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         display: flex;

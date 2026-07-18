@@ -95,8 +95,8 @@ const WelcomeScreen = () => {
             className="text-center space-y-3 hover:shadow-l2 hover:-translate-y-1 transition-all duration-200"
           >
             <div className="flex justify-center">
-              <div className="p-3 rounded-lg bg-[#1EC8E6]/10 border border-[#1EC8E6]/20">
-                <Globe className="w-6 h-6 text-[#1EC8E6]" />
+              <div className="p-3 rounded-lg bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20">
+                <Globe className="w-6 h-6 text-[var(--color-primary)]" />
               </div>
             </div>
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">Explore Your Journey</h3>
@@ -112,8 +112,8 @@ const WelcomeScreen = () => {
             className="text-center space-y-3 hover:shadow-l2 hover:-translate-y-1 transition-all duration-200"
           >
             <div className="flex justify-center">
-              <div className="p-3 rounded-lg bg-[#1EC8E6]/10 border border-[#1EC8E6]/20">
-                <Shield className="w-6 h-6 text-[#1EC8E6]" />
+              <div className="p-3 rounded-lg bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20">
+                <Shield className="w-6 h-6 text-[var(--color-primary)]" />
               </div>
             </div>
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">100% Private & Local</h3>

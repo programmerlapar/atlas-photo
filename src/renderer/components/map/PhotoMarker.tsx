@@ -28,16 +28,16 @@ export const createPhotoIcon = (photo: Photo, count = 1, size = 60): DivIcon => 
     ? `<img src="${thumbnailUrl}" alt="${escapeHtml(photo.filename)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />`
     : '';
   const countBadge = count > 1
-    ? `<span style="position:absolute;right:-7px;bottom:-7px;z-index:1;min-width:22px;height:22px;padding:0 4px;border-radius:11px;background:#0A6E8C;border:2px solid white;color:white;font:700 10px/18px system-ui;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.25)">${count}</span>`
+    ? `<span style="position:absolute;right:-7px;bottom:-7px;z-index:1;min-width:22px;height:22px;padding:0 4px;border-radius:11px;background:#4080c8;border:2px solid white;color:white;font:700 10px/18px system-ui;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.25)">${count}</span>`
     : '';
 
   return new DivIcon({
     className: 'photo-marker',
     html: `
       <div class="photo-marker-content" style="width:${size}px;height:${size}px;position:relative">
-        <div style="width:100%;height:100%;border-radius:14px;overflow:hidden;border:2px solid #1EC8E6;box-shadow:0 3px 10px rgba(0,0,0,.3);background:#0A2A4A;position:relative">
+        <div style="width:100%;height:100%;border-radius:14px;overflow:hidden;border:2px solid #58a0ff;box-shadow:0 3px 10px rgba(0,0,0,.3);background:#303090;position:relative">
           ${image}
-          <div style="${thumbnailUrl ? 'display:none' : 'display:flex'};position:absolute;inset:0;align-items:center;justify-content:center;background:linear-gradient(135deg,#1EC8E6,#0A2A4A)">${fallbackGlyph}</div>
+          <div style="${thumbnailUrl ? 'display:none' : 'display:flex'};position:absolute;inset:0;align-items:center;justify-content:center;background:linear-gradient(135deg,#58a0ff,#303090)">${fallbackGlyph}</div>
         </div>
         ${countBadge}
       </div>

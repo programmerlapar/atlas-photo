@@ -34,7 +34,7 @@ const MapPopup = ({ photo, nearbyCount = 1, onClick }: MapPopupProps) => {
 
   return (
     <div
-      className="rounded-xl border border-[#b9d7e1] bg-white/95 shadow-[0_14px_35px_rgba(37,99,120,0.16)] p-3 min-w-[200px] space-y-2 cursor-pointer hover:bg-[#f3fbfd] transition-smooth"
+      className="rounded-xl border border-[var(--color-neutral-200)] bg-white/95 shadow-[0_14px_35px_rgba(48,48,144,0.16)] p-3 min-w-[200px] space-y-2 cursor-pointer hover:bg-[var(--bg-primary)] transition-smooth"
       onClick={onClick}
     >
       {/* Thumbnail */}
@@ -49,18 +49,18 @@ const MapPopup = ({ photo, nearbyCount = 1, onClick }: MapPopupProps) => {
         </div>
       )}
       {(!photo.thumbnailPath || thumbnailFailed) && (
-        <div className="w-full aspect-square rounded-md mb-2 bg-gradient-to-br from-primary/70 to-[#0A2A4A] flex items-center justify-center">
+        <div className="w-full aspect-square rounded-md mb-2 bg-gradient-to-br from-[var(--color-primary)]/70 to-[var(--color-secondary)] flex items-center justify-center">
           <ImageOff className="w-8 h-8 text-white/90" />
         </div>
       )}
 
       {/* Metadata */}
       <div className="space-y-1">
-        <p className="text-sm font-semibold text-[#123247] truncate">
+        <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
           {photo.filename}
         </p>
         {photo.metadata?.date && (
-          <div className="flex items-center gap-2 text-xs text-[#527080]">
+          <div className="flex items-center gap-2 text-xs text-[var(--text-tertiary)]">
             <Calendar className="w-3 h-3" />
             <span>{formatDate(photo.metadata.date)}</span>
           </div>
@@ -72,14 +72,14 @@ const MapPopup = ({ photo, nearbyCount = 1, onClick }: MapPopupProps) => {
           </div>
         )}
         {nearbyCount > 1 && (
-          <p className="text-xs font-medium text-[#0A6E8C]">
+          <p className="text-xs font-medium text-[var(--color-primary-mid)]">
             Latest of {nearbyCount} photos in this area
           </p>
         )}
       </div>
 
       {/* Click hint */}
-      <p className="text-xs text-[#527080] text-center mt-2">Click to view</p>
+      <p className="text-xs text-[var(--text-muted)] text-center mt-2">Click to view</p>
     </div>
   );
 };

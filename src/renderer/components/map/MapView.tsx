@@ -433,7 +433,7 @@ const MapView = ({ photos, onClusterClick }: MapViewProps) => {
   const currentProvider = TILE_PROVIDERS.voyager;
 
   return (
-    <div className="relative w-full h-full overflow-hidden bg-[#e8f3f7]">
+    <div className="relative w-full h-full overflow-hidden bg-[var(--bg-primary)]">
       <MapContainer
         key={`map-${photosWithLocation.length}`}
         center={center}
@@ -456,7 +456,7 @@ const MapView = ({ photos, onClusterClick }: MapViewProps) => {
           attribution={currentProvider.attribution}
           url={currentProvider.url}
           subdomains={currentProvider.subdomains}
-          errorTileUrl="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Crect fill='%23e8f3f7' width='256' height='256'/%3E%3Cpath d='M0 128h256M128 0v256' stroke='%23bdd6df' stroke-width='2'/%3E%3C/svg%3E"
+          errorTileUrl="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='256'%3E%3Crect fill='%23e8eaf8' width='256' height='256'/%3E%3Cpath d='M0 128h256M128 0v256' stroke='%23b8bce0' stroke-width='2'/%3E%3C/svg%3E"
           maxZoom={19}
           maxNativeZoom={19}
           crossOrigin={true}
@@ -469,12 +469,12 @@ const MapView = ({ photos, onClusterClick }: MapViewProps) => {
           onClusterClick={onClusterClick}
         />
       </MapContainer>
-      <div className="absolute bottom-2 right-2 z-[450] rounded-full border border-white/70 bg-white/72 px-2.5 py-1 text-[10px] font-medium text-[#527080] shadow-[0_2px_8px_rgba(37,99,120,0.12)] backdrop-blur-md">
+      <div className="absolute bottom-2 right-2 z-[450] rounded-full border border-white/70 bg-white/72 px-2.5 py-1 text-[10px] font-medium text-[var(--text-muted)] shadow-[0_2px_8px_rgba(48,48,144,0.12)] backdrop-blur-md">
         <a
           href="https://www.openstreetmap.org/copyright"
           target="_blank"
           rel="noreferrer"
-          className="hover:text-[#123247]"
+          className="hover:text-[var(--text-primary)]"
         >
           © OpenStreetMap
         </a>
@@ -483,25 +483,25 @@ const MapView = ({ photos, onClusterClick }: MapViewProps) => {
           href="https://carto.com/attributions"
           target="_blank"
           rel="noreferrer"
-          className="hover:text-[#123247]"
+          className="hover:text-[var(--text-primary)]"
         >
           CARTO
         </a>
       </div>
       <div
-        className={`absolute inset-0 z-[500] flex items-center justify-center bg-[#e8f3f7]/92 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`absolute inset-0 z-[500] flex items-center justify-center bg-[var(--bg-primary)]/92 backdrop-blur-sm transition-opacity duration-300 ${
           isMapReady ? 'pointer-events-none opacity-0' : 'opacity-100'
         }`}
         aria-hidden={isMapReady}
       >
-        <div className="flex items-center gap-3 rounded-2xl border border-[#b9d7e1] bg-white/90 px-5 py-4 shadow-[0_14px_35px_rgba(37,99,120,0.16)]">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-[#0A6E8C]">
+        <div className="flex items-center gap-3 rounded-2xl border border-[var(--color-neutral-200)] bg-white/90 px-5 py-4 shadow-[0_14px_35px_rgba(48,48,144,0.16)]">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-[var(--color-primary-mid)]">
             <span className="absolute h-7 w-7 rounded-full border border-white/60 animate-ping" />
             <span className="h-3 w-3 rounded-full bg-white shadow-sm" />
           </div>
           <div>
-            <p className="text-sm font-semibold text-[#123247]">Finding your places</p>
-            <p className="text-xs text-[#527080]">Loading map details</p>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">Finding your places</p>
+            <p className="text-xs text-[var(--text-tertiary)]">Loading map details</p>
           </div>
         </div>
       </div>
