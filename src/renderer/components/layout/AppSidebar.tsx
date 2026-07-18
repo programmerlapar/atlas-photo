@@ -97,10 +97,10 @@ const AppSidebar = () => {
       <div className="desktop-sidebar-brand">
         <img src="/icons/logo.png" className="desktop-sidebar-logo" alt="" />
         <div>
-          <p className="text-sm font-semibold tracking-[-0.01em] text-[var(--photos-primary-text)]">
+          <p className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--photos-primary-text)]">
             PhotoMap
           </p>
-          <p className="mt-0.5 text-[11px] text-[var(--photos-secondary-text)]">
+          <p className="mt-0.5 text-[12px] text-[var(--photos-secondary-text)]">
             Your local library
           </p>
         </div>

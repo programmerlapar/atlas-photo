@@ -12,6 +12,7 @@ export const createMainWindow = (): BrowserWindow => {
     height: 800,
     minWidth: 1024,
     minHeight: 600,
+    icon: join(__dirname, '../../public/icons/logo.png'),
     backgroundColor: '#FFFFFF',
     show: false,
     webPreferences: {

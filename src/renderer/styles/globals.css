@@ -408,15 +408,15 @@ a[href] {
 .desktop-sidebar-brand {
   display: flex;
   align-items: center;
-  gap: 9px;
-  min-height: 58px;
+  gap: 10px;
+  min-height: 64px;
   margin-bottom: 10px;
   padding: 8px 16px;
 }
 
 .desktop-sidebar-logo {
-  height: 26px;
-  width: 26px;
+  height: 34px;
+  width: 34px;
   flex: 0 0 auto;
   border-radius: 7px;
   object-fit: cover;
