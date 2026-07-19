@@ -1,4 +1,11 @@
-import { memo, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  memo,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import { debounce } from 'lodash.debounce';
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import * as Leaflet from 'leaflet';
 import { DivIcon, LatLngBounds } from 'leaflet';
@@ -6,7 +13,7 @@ import '../../styles/leaflet.css';
 import type { Photo } from '../../../shared/types/photo';
 import PhotoMarker from './PhotoMarker';
 import { generateThumbnail } from '../../services/api';
-import { getCachedThumbnail } from '../../cache/thumbCache';
+import { getCachedThumbnail, cacheThumbnail } from '../../cache/thumbCache';
 
 /**
  * Tile provider configuration
@@ -111,9 +118,33 @@ const ClusteredPhotoMarkers = ({
   const map = useMap();
   const [viewportVersion, setViewportVersion] = useState(0);
   const [presentedClusters, setPresentedClusters] = useState<PresentedPhotoCluster[]>([]);
-  const iconCache = useRef(
-    new Map<string, { signature: string; icon: DivIcon }>()
-  );
+  const iconCache = useRef(new Map<string, { signature: string; icon: Leaflet.DivIcon }>());
+  // Pre-fetch thumbnails for clusters
+  const preFetchThumbnail = debounce(async (photoPath: string) => {
+    if (!photoPath) return;
+    const cachedThumbnail = getCachedThumbnail(photoPath);
+    if (!cachedThumbnail) {
+      try {
+        const thumbnailPath = await generateThumbnail(photoPath);
+        if (thumbnailPath) {
+          cacheThumbnail(photoPath, thumbnailPath);
+        }
+      } catch (error) {
+        console.error(`[MapView] Error pre-fetching thumbnail for ${photoPath}:`, error);
+      }
+    }
+  }, 300);
+
+  // Pre-fetch thumbnails for clusters when they enter the viewport
+  useEffect(() => {
+    presentedClusters.forEach((cluster) => {
+      if (cluster.phase === 'entering') {
+        cluster.photos.forEach((photo) => {
+          preFetchThumbnail(photo.path);
+        });
+      }
+    });
+  }, [presentedClusters]);
 
   useMapEvents({
     moveend: () => setViewportVersion((version) => version + 1),

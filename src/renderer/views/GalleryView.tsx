@@ -153,6 +153,9 @@ const GalleryView = () => {
       if (scrollSaveTimeoutRef.current) {
         clearTimeout(scrollSaveTimeoutRef.current);
       }
+      if (rafScrollRef.current !== null) {
+        cancelAnimationFrame(rafScrollRef.current);
+      }
       const scrollTop = scrollPositionsRef.current[viewKey];
       if (scrollTop > 0) {
         cacheViewStateRef.current(viewKey, { scrollTop });
@@ -318,10 +321,28 @@ const GalleryView = () => {
     navigate('/albums');
   };
 
+  const rafScrollRef = useRef<number | null>(null);
+  const lastScrolledFlagRef = useRef(false);
+
   const handleGalleryScroll = useCallback(
     (event: UIEvent<HTMLDivElement>) => {
-      setIsHeaderScrolled(event.currentTarget.scrollTop > 12);
-      scrollPositionsRef.current[viewKey] = event.currentTarget.scrollTop;
+      const scrollTop = event.currentTarget.scrollTop;
+      const scrolled = scrollTop > 12;
+
+      // Only touch React state when the header state actually flips, and do it
+      // on a rAF tick so a fast scroll doesn't re-render the whole view per
+      // pixel. The scroll position itself is tracked in a ref, not state.
+      if (scrolled !== lastScrolledFlagRef.current) {
+        lastScrolledFlagRef.current = scrolled;
+        if (rafScrollRef.current === null) {
+          rafScrollRef.current = requestAnimationFrame(() => {
+            rafScrollRef.current = null;
+            setIsHeaderScrolled(lastScrolledFlagRef.current);
+          });
+        }
+      }
+
+      scrollPositionsRef.current[viewKey] = scrollTop;
 
       if (scrollSaveTimeoutRef.current) {
         clearTimeout(scrollSaveTimeoutRef.current);
@@ -331,6 +352,13 @@ const GalleryView = () => {
           scrollTop: scrollPositionsRef.current[viewKey],
         });
       }, 200);
+    },
+    [viewKey]
+  );
+
+  const handleVisibleCountChange = useCallback(
+    (count: number) => {
+      cacheViewStateRef.current(viewKey, { visibleCount: count });
     },
     [viewKey]
   );
@@ -498,9 +526,7 @@ const GalleryView = () => {
               onToggleSelect={handleTogglePhotoSelect}
               groupBy={groupBy}
               initialVisibleCount={cachedViewState?.visibleCount}
-              onVisibleCountChange={(count) => {
-                cacheViewStateRef.current(viewKey, { visibleCount: count });
-              }}
+              onVisibleCountChange={handleVisibleCountChange}
             />
           )}
           {!selectionMode && <StatusBar photos={photos} />}

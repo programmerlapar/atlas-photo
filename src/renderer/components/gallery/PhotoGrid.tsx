@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useEffect, useMemo, useRef, useState } from 'react';
 import PhotoCard from './PhotoCard';
 import type { Photo } from '../../../shared/types/photo';
 
@@ -15,10 +15,13 @@ export interface PhotoGridProps {
 }
 
 /**
- * Photo grid component with responsive layout and grouping
- * Uses an aspect-aware, wrapped thumbnail flow. PhotoCard updates its own
- * ratio from the loaded thumbnail, so portrait and landscape assets retain
- * their natural visual proportions without a new layout dependency.
+ * Photo grid component with a responsive, aspect-aware wrapped thumbnail flow.
+ *
+ * Virtualization strategy: the wrapped masonry flow makes fixed-row windowing
+ * impossible, so instead of mounting the entire album we keep the DOM bounded
+ * by rendering only `visibleCount` items and growing that count as the user
+ * approaches a real sentinel at the end of the rendered grid. Thumbnails are
+ * loaded lazily by PhotoCard itself, so off-screen work stays minimal.
  */
 const PhotoGrid = ({
   photos,
@@ -55,7 +58,7 @@ const PhotoGrid = ({
   // When photos arrive after a setPhotos([]) clear, photos.length transitions
   // from 0 → N and photoCollectionKey changes again. If initialVisibleCount
   // was provided we treat this as a "return to cached view" and restore it
-  // instead of falling back to the default 50.
+  // instead of falling back to the default 60.
   useEffect(() => {
     if (!isMountedRef.current) {
       isMountedRef.current = true;
@@ -71,13 +74,15 @@ const PhotoGrid = ({
     }
 
     setVisibleCount(Math.min(initialRenderCount, photos.length));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photoCollectionKey, photos.length]);
 
   useEffect(() => {
     onVisibleCountChangeRef.current?.(visibleCount);
   }, [visibleCount]);
 
+  // Drive progressive reveal from a real sentinel at the end of the rendered
+  // grid. Mounting more cards only when the sentinel nears the viewport keeps
+  // the live DOM small even for very large albums.
   useEffect(() => {
     const sentinel = loadMoreRef.current;
     if (!sentinel || visibleCount >= photos.length) return;
@@ -90,21 +95,13 @@ const PhotoGrid = ({
           );
         }
       },
-      { rootMargin: '600px' }
+      { rootMargin: '1200px' }
     );
+
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [photos.length, visibleCount]);
 
-  const loadMoreMarker =
-    visibleCount < photos.length ? (
-      <div ref={loadMoreRef} className="h-px" aria-hidden="true" />
-    ) : null;
-
-  const visiblePhotoIds = useMemo(
-    () => new Set(photos.slice(0, visibleCount).map((photo) => photo.id)),
-    [photos, visibleCount]
-  );
   /**
    * Groups photos by date
    */
@@ -158,6 +155,34 @@ const PhotoGrid = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photoCollectionKey, groupBy]);
 
+  // When grouping, the grouped arrays are computed above (groupedByDate /
+  // groupedByLocation) and surfaced through groupedPhotos.
+  const groupedPhotos = useMemo<Array<[string, Photo[]]> | Photo[]>(() => {
+    if (groupBy === 'date') return groupedByDate ?? [];
+    if (groupBy === 'location') return groupedByLocation ?? [];
+    return photos;
+  }, [groupBy, groupedByDate, groupedByLocation, photos]);
+
+  // When grouping, build the visible window of groups (header + a slice of
+  // their photos) preserving group order, instead of flattening the whole list.
+  const getVisibleGroups = (): Array<[string | null, Photo[]] | Photo> => {
+    if (groupBy === 'none') return photos.slice(0, visibleCount);
+
+    const groups = groupedPhotos as Array<[string, Photo[]]>;
+    const result: Array<[string | null, Photo[]] | Photo> = [];
+    let counted = 0;
+    for (const entry of groups) {
+      const [label, groupPhotos] = entry;
+      const slice = groupPhotos.slice(0, Math.max(0, visibleCount - counted));
+      counted += groupPhotos.length;
+      // Skip groups that fall entirely beyond the visible window so we don't
+      // render empty headings while scrolling through a large album.
+      if (slice.length > 0) result.push([label, slice]);
+      if (counted >= visibleCount) break;
+    }
+    return result;
+  };
+
   /**
    * Formats date for group header
    */
@@ -182,89 +207,54 @@ const PhotoGrid = ({
     });
   };
 
-  if (groupBy === 'date' && groupedByDate) {
-    return (
-      <div className="photos-gallery-groups">
-        {groupedByDate.map(([date, groupPhotos]) => {
-          const visiblePhotos = groupPhotos.filter((photo) =>
-            visiblePhotoIds.has(photo.id)
-          );
-          if (visiblePhotos.length === 0) return null;
-          return (
-            <section key={date} className="photo-date-group">
-              <h3 className="photo-date-heading">{formatGroupDate(date)}</h3>
-              <div className="photo-aspect-row">
-                {visiblePhotos.map((photo) => (
-                  <PhotoCard
-                    key={photo.id}
-                    photo={photo}
-                    onClick={onPhotoClick}
-                    onHover={onPhotoHover}
-                    isSelected={selectedPhotoIds.includes(photo.id)}
-                    selectionMode={selectionMode}
-                    onToggleSelect={onToggleSelect}
-                  />
-                ))}
-              </div>
-            </section>
-          );
-        })}
-        {loadMoreMarker}
-      </div>
-    );
-  }
+  const visibleItems = getVisibleGroups();
 
-  if (groupBy === 'location' && groupedByLocation) {
-    return (
-      <div className="photos-gallery-groups">
-        {groupedByLocation.map(([location, groupPhotos]) => {
-          const visiblePhotos = groupPhotos.filter((photo) =>
-            visiblePhotoIds.has(photo.id)
-          );
-          if (visiblePhotos.length === 0) return null;
-          return (
-            <section key={location} className="photo-date-group">
-              <h3 className="photo-date-heading">
-                {location === 'No Location'
-                  ? 'No Location'
-                  : `Location: ${location}`}
-              </h3>
-              <div className="photo-aspect-row">
-                {visiblePhotos.map((photo) => (
-                  <PhotoCard
-                    key={photo.id}
-                    photo={photo}
-                    onClick={onPhotoClick}
-                    onHover={onPhotoHover}
-                    isSelected={selectedPhotoIds.includes(photo.id)}
-                    selectionMode={selectionMode}
-                    onToggleSelect={onToggleSelect}
-                  />
-                ))}
-              </div>
-            </section>
-          );
-        })}
-        {loadMoreMarker}
-      </div>
-    );
-  }
-
-  // No grouping - display all photos in a single grid
   return (
-    <div className="photo-aspect-row">
-      {photos.slice(0, visibleCount).map((photo) => (
-        <PhotoCard
-          key={photo.id}
-          photo={photo}
-          onClick={onPhotoClick}
-          onHover={onPhotoHover}
-          isSelected={selectedPhotoIds.includes(photo.id)}
-        />
-      ))}
-      {loadMoreMarker}
+    <div className="photo-grid-scroll">
+      {groupBy !== 'none'
+        ? (visibleItems as Array<[string | null, Photo[]]>).map(
+            ([label, groupPhotos]) => (
+              <section key={label ?? 'unknown'} className="photo-date-group">
+                <h2 className="photo-date-heading">
+                  {formatGroupDate(label ?? '')}
+                </h2>
+                <div className="photo-aspect-row">
+                  {groupPhotos.map((photo) => (
+                    <PhotoCard
+                      key={photo.id}
+                      photo={photo}
+                      onClick={onPhotoClick}
+                      onHover={onPhotoHover}
+                      isSelected={selectedPhotoIds.includes(photo.id)}
+                      selectionMode={selectionMode}
+                      onToggleSelect={onToggleSelect}
+                    />
+                  ))}
+                </div>
+              </section>
+            )
+          )
+        : (
+            <div className="photo-aspect-row">
+              {(visibleItems as Photo[]).map((photo) => (
+                <PhotoCard
+                  key={photo.id}
+                  photo={photo}
+                  onClick={onPhotoClick}
+                  onHover={onPhotoHover}
+                  isSelected={selectedPhotoIds.includes(photo.id)}
+                  selectionMode={selectionMode}
+                  onToggleSelect={onToggleSelect}
+                />
+              ))}
+            </div>
+          )}
+
+      {visibleCount < photos.length && (
+        <div ref={loadMoreRef} className="photo-grid-sentinel" aria-hidden="true" />
+      )}
     </div>
   );
 };
 
-export default PhotoGrid;
+export default memo(PhotoGrid);

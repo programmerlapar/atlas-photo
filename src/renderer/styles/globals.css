@@ -1162,11 +1162,23 @@ html[data-albums-header-scrolled='true']
   line-height: 22px;
 }
 
+.photo-grid-scroll {
+  display: grid;
+  gap: 20px;
+  contain: layout style paint;
+}
+
+.photo-grid-sentinel {
+  height: 1px;
+  width: 100%;
+}
+
 .photo-aspect-row {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   gap: 12px;
+  contain: layout style;
 }
 
 .photo-tile {

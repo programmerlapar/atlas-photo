@@ -6,6 +6,10 @@ import { generateThumbnail } from '../../services/api';
 import type { Photo } from '../../../shared/types/photo';
 import { cacheThumbnail, getCachedThumbnail } from '../../cache/thumbCache';
 
+// The grid only ever shows the small cached thumbnail. The full-resolution
+// original is loaded lazily and exclusively in DetailView, so the grid keeps a
+// bounded DOM and never decodes multi-megabyte sources while scrolling.
+
 export interface PhotoCardProps {
   photo: Photo;
   onClick?: (photo: Photo) => void;
@@ -32,7 +36,6 @@ const PhotoCard = ({
   const isHeic = isHeicFile(photo.filename);
   const isHeicWithoutThumbnail = isHeic && !photo.thumbnailPath;
 
-  // State for lazy thumbnail generation
   const [thumbnailPath, setThumbnailPath] = useState<string | undefined>(
     getCachedThumbnail(photo.path) ?? photo.thumbnailPath
   );
@@ -51,8 +54,7 @@ const PhotoCard = ({
   );
   const [aspectRatio, setAspectRatio] = useState(4 / 3);
 
-  // Generate only when a card is approaching the viewport. This prevents a
-  // large album from decoding every full-size image at the same time.
+  // Stabilize IntersectionObserver dependencies
   useEffect(() => {
     const element = thumbnailContainerRef.current;
     if (!element || thumbnailPath || isThumbnailVisible) return;
@@ -68,13 +70,24 @@ const PhotoCard = ({
     );
     observer.observe(element);
     return () => observer.disconnect();
-  }, [isThumbnailVisible, thumbnailPath]);
+  }, [thumbnailPath]);
 
   // Lazy thumbnail generation - only after the card becomes visible.
   useEffect(() => {
     if (isThumbnailVisible && !thumbnailPath && !generatingRef.current) {
       generatingRef.current = true;
       setIsGeneratingThumbnail(true);
+
+      // Check if thumbnail is already cached
+      const cachedThumbnail = getCachedThumbnail(photo.path);
+      if (cachedThumbnail) {
+        cacheThumbnail(photo.path, cachedThumbnail);
+        setThumbnailPath(cachedThumbnail);
+        setImageLoading(true);
+        setImageError(false);
+        generatingRef.current = false;
+        return;
+      }
 
       // Generate thumbnail lazily
       generateThumbnail(photo.path)
@@ -100,7 +113,7 @@ const PhotoCard = ({
           generatingRef.current = false;
         });
     }
-  }, [isThumbnailVisible, photo.filename, photo.path, thumbnailPath]);
+  }, [isThumbnailVisible, photo.path, thumbnailPath]);
 
   // Update thumbnail path when photo prop changes
   useEffect(() => {
@@ -154,65 +167,49 @@ const PhotoCard = ({
     >
       <div className="photo-tile-media">
         {!imageError && thumbnailPath ? (
-          <>
-            <img
-              src={`photomap://${encodeFilePath(thumbnailPath)}`}
-              alt={photo.filename}
-              className={`w-full h-full object-cover transition-opacity duration-200 ${
-                imageLoading ? 'opacity-0' : 'opacity-100'
-              }`}
-              onLoad={(event) => {
-                const ratio =
-                  (event.currentTarget.naturalWidth || 4) /
-                  (event.currentTarget.naturalHeight || 3);
-                setAspectRatio(Math.min(2.4, Math.max(0.55, ratio)));
-                setImageLoading(false);
-                setIsGeneratingThumbnail(false);
-              }}
-              onError={(e) => {
-                const src = `photomap://${encodeFilePath(thumbnailPath)}`;
-
-                // For HEIC files without thumbnails, show error
-                // For HEIC files with thumbnails, this shouldn't happen (thumbnails are JPEGs)
-                if (isHeic && !thumbnailPath) {
-                  console.warn(
-                    `[PhotoCard] HEIC file without thumbnail: ${photo.filename}`,
-                    {
-                      src,
-                      photoPath: photo.path,
-                      note: 'HEIC file needs thumbnail generation',
-                    }
-                  );
-                } else {
-                  console.error(
-                    `[PhotoCard] Image load error for: ${photo.filename}`,
-                    {
-                      error: e,
-                      src,
-                      hasThumbnail: !!thumbnailPath,
-                      isHeic,
-                      photoPath: photo.path,
-                    }
-                  );
-                }
-                setImageError(true);
-                setImageLoading(false);
-              }}
-            />
-            {(imageLoading || isGeneratingThumbnail) && (
-              <div className="absolute inset-0 flex items-center justify-center bg-neutral-800">
-                <div className="text-center space-y-2">
-                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-                  {isGeneratingThumbnail && (
-                    <p className="text-xs text-neutral-400">
-                      Generating thumbnail...
-                    </p>
-                  )}
-                </div>
-                <div className="absolute inset-0 bg-white/5 animate-pulse" />
-              </div>
-            )}
-          </>
+          <img
+            src={`photomap://${encodeFilePath(thumbnailPath)}`}
+            alt={photo.filename}
+            className={`w-full h-full object-cover transition-opacity duration-200 ${
+              imageLoading ? 'opacity-0' : 'opacity-100'
+            }`}
+            loading="lazy"
+            decoding="async"
+            onLoad={(event) => {
+              const ratio =
+                (event.currentTarget.naturalWidth || 4) /
+                (event.currentTarget.naturalHeight || 3);
+              setAspectRatio(Math.min(2.4, Math.max(0.55, ratio)));
+              setImageLoading(false);
+              setIsGeneratingThumbnail(false);
+            }}
+            onError={(e) => {
+              const src = `photomap://${encodeFilePath(thumbnailPath)}`;
+              if (isHeic && !thumbnailPath) {
+                console.warn(
+                  `[PhotoCard] HEIC file without thumbnail: ${photo.filename}`,
+                  {
+                    src,
+                    photoPath: photo.path,
+                    note: 'HEIC file needs thumbnail generation',
+                  }
+                );
+              } else {
+                console.error(
+                  `[PhotoCard] Image load error for: ${photo.filename}`,
+                  {
+                    error: e,
+                    src,
+                    hasThumbnail: !!thumbnailPath,
+                    isHeic,
+                    photoPath: photo.path,
+                  }
+                );
+              }
+              setImageError(true);
+              setImageLoading(false);
+            }}
+          />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-neutral-800">
             <div className="text-center space-y-2 p-4">
