@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 import type { Photo } from '../../shared/types/photo';
 
+export interface ViewState {
+  scrollTop: number;
+  visibleCount: number;
+}
+
 interface PhotoState {
   photos: Photo[];
   currentDirectory: string | null;
@@ -28,6 +33,8 @@ interface PhotoState {
   ) => void;
   setError: (error: string | null) => void;
   clearPhotos: () => void;
+  viewStateCache: Record<string, ViewState>;
+  cacheViewState: (key: string, state: Partial<ViewState>) => void;
 }
 
 /**
@@ -66,4 +73,12 @@ export const usePhotoStore = create<PhotoState>((set) => ({
   setLoadingProgress: (progress) => set({ loadingProgress: progress }),
   setError: (error) => set({ error }),
   clearPhotos: () => set({ photos: [], currentDirectory: null }),
+  viewStateCache: {},
+  cacheViewState: (key, state) =>
+    set((prev) => ({
+      viewStateCache: {
+        ...prev.viewStateCache,
+        [key]: { ...prev.viewStateCache[key], ...state } as ViewState,
+      },
+    })),
 }));

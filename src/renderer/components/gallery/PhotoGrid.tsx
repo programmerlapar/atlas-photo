@@ -10,6 +10,8 @@ export interface PhotoGridProps {
   selectionMode?: boolean;
   onToggleSelect?: (photo: Photo) => void;
   groupBy?: 'date' | 'location' | 'none';
+  initialVisibleCount?: number;
+  onVisibleCountChange?: (count: number) => void;
 }
 
 /**
@@ -26,20 +28,55 @@ const PhotoGrid = ({
   selectionMode = false,
   onToggleSelect,
   groupBy = 'date',
+  initialVisibleCount,
+  onVisibleCountChange,
 }: PhotoGridProps) => {
   const initialRenderCount = 50;
   const renderBatchSize = 60;
   const photoCollectionKey = `${photos.length}:${photos[0]?.id ?? ''}:${photos[photos.length - 1]?.id ?? ''}`;
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const onVisibleCountChangeRef = useRef(onVisibleCountChange);
+  onVisibleCountChangeRef.current = onVisibleCountChange;
   const [visibleCount, setVisibleCount] = useState(() =>
-    Math.min(initialRenderCount, photos.length)
+    initialVisibleCount && initialVisibleCount > 0
+      ? initialVisibleCount
+      : initialRenderCount
   );
+  const isMountedRef = useRef(false);
 
   // Keep the DOM bounded. More cards mount only when the user approaches the
   // end of the rendered grid, rather than mounting a whole large album idle.
+  //
+  // The dependency on photoCollectionKey means this fires whenever the photo
+  // list is replaced (different album, library reload, etc.). We intentionally
+  // skip the initial mount (isMountedRef) so that the useState initializer
+  // (which uses initialVisibleCount from the cache) is honoured.
+  //
+  // When photos arrive after a setPhotos([]) clear, photos.length transitions
+  // from 0 → N and photoCollectionKey changes again. If initialVisibleCount
+  // was provided we treat this as a "return to cached view" and restore it
+  // instead of falling back to the default 50.
   useEffect(() => {
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      return;
+    }
+
+    // Still in the empty transition (setPhotos([]) happened, load pending)
+    if (photos.length === 0) return;
+
+    if (initialVisibleCount && initialVisibleCount > 0) {
+      setVisibleCount(Math.min(initialVisibleCount, photos.length));
+      return;
+    }
+
     setVisibleCount(Math.min(initialRenderCount, photos.length));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photoCollectionKey, photos.length]);
+
+  useEffect(() => {
+    onVisibleCountChangeRef.current?.(visibleCount);
+  }, [visibleCount]);
 
   useEffect(() => {
     const sentinel = loadMoreRef.current;

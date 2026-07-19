@@ -10,6 +10,7 @@ import {
 import { useLocation } from 'react-router-dom';
 import { usePhotos } from '../hooks/usePhotos';
 import { useFilterStore } from '../stores/filterStore';
+import { usePhotoStore } from '../stores/photoStore';
 import { useKeyboard } from '../hooks/useKeyboard';
 import { useMotionNavigate } from '../hooks/useMotionNavigate';
 import { encodePhotoId } from '../utils/photoId';
@@ -64,6 +65,13 @@ const GalleryView = () => {
   // Check if we're in "All" view mode
   const isAllView = new URLSearchParams(location.search).get('view') === 'all';
 
+  // Per-view state cache (scroll position + rendered count)
+  const viewKey = isAllView ? 'library' : (currentDirectory ?? 'unknown');
+  const cachedViewState = usePhotoStore((s) => s.viewStateCache[viewKey]);
+  const cacheViewState = usePhotoStore((s) => s.cacheViewState);
+  const cacheViewStateRef = useRef(cacheViewState);
+  cacheViewStateRef.current = cacheViewState;
+
   const { groupBy, applyFilters } = useFilterStore();
 
   // Apply filters and sorting (must be declared before handlers that use it)
@@ -72,14 +80,19 @@ const GalleryView = () => {
     [applyFilters, photos]
   );
 
+  // Restore scroll position from location.state (detail round-trip) or cache (sidebar nav)
   useEffect(() => {
-    const scrollTop = location.state?.restoreScrollTop;
-    if (
-      typeof scrollTop !== 'number' ||
-      restoredLocationKey.current === location.key
-    ) {
-      return;
-    }
+    if (photos.length === 0) return;
+
+    const scrollTopFromState = location.state?.restoreScrollTop;
+    const scrollTopFromCache = cachedViewState?.scrollTop;
+    const scrollTop =
+      typeof scrollTopFromState === 'number'
+        ? scrollTopFromState
+        : scrollTopFromCache;
+
+    if (typeof scrollTop !== 'number' || scrollTop === 0) return;
+    if (restoredLocationKey.current === location.key) return;
 
     restoredLocationKey.current = location.key;
     const frame = requestAnimationFrame(() => {
@@ -90,7 +103,7 @@ const GalleryView = () => {
       });
     });
     return () => cancelAnimationFrame(frame);
-  }, [location.key, location.state]);
+  }, [location.key, location.state, cachedViewState?.scrollTop, photos.length]);
 
   useEffect(() => {
     document.documentElement.dataset.galleryHeaderScrolled = String(
@@ -128,6 +141,24 @@ const GalleryView = () => {
     loadPhotos,
     photos.length,
   ]);
+
+  // Save scroll position to cache (debounced)
+  const scrollSaveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
+  const scrollPositionsRef = useRef<Record<string, number>>({});
+
+  useEffect(() => {
+    return () => {
+      if (scrollSaveTimeoutRef.current) {
+        clearTimeout(scrollSaveTimeoutRef.current);
+      }
+      const scrollTop = scrollPositionsRef.current[viewKey];
+      if (scrollTop > 0) {
+        cacheViewStateRef.current(viewKey, { scrollTop });
+      }
+    };
+  }, [viewKey]);
 
   // Get selected photos (must be declared before handlers that use it)
   const selectedPhotos = filteredPhotos.filter((photo) =>
@@ -290,8 +321,18 @@ const GalleryView = () => {
   const handleGalleryScroll = useCallback(
     (event: UIEvent<HTMLDivElement>) => {
       setIsHeaderScrolled(event.currentTarget.scrollTop > 12);
+      scrollPositionsRef.current[viewKey] = event.currentTarget.scrollTop;
+
+      if (scrollSaveTimeoutRef.current) {
+        clearTimeout(scrollSaveTimeoutRef.current);
+      }
+      scrollSaveTimeoutRef.current = setTimeout(() => {
+        cacheViewStateRef.current(viewKey, {
+          scrollTop: scrollPositionsRef.current[viewKey],
+        });
+      }, 200);
     },
-    []
+    [viewKey]
   );
 
   if (isLoading && photos.length === 0) {
@@ -448,6 +489,7 @@ const GalleryView = () => {
             </div>
           ) : (
             <PhotoGrid
+              key={viewKey}
               photos={filteredPhotos}
               onPhotoClick={handlePhotoClick}
               onPhotoHover={setHoveredPhoto}
@@ -455,6 +497,10 @@ const GalleryView = () => {
               selectionMode={selectionMode}
               onToggleSelect={handleTogglePhotoSelect}
               groupBy={groupBy}
+              initialVisibleCount={cachedViewState?.visibleCount}
+              onVisibleCountChange={(count) => {
+                cacheViewStateRef.current(viewKey, { visibleCount: count });
+              }}
             />
           )}
           {!selectionMode && <StatusBar photos={photos} />}
