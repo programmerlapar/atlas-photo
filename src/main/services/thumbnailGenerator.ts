@@ -46,7 +46,10 @@ export const generateThumbnail = async (
     const pathHash = Buffer.from(photoPath)
       .toString('base64')
       .replace(/[/+=]/g, '_');
-    const thumbnailPath = join(cacheDir, `${pathHash}_${size}.jpg`);
+    // Versioned cache key: bump when generation pipeline changes (e.g. EXIF
+    // auto-rotation) so stale, incorrectly-oriented thumbnails are regenerated.
+    const thumbVersion = 'v2';
+    const thumbnailPath = join(cacheDir, `${pathHash}_${size}_${thumbVersion}.jpg`);
     
     // For HEIC files, add a force flag to always regenerate if cache is corrupted
     // This ensures we always have valid thumbnails for HEIC files
@@ -112,6 +115,7 @@ export const generateThumbnail = async (
         failOn: 'none', // Don't fail on unsupported formats, try to process anyway
         limitInputPixels: false, // Allow large images
       })
+        .rotate() // Auto-apply EXIF orientation so thumbnails match the browser's from-image rendering
         .resize(size, size, {
           fit: 'inside',
           withoutEnlargement: true,

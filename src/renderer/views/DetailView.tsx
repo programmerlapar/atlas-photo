@@ -49,6 +49,13 @@ const DetailView = () => {
   const [slideShowSpeed, setSlideShowSpeed] = useState(3); // seconds per photo
   const [slideShowLoop, setSlideShowLoop] = useState(false);
   const slideShowIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const currentIndexRef = useRef(0);
+  currentIndexRef.current = currentIndex;
+  // Tracks the photo id whose loading state was last initialized, so the
+  // "Find photo by ID" effect can tell a real photo switch from a background
+  // `photos` update (e.g. a thumbnail finishing) without relying on
+  // `selectedPhoto`, which is updated optimistically during navigation.
+  const loadedPhotoIdRef = useRef<string | null>(null);
 
   // State for lazy thumbnail generation
   const [thumbnailPath, setThumbnailPath] = useState<string | undefined>(
@@ -70,30 +77,42 @@ const DetailView = () => {
   useEffect(() => {
     if (photoId && photos.length > 0) {
       if (routePhoto) {
+        const photoChanged = routePhoto.id !== loadedPhotoIdRef.current;
         setSelectedPhoto(routePhoto);
         setCurrentIndex(routePhotoIndex);
 
-        // Reset thumbnail state when photo changes
-        setThumbnailPath(routePhoto.thumbnailPath);
-        setIsGeneratingThumbnail(false);
-        generatingRef.current = false;
+        // Only reset loading/thumbnail state when the displayed photo actually
+        // changes. Background thumbnail updates mutate `photos` (changing
+        // routePhoto.thumbnailPath) but must not re-trigger the spinner for the
+        // photo already on screen — its <img> src would be unchanged and onLoad
+        // would never fire again, leaving the spinner stuck.
+        if (photoChanged) {
+          loadedPhotoIdRef.current = routePhoto.id;
+          setThumbnailPath(routePhoto.thumbnailPath);
+          setIsGeneratingThumbnail(false);
+          generatingRef.current = false;
 
-        // For HEIC files without thumbnails, try to generate thumbnail lazily
-        const isHeic = isHeicFile(routePhoto.filename);
-        const isHeicWithoutThumbnail = isHeic && !routePhoto.thumbnailPath;
+          // For HEIC files without thumbnails, try to generate thumbnail lazily
+          const isHeic = isHeicFile(routePhoto.filename);
+          const isHeicWithoutThumbnail = isHeic && !routePhoto.thumbnailPath;
 
-        if (isHeicWithoutThumbnail) {
-          setImageError(true);
-          setIsLoading(false);
-        } else {
-          setIsLoading(true);
-          setImageError(false);
+          if (isHeicWithoutThumbnail) {
+            setImageError(true);
+            setIsLoading(false);
+          } else {
+            setIsLoading(true);
+            setImageError(false);
+          }
+        } else if (routePhoto.thumbnailPath && !thumbnailPath) {
+          // The displayed photo gained a thumbnail in the background: adopt it
+          // so the preview upgrades without a full reload.
+          setThumbnailPath(routePhoto.thumbnailPath);
         }
       } else {
         navigate('/gallery');
       }
     }
-  }, [photoId, photos.length, routePhoto, routePhotoIndex, navigate]);
+  }, [photoId, photos, routePhoto, routePhotoIndex, thumbnailPath, navigate]);
 
   // Lazy thumbnail generation for HEIC files in detail view
   useEffect(() => {
@@ -167,41 +186,37 @@ const DetailView = () => {
     }
   }, [selectedPhoto?.thumbnailPath, thumbnailPath]);
 
+  // Reset per-photo loading state so the incoming photo paints correctly.
+  // `thumbnailPath` must follow the new photo (it may be undefined) or the
+  // <img> keeps showing the previous photo's thumbnail and never re-fires
+  // onLoad, leaving the spinner stuck.
+  const preparePhotoNavigation = (newIndex: number) => {
+    setCurrentIndex(newIndex);
+    setSelectedPhoto(photos[newIndex]);
+    setThumbnailPath(photos[newIndex].thumbnailPath);
+    setFullImagePath(null);
+    setIsFullImageReady(false);
+    navigate(`/detail/${encodePhotoId(photos[newIndex].id)}`, { instant: true });
+    setZoom(1);
+    setPosition({ x: 0, y: 0 });
+    setImageError(false);
+    setIsLoading(true);
+  };
+
   // Navigate to previous photo
   const handlePrevious = () => {
     if (currentIndex > 0) {
-      const newIndex = currentIndex - 1;
-      setCurrentIndex(newIndex);
-      setSelectedPhoto(photos[newIndex]);
-      navigate(`/detail/${encodePhotoId(photos[newIndex].id)}`);
-      setZoom(1);
-      setPosition({ x: 0, y: 0 });
-      setIsLoading(true);
-      setImageError(false);
+      preparePhotoNavigation(currentIndex - 1);
     }
   };
 
   // Navigate to next photo
   const handleNext = () => {
     if (currentIndex < photos.length - 1) {
-      const newIndex = currentIndex + 1;
-      setCurrentIndex(newIndex);
-      setSelectedPhoto(photos[newIndex]);
-      navigate(`/detail/${encodePhotoId(photos[newIndex].id)}`);
-      setZoom(1);
-      setPosition({ x: 0, y: 0 });
-      setIsLoading(true);
-      setImageError(false);
+      preparePhotoNavigation(currentIndex + 1);
     } else if (slideShowLoop && photos.length > 0) {
       // Loop to first photo
-      const newIndex = 0;
-      setCurrentIndex(newIndex);
-      setSelectedPhoto(photos[newIndex]);
-      navigate(`/detail/${encodePhotoId(photos[newIndex].id)}`);
-      setZoom(1);
-      setPosition({ x: 0, y: 0 });
-      setIsLoading(true);
-      setImageError(false);
+      preparePhotoNavigation(0);
     } else if (isSlideShow) {
       // End slide show if at last photo and not looping
       handleSlideShowToggle();
@@ -364,32 +379,16 @@ const DetailView = () => {
   useEffect(() => {
     if (isSlideShow && photos.length > 0) {
       const interval = setInterval(() => {
-        setCurrentIndex((prevIndex) => {
-          if (prevIndex < photos.length - 1) {
-            const newIndex = prevIndex + 1;
-            setSelectedPhoto(photos[newIndex]);
-            navigate(`/detail/${encodePhotoId(photos[newIndex].id)}`);
-            setZoom(1);
-            setPosition({ x: 0, y: 0 });
-            setIsLoading(true);
-            setImageError(false);
-            return newIndex;
-          } else if (slideShowLoop && photos.length > 0) {
-            // Loop to first photo
-            const newIndex = 0;
-            setSelectedPhoto(photos[newIndex]);
-            navigate(`/detail/${encodePhotoId(photos[newIndex].id)}`);
-            setZoom(1);
-            setPosition({ x: 0, y: 0 });
-            setIsLoading(true);
-            setImageError(false);
-            return newIndex;
-          } else {
-            // End slide show if at last photo and not looping
-            setIsSlideShow(false);
-            return prevIndex;
-          }
-        });
+        const prevIndex = currentIndexRef.current;
+        if (prevIndex < photos.length - 1) {
+          preparePhotoNavigation(prevIndex + 1);
+        } else if (slideShowLoop && photos.length > 0) {
+          // Loop to first photo
+          preparePhotoNavigation(0);
+        } else {
+          // End slide show if at last photo and not looping
+          handleSlideShowToggle();
+        }
       }, slideShowSpeed * 1000);
 
       slideShowIntervalRef.current = interval;
@@ -618,7 +617,7 @@ const DetailView = () => {
       {/* Photo viewer */}
       <div
         ref={containerRef}
-        className="flex-1 flex items-center justify-center overflow-hidden relative"
+        className="flex-1 flex items-center justify-center overflow-hidden relative pt-[104px] pb-24"
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -800,6 +799,7 @@ const DetailView = () => {
           ) : (
             selectedPhoto && (
               <img
+                key={selectedPhoto.id}
                 ref={imageRef}
                 src={
                   // Paint the cached gallery thumbnail first. The original is
@@ -811,7 +811,7 @@ const DetailView = () => {
                 alt={selectedPhoto.filename}
                 className={`max-w-full max-h-full object-contain transition-smooth ${
                   zoom > 1 ? 'cursor-move' : 'cursor-default'
-                } ${isLoading ? 'opacity-0' : 'opacity-100 animate-fade-in'}`}
+                } ${isLoading ? 'opacity-0' : 'opacity-100 animate-photo-in'}`}
                 style={{
                   transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
                 }}
