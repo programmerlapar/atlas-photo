@@ -165,9 +165,9 @@ const DetailView = () => {
       const original = new Image();
       original.onload = () => {
         if (!cancelled)
-          setFullImagePath(`photomap://${encodeFilePath(selectedPhoto.path)}`);
+           setFullImagePath(`atlas-photo://${encodeFilePath(selectedPhoto.path)}`);
       };
-      original.src = `photomap://${encodeFilePath(selectedPhoto.path)}`;
+       original.src = `atlas-photo://${encodeFilePath(selectedPhoto.path)}`;
     }, 0);
 
     return () => {

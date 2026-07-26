@@ -134,7 +134,7 @@ Mark tasks complete only when:
 
 ### Electron Execution Rules (CRITICAL)
 - For Electron renderers, MUST use `HashRouter` (never `BrowserRouter`) and enable React Router future flags.
-- MUST register custom protocols (e.g., `photomap://`) before creating `BrowserWindow`, and if using a custom partition, register on that session via `session.fromPartition(...).protocol.registerFileProtocol()`; unregister first if needed.
+- MUST register custom protocols (e.g., `atlas-photo://`) before creating `BrowserWindow`, and if using a custom partition, register on that session via `session.fromPartition(...).protocol.registerFileProtocol()`; unregister first if needed.
 - MUST apply a Content-Security-Policy to the renderer session in development (lenient for HMR) and strengthen it for production builds.
 - On Windows, set `userCache` and `sessionData` to `app.getPath('userData')` before `app.whenReady()`; handle cache warnings gracefully.
 - MUST filter macOS metadata files (names starting with `._`) in any file scanning/EXIF/thumbnail flows.

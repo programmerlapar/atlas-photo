@@ -1,5 +1,5 @@
 ---
-name: photomap-motion
+name: atlas-photo-motion
 description: Enforce PhotoMap's zoom-and-fade motion language whenever changing React routes, full-page views, map/detail navigation, or other view-level transitions. Use when adding or reviewing navigation, overlays that act as views, and motion-sensitive UI in this repository.
 ---
 

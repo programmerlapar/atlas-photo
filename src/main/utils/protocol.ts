@@ -19,7 +19,7 @@ export const registerCustomProtocol = () => {
       request: Electron.ProtocolRequest,
       callback: (response: Electron.ProtocolResponse) => void
     ) => {
-      const url = request.url.replace('photomap://', '');
+      const url = request.url.replace('atlas-photo://', '');
 
       // Decode the file path from base64url
       // The renderer uses browser-compatible encoding (TextEncoder + btoa)
@@ -51,21 +51,21 @@ export const registerCustomProtocol = () => {
     // Unregister protocol first if it exists (to allow re-registration)
     // Note: unregisterProtocol may throw if protocol doesn't exist, so we wrap in try-catch
     try {
-      customSession.protocol.unregisterProtocol('photomap');
+        customSession.protocol.unregisterProtocol('atlas-photo');
     } catch (error) {
       // Ignore if protocol doesn't exist or unregister fails
     }
 
     // Register protocol to the custom session
-    customSession.protocol.registerFileProtocol('photomap', protocolHandler);
+    customSession.protocol.registerFileProtocol('atlas-photo', protocolHandler);
 
     // Also register to default session as fallback
     try {
-      protocol.unregisterProtocol('photomap');
+      protocol.unregisterProtocol('atlas-photo');
     } catch (error) {
       // Ignore if protocol doesn't exist or unregister fails
     }
-    protocol.registerFileProtocol('photomap', protocolHandler);
+    protocol.registerFileProtocol('atlas-photo', protocolHandler);
   } catch (error) {
     console.error('Failed to register custom protocol:', error);
     throw error;

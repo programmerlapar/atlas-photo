@@ -270,7 +270,7 @@ Maintain a **Section Progress Tracker** at the top of the working document (e.g.
     5. Set `cache: false` or `partition: 'persist:main'` in webPreferences for Windows
     6. **Filter macOS metadata files:** When implementing file scanning/processing, always filter out macOS resource fork/metadata files (files starting with `._`) to prevent "Unknown file format" errors during EXIF extraction and thumbnail generation. Use `isMacOSMetadataFile()` helper function in file type checks. See [BUG-009](../../Docs/Bug_Reports/electron/macos-metadata-file-exif-extraction-error.md) for details
     7. **Use HashRouter for Electron apps (MUST):** Always use `HashRouter` (never `BrowserRouter`) for Electron renderers. Enable React Router future flags. Encode file-path IDs before placing in URLs (e.g., base64url). See [BUG-011](../../Docs/Bug_Reports/electron/photo-id-routing-error.md)
-    8. **Register custom protocol for local files:** Never use `file://` URLs in the renderer process. Instead, register a custom protocol handler (e.g., `photomap://`) to serve thumbnails and photos securely. See [BUG-010](../../Docs/Bug_Reports/electron/thumbnail-file-protocol-loading-error.md) for details
+      8. **Register custom protocol for local files:** Never use `file://` URLs in the renderer process. Instead, register a custom protocol handler (e.g., `atlas-photo://`) to serve thumbnails and photos securely. See [BUG-010](../../Docs/Bug_Reports/electron/thumbnail-file-protocol-loading-error.md) for details
     9. **Never use Node.js APIs in renderer process:** Never use Node.js APIs (like `Buffer`, `fs`, `path`) directly in the renderer process. Use browser-compatible APIs (TextEncoder, TextDecoder, btoa, atob) for encoding/decoding. Create utility functions for browser-compatible operations. See [BUG-012](../../Docs/Bug_Reports/electron/buffer-not-defined-renderer-error.md) for details
     10. **Custom protocol registration (MUST):** Register protocols before creating `BrowserWindow`. If using a custom partition, register on that session via `session.fromPartition(...).protocol.registerFileProtocol()` and unregister first if needed; also register on default session as fallback. Disable sandbox (`sandbox: false`) only if required by protocol constraints. See [BUG-013](../../Docs/Bug_Reports/electron/custom-protocol-not-registered-error.md)
     11. **Renderer CSP (MUST):** Set a Content-Security-Policy on the renderer session in development (allow HMR) and tighten for production. See [BUG-015](../../Docs/Bug_Reports/electron/electron-content-security-policy-warning.md)
@@ -859,7 +859,7 @@ const primary = 'bg-[rgb(var(--primary))] text-white hover:opacity-90';
             "default-src 'self'; " +
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
               "style-src 'self' 'unsafe-inline'; " +
-              "img-src 'self' data: photomap: file:; " +
+              "img-src 'self' data: atlas-photo: file:; " +
               "font-src 'self' data:; " +
               "connect-src 'self' http://localhost:* ws://localhost:* ws://127.0.0.1:*;",
           ],

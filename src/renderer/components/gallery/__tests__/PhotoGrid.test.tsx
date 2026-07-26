@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, act, within } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import PhotoGrid from '../PhotoGrid';
 import type { Photo } from '../../../../shared/types/photo';
 
@@ -12,9 +12,9 @@ const makePhotos = (count: number, startId = 1): Photo[] =>
     id: `photo-${startId + i}`,
     path: `/photos/photo-${startId + i}.jpg`,
     filename: `photo-${startId + i}.jpg`,
-    metadata: {
-      date: new Date(2024, 0, 1 + i).toISOString(),
-    },
+     metadata: {
+       date: new Date(2024, 0, 1 + i),
+     },
   }));
 
 // Stub out PhotoCard to avoid thumbnail / IntersectionObserver logic

@@ -52,7 +52,7 @@ export const createMainWindow = (): BrowserWindow => {
             "default-src 'self'; " +
               "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
               "style-src 'self' 'unsafe-inline'; " +
-              "img-src 'self' data: photomap: file: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org; " +
+               "img-src 'self' data: atlas-photo: file: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org; " +
               "font-src 'self' data:; " +
               "connect-src 'self' http://localhost:* ws://localhost:* ws://127.0.0.1:* https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org;",
           ],
@@ -91,7 +91,7 @@ export const createMainWindow = (): BrowserWindow => {
   }
 
   // Show window when ready
-  mainWindow.once('ready-to-show', () => {
+  mainWindow.setTitle('Atlas Photo');
     mainWindow.show();
 
     if (isDev) {

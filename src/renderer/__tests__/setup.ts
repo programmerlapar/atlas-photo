@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom';
+import { vi, beforeEach, afterEach } from 'vitest';
 
 // Stub electronAPI used throughout the renderer
 Object.defineProperty(window, 'electronAPI', {

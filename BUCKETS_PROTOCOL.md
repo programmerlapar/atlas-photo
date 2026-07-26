@@ -1,4 +1,4 @@
-﻿# Photomap — Buckets Protocol (v1)
+﻿# Atlas Photo — Buckets Protocol (v1)
 
 **Original intent:** polished MVP photo gallery (Electron + Leaflet) with snappy performance, iOS-like feel.
 

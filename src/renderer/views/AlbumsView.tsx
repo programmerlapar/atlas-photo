@@ -350,7 +350,7 @@ const AlbumsView = () => {
                 <div className="aspect-[4/3] bg-gradient-to-br from-primary/20 to-primary/5 relative overflow-hidden">
                   {album.thumbnailPath ? (
                     <img
-                      src={`photomap://${encodeFilePath(album.thumbnailPath)}`}
+                       src={`atlas-photo://${encodeFilePath(album.thumbnailPath)}`}
                       alt={album.name}
                       className="w-full h-full object-cover"
                       onError={(e) => {
