@@ -22,7 +22,7 @@ const escapeHtml = (value: string): string =>
 /** Creates a marker that always has a visible fallback if its image fails. */
 export const createPhotoIcon = (photo: Photo, count = 1, size = 60): DivIcon => {
   const thumbnailUrl = photo.thumbnailPath
-    ? `photomap://${encodeFilePath(photo.thumbnailPath)}`
+     ? `atlas-photo://${encodeFilePath(photo.thumbnailPath)}`
     : null;
   const image = thumbnailUrl
     ? `<img src="${thumbnailUrl}" alt="${escapeHtml(photo.filename)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />`

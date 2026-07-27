@@ -71,7 +71,7 @@ const PhotoClusterSheet = ({ photos, onClose, onPhotoSelect }: PhotoClusterSheet
             </div>
             {thumbnailPath && (
               <img
-                src={`photomap://${encodeFilePath(thumbnailPath)}`}
+                 src={`atlas-photo://${encodeFilePath(thumbnailPath)}`}
                 alt=""
                 className="absolute inset-0 h-full w-full object-cover"
                 onError={(event) => {

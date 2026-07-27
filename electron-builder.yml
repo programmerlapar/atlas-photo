@@ -1,4 +1,4 @@
-appId: com.photomap.app
+appId: com.atlasphoto.app
 productName: PhotoMap
 directories:
   output: dist

@@ -41,7 +41,7 @@ const MapPopup = ({ photo, nearbyCount = 1, onClick }: MapPopupProps) => {
       {photo.thumbnailPath && !thumbnailFailed && (
         <div className="w-full aspect-square rounded-md overflow-hidden mb-2">
           <img
-            src={`photomap://${encodeFilePath(photo.thumbnailPath)}`}
+             src={`atlas-photo://${encodeFilePath(photo.thumbnailPath)}`}
             alt={photo.filename}
             className="w-full h-full object-cover"
             onError={() => setThumbnailFailed(true)}

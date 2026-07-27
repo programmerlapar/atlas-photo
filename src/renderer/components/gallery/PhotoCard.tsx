@@ -168,7 +168,7 @@ const PhotoCard = ({
       <div className="photo-tile-media">
         {!imageError && thumbnailPath ? (
           <img
-            src={`photomap://${encodeFilePath(thumbnailPath)}`}
+             src={`atlas-photo://${encodeFilePath(thumbnailPath)}`}
             alt={photo.filename}
             className={`w-full h-full object-cover transition-opacity duration-200 ${
               imageLoading ? 'opacity-0' : 'opacity-100'
@@ -184,7 +184,7 @@ const PhotoCard = ({
               setIsGeneratingThumbnail(false);
             }}
             onError={(e) => {
-              const src = `photomap://${encodeFilePath(thumbnailPath)}`;
+               const src = `atlas-photo://${encodeFilePath(thumbnailPath)}`;
               if (isHeic && !thumbnailPath) {
                 console.warn(
                   `[PhotoCard] HEIC file without thumbnail: ${photo.filename}`,

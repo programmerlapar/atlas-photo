@@ -1,7 +1,7 @@
 {
-  "name": "photomap",
+  "name": "atlas-photo",
   "version": "0.1.0",
-  "description": "A beautiful photo gallery app with map integration, inspired by iOS Photos",
+  "description": "A beautiful Atlas Photo gallery app with map integration, inspired by iOS Photos",
   "main": "dist-electron/main/index.js",
   "author": "",
   "license": "MIT",

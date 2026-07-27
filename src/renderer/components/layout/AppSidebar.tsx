@@ -98,7 +98,7 @@ const AppSidebar = () => {
         <img src="/icons/logo.png" className="desktop-sidebar-logo" alt="" />
         <div>
           <p className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--photos-primary-text)]">
-            PhotoMap
+            Atlas Photo
           </p>
           <p className="mt-0.5 text-[12px] text-[var(--photos-secondary-text)]">
             Your local library

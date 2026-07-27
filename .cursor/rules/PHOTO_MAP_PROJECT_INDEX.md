@@ -51,7 +51,7 @@ Thumbnail generator with sharp cache integrated for HEIC/EXR/etc. fallback chain
 
 - Map entry no longer depends on the old `Suspense` spinner or a simulated delay. It uses CartoDB Voyager, a geographic loading surface, and non-blocking thumbnail warming.
 - Marker and popup thumbnails now have visible fallbacks. Nearby photos are grouped in screen space, represent the newest photo in a group, and split/merge with short opacity/transform motion as zoom changes.
-- The invalid Stamen CSP wildcard was removed. `skills/photomap-motion/SKILL.md` records the mandatory zoom-and-fade view transition rule, including reduced-motion support.
+- The invalid Stamen CSP wildcard was removed. `skills/atlas-photo-motion/SKILL.md` records the mandatory zoom-and-fade view transition rule, including reduced-motion support.
 - Pending manual validation: map entry/re-entry with a large library, marker split/merge while zooming, and marker-to-detail navigation.
 
 **Follow-up:** The map uses `@luomus/leaflet-smooth-wheel-zoom` for continuous cursor-anchored wheel zoom. Marker transitions are opacity-only; a compact OpenStreetMap/CARTO credit replaces the stock Leaflet attribution control.
