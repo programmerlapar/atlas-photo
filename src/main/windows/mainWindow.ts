@@ -97,7 +97,6 @@ export const createMainWindow = (): BrowserWindow => {
     if (isDev) {
       mainWindow.webContents.openDevTools();
     }
-  });
 
   return mainWindow;
 };
