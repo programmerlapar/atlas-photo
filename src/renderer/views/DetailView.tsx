@@ -97,8 +97,8 @@ const DetailView = () => {
           const isHeicWithoutThumbnail = isHeic && !routePhoto.thumbnailPath;
 
           if (isHeicWithoutThumbnail) {
-            setImageError(true);
-            setIsLoading(false);
+            setIsLoading(true);
+            setImageError(false);
           } else {
             setIsLoading(true);
             setImageError(false);
@@ -196,6 +196,7 @@ const DetailView = () => {
     setThumbnailPath(photos[newIndex].thumbnailPath);
     setFullImagePath(null);
     setIsFullImageReady(false);
+    setIsGeneratingThumbnail(false);
     navigate(`/detail/${encodePhotoId(photos[newIndex].id)}`, { instant: true });
     setZoom(1);
     setPosition({ x: 0, y: 0 });
@@ -740,125 +741,82 @@ const DetailView = () => {
 
         {/* Photo image */}
         <div className="relative w-full h-full flex items-center justify-center">
-          {isLoading && (
+          {selectedPhoto &&
+          isHeicFile(selectedPhoto.filename) &&
+          !thumbnailPath ? (
+            <div className="text-center space-y-4 p-8">
+              {isGeneratingThumbnail || isLoading ? (
+                <>
+                  <div className="w-12 h-12 mx-auto border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  <p className="text-lg text-[var(--text-tertiary)]">
+                    Generating thumbnail...
+                  </p>
+                </>
+              ) : (
+                <p className="text-lg text-[var(--text-tertiary)]">
+                  HEIC files cannot be displayed directly in Chromium. Please open with system app.
+                </p>
+              )}
+            </div>
+          ) : imageError ? (
+            <div className="text-center space-y-4 p-8">
+              <p className="text-lg text-[var(--text-tertiary)]">
+                Failed to load photo
+              </p>
+              <Button onClick={handleClose} variant="secondary">
+                Go Back
+              </Button>
+            </div>
+          ) : isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
-          )}
-          {imageError ||
-          (selectedPhoto &&
-            isHeicFile(selectedPhoto.filename) &&
-            !thumbnailPath &&
-            !isGeneratingThumbnail) ? (
-            <div className="text-center space-y-4 p-8">
-              <p className="text-lg text-[var(--text-tertiary)]">
-                {isGeneratingThumbnail
-                  ? 'Generating thumbnail...'
-                  : selectedPhoto && isHeicFile(selectedPhoto.filename)
-                    ? 'HEIC files cannot be displayed directly in Chromium. Please open with system app.'
-                    : 'Failed to load photo'}
-              </p>
-              {isGeneratingThumbnail && (
-                <div className="flex items-center justify-center">
-                  <div className="w-12 h-12 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                </div>
-              )}
-              <div className="flex items-center justify-center gap-3">
-                {selectedPhoto &&
-                  isHeicFile(selectedPhoto.filename) &&
-                  !isGeneratingThumbnail && (
-                    <Button
-                      onClick={async () => {
-                        if (selectedPhoto) {
-                          console.log(
-                            `[DetailView] Opening HEIC file with system app: ${selectedPhoto.path}`
-                          );
-                          await sharePhoto(selectedPhoto.path); // Opens with system default app
-                        }
-                      }}
-                      variant="primary"
-                    >
-                      Open with System App
-                    </Button>
-                  )}
-                {selectedPhoto &&
-                  !isHeicFile(selectedPhoto.filename) &&
-                  !isGeneratingThumbnail && (
-                    <Button
-                      onClick={() => {
-                        setImageError(false);
-                        setIsLoading(true);
-                      }}
-                      variant="secondary"
-                    >
-                      Retry
-                    </Button>
-                  )}
-              </div>
-            </div>
-          ) : (
-            selectedPhoto && (
-              <img
-                key={selectedPhoto.id}
-                ref={imageRef}
-                src={
-                  // Paint the cached gallery thumbnail first. The original is
-                  // overlaid only after it has been preloaded in the background.
-                  thumbnailPath
-                    ? `photomap://${encodeFilePath(thumbnailPath)}`
-                    : `photomap://${encodeFilePath(selectedPhoto.path)}`
-                }
-                alt={selectedPhoto.filename}
-                className={`max-w-full max-h-full object-contain transition-smooth ${
-                  zoom > 1 ? 'cursor-move' : 'cursor-default'
-                } ${isLoading ? 'opacity-0' : 'opacity-100 animate-photo-in'}`}
-                style={{
-                  transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
-                }}
-                onLoad={() => {
-                  setIsLoading(false);
-                  setImageError(false);
-                  setIsGeneratingThumbnail(false);
-                }}
-                onError={(e) => {
-                  const isHeic = isHeicFile(selectedPhoto.filename);
-                  const src = thumbnailPath
-                    ? `photomap://${encodeFilePath(thumbnailPath)}`
-                    : `photomap://${encodeFilePath(selectedPhoto.path)}`;
+          ) : null}
 
-                  // For HEIC files without thumbnails, show error
-                  // For HEIC files with thumbnails, this shouldn't happen (thumbnails are JPEGs)
-                  if (isHeic && !thumbnailPath) {
-                    console.warn(
-                      `[DetailView] HEIC file without thumbnail: ${selectedPhoto.filename}`,
-                      {
-                        src,
-                        photoPath: selectedPhoto.path,
-                        isGenerating: isGeneratingThumbnail,
-                        note: isGeneratingThumbnail
-                          ? 'Thumbnail generation in progress...'
-                          : 'HEIC file needs thumbnail generation',
-                      }
-                    );
-                  } else {
-                    console.error(
-                      `[DetailView] Image load error for: ${selectedPhoto.filename}`,
-                      {
-                        error: e,
-                        src,
-                        photoPath: selectedPhoto.path,
-                        hasThumbnail: !!thumbnailPath,
-                        isHeic,
-                      }
-                    );
-                  }
-                  setIsLoading(false);
-                  setImageError(true);
-                }}
-                draggable={false}
-              />
-            )
-          )}
+        {/* Photo image - render for non-HEIC photos, or HEIC photos that have a cached thumbnail */}
+        {selectedPhoto && (!isHeicFile(selectedPhoto.filename) || thumbnailPath) && (
+          <img
+            key={selectedPhoto.id}
+            ref={imageRef}
+            src={
+              // Paint the cached gallery thumbnail first. The original is
+              // overlaid only after it has been preloaded in the background.
+              thumbnailPath
+                ? `atlas-photo://${encodeFilePath(thumbnailPath)}`
+                : `atlas-photo://${encodeFilePath(selectedPhoto.path)}`
+            }
+            alt={selectedPhoto.filename}
+            className={`max-w-full max-h-full object-contain transition-smooth ${
+              zoom > 1 ? 'cursor-move' : 'cursor-default'
+            } ${isLoading ? 'opacity-0' : 'opacity-100 animate-photo-in'}`}
+            style={{
+              transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
+            }}
+            onLoad={() => {
+              setIsLoading(false);
+              setImageError(false);
+              setIsGeneratingThumbnail(false);
+            }}
+            onError={(e) => {
+              const src = thumbnailPath
+                ? `atlas-photo://${encodeFilePath(thumbnailPath)}`
+                : `atlas-photo://${encodeFilePath(selectedPhoto.path)}`;
+
+              console.error(
+                `[DetailView] Image load error for: ${selectedPhoto.filename}`,
+                {
+                  error: e,
+                  src,
+                  photoPath: selectedPhoto.path,
+                  hasThumbnail: !!thumbnailPath,
+                }
+              );
+              setIsLoading(false);
+              setImageError(true);
+            }}
+            draggable={false}
+          />
+        )}
           {selectedPhoto && fullImagePath && (
             <img
               src={fullImagePath}

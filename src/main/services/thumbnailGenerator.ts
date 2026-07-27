@@ -5,6 +5,7 @@ import { existsSync } from 'fs';
 import { app } from 'electron';
 import { isMacOSMetadataFile } from '../../shared/constants/fileTypes';
 import convert from 'heic-convert';
+import * as exifr from 'exifr';
 
 async function readBytes(filePath: string, count: number): Promise<Buffer> {
   const fh = await open(filePath, 'r');
@@ -300,6 +301,52 @@ export const generateThumbnail = async (
           console.error(`[Thumbnail] heic-convert library also failed: ${heicErrorMsg}`);
         }
         
+        // Try exifr.thumbnail() as final fallback - extracts embedded JPEG preview
+        // from HEIC files without decoding the full image (much more reliable)
+        try {
+          console.log(`[Thumbnail] Attempting exifr thumbnail extraction for: ${filename}`);
+
+          // Extract the embedded JPEG thumbnail/preview from the HEIC file
+          // Note: exifr.thumbnail() takes only a path argument and returns a Buffer directly
+          const thumbnailBuffer = await exifr.thumbnail(photoPath);
+
+          if (thumbnailBuffer && thumbnailBuffer.length > 10) {
+            // thumbnail() may return Uint8Array; convert to Buffer for sharp compatibility
+            let jpegData: Buffer;
+            if (thumbnailBuffer instanceof Buffer) {
+              jpegData = thumbnailBuffer;
+            } else {
+              jpegData = Buffer.from(thumbnailBuffer);
+            }
+
+            // Try to resize through sharp if needed to match requested size
+            await sharp(jpegData)
+              .resize(size, size, {
+                fit: 'inside',
+                withoutEnlargement: true,
+              })
+              .jpeg({ 
+                quality: 85,
+                mozjpeg: true,
+              })
+              .toFile(thumbnailPath);
+
+            // Validate the generated file
+            if (existsSync(thumbnailPath)) {
+              const thumbStats = await stat(thumbnailPath);
+              if (thumbStats.size > 0) {
+                console.log(`[Thumbnail] exifr thumbnail extraction succeeded: ${thumbnailPath}`);
+                return thumbnailPath;
+              }
+            }
+          }
+
+          console.warn(`[Thumbnail] exifr thumbnail extraction failed for: ${filename}`);
+        } catch (exifrError) {
+          const exifrErrorMsg = exifrError instanceof Error ? exifrError.message : String(exifrError);
+          console.error(`[Thumbnail] exifr thumbnail also failed for ${filename}: ${exifrErrorMsg}`);
+        }
+
         // If all attempts fail, return null
         console.warn(
           `[Thumbnail] All HEIC conversion attempts failed for ${filename}. The file may require additional codecs or plugins. Will use full file path as fallback.`
