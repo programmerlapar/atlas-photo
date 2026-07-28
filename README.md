@@ -6,9 +6,10 @@
 ![Version](https://img.shields.io/badge/version-0.1.0-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows%2C%20macOS%2C%20Linux-green)
 
----
+![App Screenshot 1](images/atlas-app-01.png)
+![App Screenshot 2](images/atlas-app-02.png)
 
-## ✨ Key Features
+---
 
 *   📸 **Fluid & Intuitive Gallery:** A beautifully crafted interface designed for seamless photo browsing and discovery.
 *   🗺️ **Map View Integration:** Instantly see where each photo was taken on an interactive leaflet map.
