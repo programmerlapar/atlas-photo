@@ -1,3 +1,11 @@
+import logoImg from '../../assets/logo.png';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useMotionNavigate } from '../../hooks/useMotionNavigate';
+import { useFilterStore, type GroupOption } from '../../stores/filterStore';
+import { useThemeStore } from '../../stores/themeStore';
+import { usePhotoStore } from '../../stores/photoStore';
+import { scanDirectory } from '../../services/api';
 import {
   ChevronDown,
   ChevronRight,
@@ -9,13 +17,6 @@ import {
   SlidersHorizontal,
   Sun,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
-import { useMotionNavigate } from '../../hooks/useMotionNavigate';
-import { useFilterStore, type GroupOption } from '../../stores/filterStore';
-import { useThemeStore } from '../../stores/themeStore';
-import { usePhotoStore } from '../../stores/photoStore';
-import { scanDirectory } from '../../services/api';
 
 /** Attached top-level navigation, intentionally limited to Library and Albums. */
 const AppSidebar = () => {
@@ -95,7 +96,7 @@ const AppSidebar = () => {
   return (
     <aside className="desktop-sidebar" aria-label="Primary navigation">
       <div className="desktop-sidebar-brand">
-        <img src="/icons/logo.png" className="desktop-sidebar-logo" alt="" />
+        <img src={logoImg} className="desktop-sidebar-logo" alt="" />
         <div>
           <p className="text-[15px] font-semibold tracking-[-0.01em] text-[var(--photos-primary-text)]">
             Atlas Photo

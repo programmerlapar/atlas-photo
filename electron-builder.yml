@@ -1,17 +1,16 @@
-appId: com.atlasphoto.app
-productName: PhotoMap
+appId: com.example.atlas-photo
+productName: Atlas Photo
 directories:
-  output: dist
-  buildResources: resources
+  output: release
+  buildResources: build
 files:
-  - dist-electron/**
-  - dist-renderer/**
-  - package.json
+  - dist-electron/**/*
+  - public/**/*
 win:
   target:
     - nsis
     - portable
-  icon: resources/icons/icon.ico
+  icon: public/icons/logo.png
 mac:
   target:
     - dmg
