@@ -62,7 +62,7 @@ const AppSidebar = () => {
       }
     };
     void loadAlbumPaths();
-  }, []);
+  }, [location.pathname]);
 
   const handleAlbumSelect = async (path: string) => {
     navigate('/gallery');
