@@ -84,10 +84,9 @@ yarn electron:build
 ```
 
 ---
+## ☕ Support the Project
 
-## 📜 License
-
-This project is licensed under the MIT License. See the [`LICENSE`](LICENSE) file for details.
+If you find Atlas Photo useful, consider supporting its development!
+[Buy me a coffee via PayPal](https://paypal.me/programmerlapar)
 
 ---
-*Created with ❤️ by the Atlas Photo Team.*
