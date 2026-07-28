@@ -1,6 +1,6 @@
 {
   "name": "atlas-photo",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A beautiful Atlas Photo gallery app with map integration, inspired by iOS Photos",
   "main": "dist-electron/main/index.js",
   "author": "",
