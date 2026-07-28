@@ -1,54 +1,90 @@
-# PhotoMap
+# 🗺️ Atlas Photo
 
-A beautiful photo gallery app with map integration, inspired by iOS Photos.
+**Atlas Photo** is a premium, privacy-first photo gallery application that seamlessly integrates your photos with an interactive map. It brings your memories to life through beautiful, fluid interfaces and geographic context.
 
-## Features
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Version](https://img.shields.io/badge/version-0.1.0-blue)
+![Platform](https://img.shields.io/badge/platform-Windows%2C%20macOS%2C%20Linux-green)
 
-- 🖼️ iOS Photos-style gallery interface
-- 🗺️ Interactive map showing photo locations
-- 📍 Automatic GPS extraction from EXIF data
-- 🔒 100% local, privacy-first
-- 🖥️ Cross-platform (Windows, macOS, Linux)
+---
 
-## Development
+## ✨ Key Features
+
+*   📸 **Fluid & Intuitive Gallery:** A beautifully crafted interface designed for seamless photo browsing and discovery.
+*   🗺️ **Map View Integration:** Instantly see where each photo was taken on an interactive leaflet map.
+*   📍 **Automatic Metadata Extraction:** Automatically pulls GPS coordinates from EXIF data to populate the map.
+*   🔒 **Privacy-First & Local-Only:** Your photos never leave your device. Everything is processed 100% locally for maximum security and privacy.
+*   🚀 **High Performance:** Built with Electron, React, and Vite for a smooth, responsive experience.
+
+---
+
+## 📥 Downloads
+
+Get the latest version of Atlas Photo below:
+
+| Platform | Type | Download Link |
+| :--- | :--- | :--- |
+| **Windows** | Installer (`.exe`) | [Download Setup](https://github.com/programmerlapar/atlas-photo/releases/download/v0.1.0/Atlas%20Photo%20Setup%200.1.0.exe) |
+| **Windows** | Portable (`.exe`) | [Download Portable](https://github.com/programmerlapar/atlas-photo/releases/download/v0.1.0/Atlas%20Photo%200.1.0.exe) |
+
+> *Note: Links above are placeholders. Please visit our [Releases Page](https://github.com/programmerlapar/atlas-photo/releases) to download the latest version.*
+
+---
+
+## 🛠️ Technical Deep Dive
+
+Atlas Photo is built with a modern, robust tech stack:
+
+*   **Frontend:** React 18 + Tailwind CSS v4 (for beautiful styling)
+*   **Desktop Framework:** Electron (for cross-platform capability)
+*   **Build Engine:** Vite (for lightning-fast development and bundling)
+*   **Map Rendering:** Leaflet (highly performant interactive maps)
+*   **Metadata Parsing:** `exifr` (specialized EXIF data handling)
+*   **Image Processing:** `sharp` (high-speed image manipulation)
+*   **State Management:** Zustand (orchestrated global state)
+
+---
+
+## 💻 Getting Started (For Developers)
+
+If you want to explore the codebase or contribute, follow these steps.
 
 ### Prerequisites
 
-- Node.js 18+
-- Yarn
+*   [Node.js](https://nodejs.org/) (v18+)
+*   [Yarn](https://yarnpkg.com/)
 
-### Setup
+### Setup & Installation
 
-1. Install dependencies:
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/programmerlapar/atlas-photo.git
+    cd atlas-photo
+    ```
 
-```bash
-yarn install
-```
+2.  **Install dependencies:**
+    ```bash
+    yarn install
+    ```
 
-2. Start development server:
+3.  **Run in development mode:**
+    ```bash
+    yarn electron:dev
+    ```
 
-```bash
-yarn electron:dev
-```
+### Building for Production
 
-### Build
-
-Build for production:
+To generate production-ready binaries:
 
 ```bash
 yarn electron:build
 ```
 
-## Tech Stack
+---
 
-- **Framework**: Electron + React 18
-- **Build Tool**: Vite
-- **UI**: Tailwind CSS v4
-- **Icons**: lucide-react
-- **Map**: Leaflet
-- **EXIF**: exifr
-- **Image Processing**: Sharp
+## 📜 License
 
-## License
+This project is licensed under the MIT License. See the [`LICENSE`](LICENSE) file for details.
 
-MIT
+---
+*Created with ❤️ by the Atlas Photo Team.*
