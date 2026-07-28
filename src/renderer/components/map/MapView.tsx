@@ -5,7 +5,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import { debounce } from 'lodash.debounce';
+import debounce from 'lodash.debounce';
 import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import * as Leaflet from 'leaflet';
 import { DivIcon, LatLngBounds } from 'leaflet';

@@ -4,5 +4,5 @@ declare module 'lodash.debounce' {
     wait?: number,
     options?: { leading?: boolean; maxWait?: number; trailing?: boolean }
   ): T & { cancel: () => void; flush: () => void };
-  export { debounce };
+  export default debounce;
 }

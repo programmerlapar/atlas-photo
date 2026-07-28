@@ -1,7 +1,7 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, app } from 'electron';
 import { join } from 'path';
 
-const isDev = process.env.NODE_ENV === 'development';
+const isDev = !app.isPackaged;
 
 /**
  * Creates and configures the main application window
@@ -35,9 +35,9 @@ export const createMainWindow = (): BrowserWindow => {
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(join(__dirname, '../../renderer/index.html'));
-  }
+     } else {
+     mainWindow.loadFile(join(__dirname, '../../dist-electron/renderer/index.html'));
+   }
 
   // Set Content-Security-Policy for security
   // Note: In development mode, we need 'unsafe-eval' for Vite HMR, which will trigger
