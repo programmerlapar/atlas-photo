@@ -6,8 +6,10 @@
 ![Version](https://img.shields.io/badge/version-0.1.0-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows%2C%20macOS%2C%20Linux-green)
 
-![App Screenshot 1](images/atlas-app-01.png)
-![App Screenshot 2](images/atlas-app-02.png)
+<p align="center">
+  <img src="public/images/atlas-app-01.png" alt="Atlas Photo gallery view" width="49%">
+  <img src="public/images/atlas-app-02.png" alt="Atlas Photo map view" width="49%">
+</p>
 
 ---
 
