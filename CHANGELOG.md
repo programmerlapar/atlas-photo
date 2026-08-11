@@ -7,6 +7,9 @@ this project adheres to to the semantic versioning specification as described by
 
 ## [unreleased]
 
+### Changed
+- Made GitHub repository description SEO-friendly.
+
 ## [0.1.0] - 2026-07-28
 
 ### Added
