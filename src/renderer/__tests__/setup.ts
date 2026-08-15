@@ -1,5 +1,26 @@
 import { vi, beforeEach, afterEach } from 'vitest';
 
+// jsdom under Node 26 does not expose localStorage (its experimental global
+// shadows the jsdom window property). Stores read it at import time, so a
+// minimal in-memory shim keeps the whole renderer graph importable in tests.
+const localStorageShim = (() => {
+  const data = new Map<string, string>();
+  return {
+    getItem: (key: string) => data.get(key) ?? null,
+    setItem: (key: string, value: string) => void data.set(key, String(value)),
+    removeItem: (key: string) => void data.delete(key),
+    clear: () => data.clear(),
+  };
+})();
+
+if (typeof localStorage === 'undefined') {
+  Object.defineProperty(globalThis, 'localStorage', {
+    value: localStorageShim,
+    configurable: true,
+    writable: true,
+  });
+}
+
 // Stub electronAPI used throughout the renderer
 Object.defineProperty(window, 'electronAPI', {
   value: {

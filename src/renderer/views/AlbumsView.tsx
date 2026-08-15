@@ -130,7 +130,10 @@ const AlbumsView = () => {
             name,
             photoCount: albumInfo.photoCount,
             thumbnailPath:
-              customCover.thumbnailPath || albumInfo.thumbnailPath || undefined,
+              customCover.thumbnailPath ??
+              customCover.photoPath ??
+              albumInfo.thumbnailPath ??
+              undefined,
           };
         })
       );
