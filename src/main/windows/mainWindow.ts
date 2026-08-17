@@ -40,22 +40,26 @@ export const createMainWindow = (): BrowserWindow => {
    }
 
   // Set Content-Security-Policy for security
-  // Note: In development mode, we need 'unsafe-eval' for Vite HMR, which will trigger
-  // Electron's security warning. This is expected and safe in development.
-  // The warning will not appear in packaged builds.
+  // In development mode, we need 'unsafe-eval' and 'unsafe-inline' for Vite HMR,
+  // which triggers an Electron security warning that is expected and safe in dev.
+  // Packaged builds use a stricter policy without those directives.
+  const scriptSrc = isDev
+    ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+    : "script-src 'self'; ";
+  const csp =
+    "default-src 'self'; " +
+    scriptSrc +
+    "style-src 'self' 'unsafe-inline'; " +
+    "img-src 'self' data: atlas-photo: file: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org; " +
+    "font-src 'self' data:; " +
+    "connect-src 'self' http://localhost:* ws://localhost:* ws://127.0.0.1:* https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org;";
+
   mainWindow.webContents.session.webRequest.onHeadersReceived(
     (details, callback) => {
       callback({
         responseHeaders: {
           ...details.responseHeaders,
-          'Content-Security-Policy': [
-            "default-src 'self'; " +
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
-              "style-src 'self' 'unsafe-inline'; " +
-               "img-src 'self' data: atlas-photo: file: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org; " +
-              "font-src 'self' data:; " +
-              "connect-src 'self' http://localhost:* ws://localhost:* ws://127.0.0.1:* https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org;",
-          ],
+          'Content-Security-Policy': [csp],
         },
       });
     }
