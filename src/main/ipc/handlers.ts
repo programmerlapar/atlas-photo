@@ -352,8 +352,12 @@ export const setupIpcHandlers = () => {
         return { photoPath: null, thumbnailPath: null };
       }
 
-      // Do not make collection rendering wait on a custom-cover conversion.
-      return { photoPath: coverPhotoPath, thumbnailPath: null };
+      // The cover thumbnail was generated (and cached on disk) when the
+      // cover was set, so this is a fast cache read rather than a blocking
+      // conversion. The renderer falls back to the cover photo itself when no
+      // thumbnail is available.
+      const thumbnailPath = await imageCache.getThumbnail(coverPhotoPath);
+      return { photoPath: coverPhotoPath, thumbnailPath };
     } catch (error) {
       console.error('Error getting album cover:', error);
       return { photoPath: null, thumbnailPath: null };
