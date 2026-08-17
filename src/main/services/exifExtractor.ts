@@ -42,13 +42,16 @@ export const extractPhotoMetadata = async (
     const metadata: PhotoMetadata = {};
 
     // Extract GPS location
-    if (exifData.latitude && exifData.longitude) {
+    if (
+      Number.isFinite(exifData.latitude) &&
+      Number.isFinite(exifData.longitude)
+    ) {
       const location: Location = {
         latitude: exifData.latitude,
         longitude: exifData.longitude,
       };
 
-      if (exifData.GPSAltitude) {
+      if (Number.isFinite(exifData.GPSAltitude)) {
         location.altitude = exifData.GPSAltitude;
       }
 
