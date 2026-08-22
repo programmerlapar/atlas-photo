@@ -175,7 +175,7 @@ export const useFilterStore = create<FilterState>((set, get) => {
         let comparison = 0;
 
         switch (sortBy) {
-          case 'date':
+          case 'date': {
             const aDate = a.metadata?.date
               ? new Date(a.metadata.date).getTime()
               : 0;
@@ -184,10 +184,11 @@ export const useFilterStore = create<FilterState>((set, get) => {
               : 0;
             comparison = aDate - bDate;
             break;
+          }
           case 'name':
             comparison = a.filename.localeCompare(b.filename);
             break;
-          case 'location':
+          case 'location': {
             const aLoc = a.metadata?.location
               ? `${a.metadata.location.latitude},${a.metadata.location.longitude}`
               : '';
@@ -196,6 +197,7 @@ export const useFilterStore = create<FilterState>((set, get) => {
               : '';
             comparison = aLoc.localeCompare(bLoc);
             break;
+          }
           case 'size':
             // TODO: Get file size from metadata
             comparison = 0;
