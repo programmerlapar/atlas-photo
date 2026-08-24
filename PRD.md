@@ -713,7 +713,7 @@ Main Gallery View
 
 - **Browser/device support**:
   - **Desktop platforms**: Windows 10+, macOS 10.14+, Linux (Ubuntu 20.04+, Fedora 32+)
-  - **Electron version**: Latest stable Electron (compatible with Node.js 18+)
+  - **Electron version**: Electron 43.4.1 or newer (requires Node.js 22.12.0+)
   - **Display resolutions**: Support from 1280x720 to 4K and higher
   - **DPI scaling**: Support high-DPI displays (Retina, 4K, etc.)
   - **Touch support**: Basic touch gestures for photo navigation (trackpad/touchscreen)
