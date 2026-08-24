@@ -9,6 +9,7 @@ import { FileWatcher } from '../services/fileWatcher';
 import { Storage } from '../utils/storage';
 import { PhotoIndex } from '../services/photoIndex';
 import { ImageCacheService } from './cache/ImageCacheService';
+import { addAllowedLibraryRoot } from '../utils/protocol';
 import type { Photo } from '../../shared/types/photo';
 
 // Store photo data in memory for current session
@@ -115,6 +116,7 @@ export const setupIpcHandlers = () => {
   ipcMain.handle('scan-directory', async (_event, path: string) => {
     try {
       currentDirectory = path;
+      addAllowedLibraryRoot(path);
 
       // Save directory to storage for persistence
       await storage.set('lastDirectory', path);

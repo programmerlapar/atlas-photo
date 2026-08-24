@@ -1,69 +1,106 @@
 import { protocol, session } from 'electron';
-import { existsSync } from 'fs';
+import { existsSync, realpathSync } from 'fs';
 import { Buffer } from 'buffer';
+import { isAbsolute, relative } from 'path';
+
+type ProtocolCallback = (response: Electron.ProtocolResponse) => void;
+
+const isPathInsideRoot = (filePath: string, rootPath: string): boolean => {
+  const relativePath = relative(rootPath, filePath);
+  return (
+    relativePath === '' ||
+    (!relativePath.startsWith('..') && !isAbsolute(relativePath))
+  );
+};
+
+const canonicalizeRoots = (roots: string[]): string[] =>
+  roots.flatMap((root) => {
+    try {
+      return existsSync(root) ? [realpathSync(root)] : [];
+    } catch {
+      return [];
+    }
+  });
+
+export const isAllowedProtocolPath = (
+  filePath: string,
+  allowedRoots: string[]
+): string | null => {
+  if (!isAbsolute(filePath) || !existsSync(filePath)) return null;
+
+  try {
+    const resolvedFilePath = realpathSync(filePath);
+    return canonicalizeRoots(allowedRoots).some((root) =>
+      isPathInsideRoot(resolvedFilePath, root)
+    )
+      ? resolvedFilePath
+      : null;
+  } catch {
+    return null;
+  }
+};
+
+let allowedLibraryRoots: string[] = [];
+
+export const addAllowedLibraryRoot = (root: string): void => {
+  try {
+    if (!existsSync(root)) return;
+    const canonicalRoot = realpathSync(root);
+    if (!allowedLibraryRoots.includes(canonicalRoot)) {
+      allowedLibraryRoots = [...allowedLibraryRoots, canonicalRoot];
+    }
+  } catch {
+    // Ignore directories that disappear while being configured.
+  }
+};
 
 /**
- * Registers a custom protocol handler for serving thumbnails and photos
- * This allows the renderer to load local files without security restrictions
- *
- * IMPORTANT: When using custom partitions (e.g., 'persist:main'), the protocol
- * must be registered to that specific session, not the default session.
+ * Registers a custom protocol for serving files from configured photo libraries.
+ * The same handler is registered on both the main and persistent sessions.
  */
-export const registerCustomProtocol = () => {
+export const registerCustomProtocol = (allowedRoots: string[] = []) => {
+  allowedRoots.forEach(addAllowedLibraryRoot);
   try {
-    // Get the custom session that matches the partition used in mainWindow
     const customSession = session.fromPartition('persist:main');
-
-    // Protocol handler function
     const protocolHandler = (
       request: Electron.ProtocolRequest,
-      callback: (response: Electron.ProtocolResponse) => void
+      callback: ProtocolCallback
     ) => {
       const url = request.url.replace('atlas-photo://', '');
 
-      // Decode the file path from base64url
-      // The renderer uses browser-compatible encoding (TextEncoder + btoa)
-      // We need to decode it here in the main process
       try {
-        // Convert base64url to base64 (replace - with +, _ with /, add padding)
         let base64 = url.replace(/-/g, '+').replace(/_/g, '/');
-        // Add padding if needed
-        while (base64.length % 4) {
-          base64 += '=';
-        }
+        while (base64.length % 4) base64 += '=';
 
-        // Decode using Buffer (Node.js API available in main process)
         const filePath = Buffer.from(base64, 'base64').toString('utf-8');
+        const allowedFilePath = isAllowedProtocolPath(filePath, allowedLibraryRoots);
 
-        // Verify file exists
-        if (existsSync(filePath)) {
-        callback({ path: filePath });
+        if (allowedFilePath) {
+          callback({ path: allowedFilePath });
         } else {
-          console.error('[Protocol] File not found:', filePath);
-          callback({ error: -2 }); // FILE_NOT_FOUND
+          console.warn(
+            '[Protocol] Rejected file outside configured library roots:',
+            filePath
+          );
+          callback({ error: -10 });
         }
       } catch (error) {
         console.error('Error handling protocol request:', error);
-        callback({ error: -2 }); // FILE_NOT_FOUND
+        callback({ error: -2 });
       }
     };
 
-    // Unregister protocol first if it exists (to allow re-registration)
-    // Note: unregisterProtocol may throw if protocol doesn't exist, so we wrap in try-catch
     try {
-        customSession.protocol.unregisterProtocol('atlas-photo');
-    } catch (error) {
-      // Ignore if protocol doesn't exist or unregister fails
+      customSession.protocol.unregisterProtocol('atlas-photo');
+    } catch {
+      // The protocol may not be registered on the first launch.
     }
-
-    // Register protocol to the custom session
     customSession.protocol.registerFileProtocol('atlas-photo', protocolHandler);
 
-    // Also register to default session as fallback
     try {
       protocol.unregisterProtocol('atlas-photo');
-    } catch (error) {
-      // Ignore if protocol doesn't exist or unregister fails
+    } catch {
+      // The protocol may not be registered on the first launch.
     }
     protocol.registerFileProtocol('atlas-photo', protocolHandler);
   } catch (error) {
