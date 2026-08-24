@@ -24,13 +24,13 @@ const canonicalizeRoots = (roots: string[]): string[] =>
 
 export const isAllowedProtocolPath = (
   filePath: string,
-  allowedRoots: string[]
+  allowedRoots?: string[]
 ): string | null => {
   if (!isAbsolute(filePath) || !existsSync(filePath)) return null;
 
   try {
     const resolvedFilePath = realpathSync(filePath);
-    return canonicalizeRoots(allowedRoots).some((root) =>
+    return canonicalizeRoots(allowedRoots ?? allowedLibraryRoots).some((root) =>
       isPathInsideRoot(resolvedFilePath, root)
     )
       ? resolvedFilePath
@@ -41,6 +41,10 @@ export const isAllowedProtocolPath = (
 };
 
 let allowedLibraryRoots: string[] = [];
+
+export const restoreAllowedLibraryRoots = (roots: string[]): void => {
+  roots.forEach(addAllowedLibraryRoot);
+};
 
 export const addAllowedLibraryRoot = (root: string): void => {
   try {
@@ -59,7 +63,7 @@ export const addAllowedLibraryRoot = (root: string): void => {
  * The same handler is registered on both the main and persistent sessions.
  */
 export const registerCustomProtocol = (allowedRoots: string[] = []) => {
-  allowedRoots.forEach(addAllowedLibraryRoot);
+  restoreAllowedLibraryRoots(allowedRoots);
   try {
     const customSession = session.fromPartition('persist:main');
     const protocolHandler = (

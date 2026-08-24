@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { isAllowedProtocolPath } from '../protocol';
+import { isAllowedProtocolPath, restoreAllowedLibraryRoots } from '../protocol';
 
 const temporaryDirectories: string[] = [];
 
@@ -14,6 +14,17 @@ afterEach(() => {
 });
 
 describe('isAllowedProtocolPath', () => {
+  it('restores persisted roots before protocol requests are checked', () => {
+    const library = mkdtempSync(join(tmpdir(), 'atlas-photo-library-'));
+    temporaryDirectories.push(library);
+    const photo = join(library, 'photo.jpg');
+    writeFileSync(photo, 'photo');
+
+    restoreAllowedLibraryRoots([library]);
+
+    expect(isAllowedProtocolPath(photo)).toBe(photo);
+  });
+
   it('allows existing files within a configured library', () => {
     const library = mkdtempSync(join(tmpdir(), 'atlas-photo-library-'));
     temporaryDirectories.push(library);
