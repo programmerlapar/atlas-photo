@@ -54,7 +54,7 @@ If you want to explore the codebase or contribute, follow these steps.
 
 ### Prerequisites
 
-*   [Node.js](https://nodejs.org/) (v18+)
+*   [Node.js](https://nodejs.org/) (v22.12.0+)
 *   [Yarn](https://yarnpkg.com/)
 
 ### Setup & Installation
