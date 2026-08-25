@@ -19,7 +19,7 @@ export const createMainWindow = (): BrowserWindow => {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,
       nodeIntegration: false,
-      sandbox: false, // Disable sandbox to allow custom protocol access
+      sandbox: true,
       // Use session cache instead of disk cache
       partition: 'persist:main',
       // Allow custom protocols to work
