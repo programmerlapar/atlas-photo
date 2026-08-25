@@ -1,7 +1,8 @@
 import { app, BrowserWindow } from 'electron';
 import { createMainWindow } from './windows/mainWindow';
 import { setupIpcHandlers } from './ipc/handlers';
-import { registerCustomProtocol } from './utils/protocol';
+import { registerCustomProtocol, restoreAllowedLibraryRoots } from './utils/protocol';
+import { Storage } from './utils/storage';
 
 // Configure cache paths and command line switches before app is ready
 // This must be called before app.whenReady()
@@ -29,7 +30,14 @@ if (process.platform === 'win32') {
 setupIpcHandlers();
 
 // Handle app lifecycle
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  const storage = new Storage();
+  const recentDirectories = (await storage.get<string[]>('recentDirectories')) || [];
+  const lastDirectory = await storage.get<string>('lastDirectory');
+  restoreAllowedLibraryRoots(
+    lastDirectory ? [...recentDirectories, lastDirectory] : recentDirectories
+  );
+
   // Register custom protocol for serving thumbnails and photos
   // This must be done before creating the window to ensure protocol is available
   // Protocol registration must be synchronous - it cannot be async
