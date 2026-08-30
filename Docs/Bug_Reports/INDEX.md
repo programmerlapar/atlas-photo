@@ -2,7 +2,7 @@
 
 **Purpose:** Central index of all bug reports for easy searching and reference.
 
-**Last Updated:** 2024-12-19 (Added BUG-014, BUG-015, BUG-016)
+**Last Updated:** 2026-08-27 (Reconciled all resolved bug reports)
 
 ---
 
@@ -17,18 +17,18 @@
 
 ### By Severity
 
-- **Critical:** 12 bugs (BUG-001, BUG-002, BUG-003, BUG-004, BUG-005, BUG-006, BUG-007, BUG-010, BUG-011, BUG-012, BUG-013, BUG-016)
-- **Major:** 2 bugs (BUG-008, BUG-009)
+- **Critical:** 14 reports (BUG-001, BUG-002, BUG-003, BUG-004, BUG-005, BUG-006, BUG-007, BUG-007, BUG-008, BUG-010, BUG-011, BUG-012, BUG-013, BUG-016)
+- **Major:** 2 reports (BUG-008, BUG-009)
 - **Minor:** 2 bugs (BUG-014, BUG-015)
 
 ### By Category
 
 - **Next.js:** 2 bugs (BUG-004, BUG-005)
-- **Amplify:** 0 bugs
+- **Amplify:** 3 bugs (BUG-006, BUG-007, BUG-008)
 - **TypeScript:** 0 bugs
-- **Packages:** 0 bugs
+- **Packages:** 2 bugs (BUG-002, BUG-003)
 - **Configuration:** 3 bugs (BUG-001, BUG-006, BUG-007)
-- **Electron:** 2 bugs (BUG-008, BUG-015)
+- **Electron:** 7 bugs (BUG-008, BUG-009, BUG-010, BUG-011, BUG-012, BUG-013, BUG-015)
 - **UI/UX:** 1 bug (BUG-016)
 - **API:** 0 bugs
 - **General:** 1 bug (BUG-014)
@@ -46,9 +46,11 @@
 
 ### Amplify Issues
 
-| Bug ID | Title | Severity | Status | Date | Link |
-| ------ | ----- | -------- | ------ | ---- | ---- |
-| -      | -     | -        | -      | -    | -    |
+| Bug ID  | Title                                                | Severity | Status   | Date       | Link                                                                      |
+| ------- | ---------------------------------------------------- | -------- | -------- | ---------- | ------------------------------------------------------------------------- |
+| BUG-006 | Amplify Backend CLI Missing aws-cdk-lib Error        | Critical | Resolved | 2024-12-19 | [link](./amplify/amplify-backend-cli-missing-aws-cdk-lib-error.md)        |
+| BUG-007 | Amplify GraphQL Transformer Missing Constructs Error | Critical | Resolved | 2024-12-19 | [link](./amplify/amplify-graphql-transformer-missing-constructs-error.md) |
+| BUG-008 | Amplify Backend Missing Config Files Error           | Critical | Resolved | 2024-12-19 | [link](./amplify/amplify-backend-missing-config-files-error.md)           |
 
 ### TypeScript Issues
 
@@ -70,15 +72,11 @@
 | BUG-001 | Tailwind CSS Variable Mapping Error           | Critical | Resolved | 2024-12-19 | [link](./configuration/tailwind-css-variable-mapping-error.md)           |
 | BUG-006 | Tailwind CSS v4 PostCSS Plugin Error          | Critical | Resolved | 2024-12-19 | [link](./configuration/tailwind-css-v4-postcss-plugin-error.md)          |
 | BUG-007 | Electron Vite Output Directory Mismatch Error | Critical | Resolved | 2024-12-19 | [link](./configuration/electron-vite-output-directory-mismatch-error.md) |
-| BUG-002 | Framer Motion motion-dom Import Error         | Critical | Resolved | 2024-12-19 | [link](./dependencies/framer-motion-motion-dom-import-error.md)          |
-| BUG-003 | Zod @hookform/resolvers Compatibility Error   | Critical | Resolved | 2024-12-19 | [link](./dependencies/zod-hookform-resolvers-compatibility-error.md)     |
-| BUG-004 | Next.js Route Group Routing Error             | Critical | Resolved | 2024-12-19 | [link](./nextjs/nextjs-route-group-routing-error.md)                     |
-| BUG-005 | Next.js useSearchParams Suspense Error        | Critical | Resolved | 2024-12-19 | [link](./nextjs/nextjs-usesearchparams-suspense-error.md)                |
 
 ### UI/UX Issues
 
-| Bug ID  | Title                                  | Severity | Status   | Date       | Link                                                      |
-| ------- | -------------------------------------- | -------- | -------- | ---------- | --------------------------------------------------------- |
+| Bug ID  | Title                                 | Severity | Status   | Date       | Link                                                     |
+| ------- | ------------------------------------- | -------- | -------- | ---------- | -------------------------------------------------------- |
 | BUG-016 | Skeleton Component Not Imported Error | Critical | Resolved | 2024-12-19 | [link](./ui-ux/skeleton-component-not-imported-error.md) |
 
 ### API Integration Issues
@@ -97,13 +95,13 @@
 | BUG-011 | Photo ID Routing Error with File Paths                        | Critical | Resolved | 2024-12-19 | [link](./electron/photo-id-routing-error.md)                    |
 | BUG-012 | Buffer Not Defined Error in Renderer Process                  | Critical | Resolved | 2024-12-19 | [link](./electron/buffer-not-defined-renderer-error.md)         |
 | BUG-013 | Custom Protocol Not Registered Error (ERR_UNKNOWN_URL_SCHEME) | Critical | Resolved | 2024-12-19 | [link](./electron/custom-protocol-not-registered-error.md)      |
-| BUG-015 | Electron Content-Security-Policy Warning                     | Minor    | Resolved | 2024-12-19 | [link](./electron/electron-content-security-policy-warning.md)  |
+| BUG-015 | Electron Content-Security-Policy Warning                      | Minor    | Resolved | 2024-12-19 | [link](./electron/electron-content-security-policy-warning.md)  |
 
 ### General Issues
 
-| Bug ID  | Title                                  | Severity | Status   | Date       | Link                                                          |
-| ------- | -------------------------------------- | -------- | -------- | ---------- | ------------------------------------------------------------- |
-| BUG-014 | React Router Future Flag Warnings      | Minor    | Resolved | 2024-12-19 | [link](./general/react-router-future-flag-warnings.md)      |
+| Bug ID  | Title                             | Severity | Status   | Date       | Link                                                   |
+| ------- | --------------------------------- | -------- | -------- | ---------- | ------------------------------------------------------ |
+| BUG-014 | React Router Future Flag Warnings | Minor    | Resolved | 2024-12-19 | [link](./general/react-router-future-flag-warnings.md) |
 
 ---
 
