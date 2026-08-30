@@ -4,9 +4,11 @@ vi.mock('exifr', () => ({
   default: { parse: vi.fn() },
 }));
 
+const { mockedStat } = vi.hoisted(() => ({ mockedStat: vi.fn() }));
+
 vi.mock('fs/promises', () => ({
-  default: { stat: vi.fn() },
-  stat: vi.fn(),
+  default: { stat: mockedStat },
+  stat: mockedStat,
 }));
 
 import exifr from 'exifr';
@@ -14,8 +16,6 @@ import { stat } from 'fs/promises';
 import { extractPhotoMetadata } from '../exifExtractor';
 
 const mockedExifrParse = vi.mocked(exifr.parse);
-const mockedStat = vi.mocked(stat);
-
 beforeEach(() => {
   vi.clearAllMocks();
   mockedStat.mockResolvedValue({
@@ -165,5 +165,18 @@ describe('extractPhotoMetadata – GPS coordinates', () => {
       latitude: -6.2088,
       longitude: 106.8456,
     });
+  });
+});
+
+describe('extractPhotoMetadata – filesystem date fallback', () => {
+  it('returns the filesystem date when exifr.parse throws', async () => {
+    const photoPath = '/fake/photo.jpg';
+    mockedExifrParse.mockRejectedValue(new Error('parse failed'));
+
+    const result = await extractPhotoMetadata(photoPath);
+
+    expect(result).toEqual({ date: new Date(1000) });
+    expect(mockedStat).toHaveBeenCalledOnce();
+    expect(mockedStat).toHaveBeenCalledWith(photoPath);
   });
 });
