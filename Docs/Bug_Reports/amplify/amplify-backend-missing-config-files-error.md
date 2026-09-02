@@ -8,7 +8,7 @@
 ## Metadata (AI-Friendly)
 
 ```yaml
-bug_id: BUG-008
+bug_id: BUG-019
 category: amplify
 context: amplify/gen2-backend-config
 severity: critical

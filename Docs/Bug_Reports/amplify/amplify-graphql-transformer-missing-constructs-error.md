@@ -8,7 +8,7 @@
 ## Metadata (AI-Friendly)
 
 ```yaml
-bug_id: BUG-007
+bug_id: BUG-018
 category: amplify
 context: amplify/gen2-graphql-transformer
 severity: critical
@@ -23,7 +23,7 @@ related_files:
   - Docs/Implementation.md
   - Docs/Configuration_Guide.md
 related_bugs:
-  - BUG-006
+  - BUG-017
 tags:
   - amplify
   - graphql-transformer
@@ -126,7 +126,7 @@ Require stack:
   - Peer dependencies are not automatically installed by npm/yarn (they must be explicitly added)
   - The implementation plan did not identify `constructs` as a required dependency for Amplify Gen 2 GraphQL features
   - The Amplify Gen 2 documentation may not explicitly state this dependency requirement for GraphQL transformer
-  - This is related to BUG-006 (aws-cdk-lib missing) - both are AWS CDK-related peer dependencies
+  - This is related to BUG-017 (aws-cdk-lib missing) - both are AWS CDK-related peer dependencies
 - **Why it wasn't caught earlier:**
   - The dependency compatibility matrix in Implementation.md did not include AWS CDK peer dependencies for GraphQL transformer
   - The Configuration_Guide.md did not list `constructs` as a required dev dependency
@@ -199,7 +199,7 @@ Require stack:
 
 **Related Issues:**
 
-- BUG-006: Amplify Backend CLI Missing aws-cdk-lib Error (similar peer dependency issue)
+- BUG-017: Amplify Backend CLI Missing aws-cdk-lib Error (similar peer dependency issue)
 - Both `aws-cdk-lib` and `constructs` are AWS CDK foundational packages required by Amplify Gen 2
 
 **External Resources:**
