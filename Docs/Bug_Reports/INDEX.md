@@ -2,7 +2,7 @@
 
 **Purpose:** Central index of all bug reports for easy searching and reference.
 
-**Last Updated:** 2026-08-27 (Reconciled all resolved bug reports)
+**Last Updated:** 2026-09-02 (Regenerated from report metadata)
 
 ---
 
@@ -12,19 +12,19 @@
 
 - **Open:** 0 bugs
 - **In Progress:** 0 bugs
-- **Resolved:** 16 bugs (BUG-001, BUG-002, BUG-003, BUG-004, BUG-005, BUG-006, BUG-007, BUG-008, BUG-009, BUG-010, BUG-011, BUG-012, BUG-013, BUG-014, BUG-015, BUG-016)
+- **Resolved:** 19 bugs (BUG-001, BUG-002, BUG-003, BUG-004, BUG-005, BUG-006, BUG-007, BUG-008, BUG-009, BUG-010, BUG-011, BUG-012, BUG-013, BUG-014, BUG-015, BUG-016, BUG-017, BUG-018, BUG-019)
 - **Closed:** 0 bugs
 
 ### By Severity
 
-- **Critical:** 14 reports (BUG-001, BUG-002, BUG-003, BUG-004, BUG-005, BUG-006, BUG-007, BUG-007, BUG-008, BUG-010, BUG-011, BUG-012, BUG-013, BUG-016)
+- **Critical:** 15 reports (BUG-001, BUG-002, BUG-003, BUG-004, BUG-005, BUG-006, BUG-007, BUG-010, BUG-011, BUG-012, BUG-013, BUG-016, BUG-017, BUG-018, BUG-019)
 - **Major:** 2 reports (BUG-008, BUG-009)
-- **Minor:** 2 bugs (BUG-014, BUG-015)
+- **Minor:** 2 reports (BUG-014, BUG-015)
 
 ### By Category
 
 - **Next.js:** 2 bugs (BUG-004, BUG-005)
-- **Amplify:** 3 bugs (BUG-006, BUG-007, BUG-008)
+- **Amplify:** 3 bugs (BUG-017, BUG-018, BUG-019)
 - **TypeScript:** 0 bugs
 - **Packages:** 2 bugs (BUG-002, BUG-003)
 - **Configuration:** 3 bugs (BUG-001, BUG-006, BUG-007)
@@ -48,9 +48,9 @@
 
 | Bug ID  | Title                                                | Severity | Status   | Date       | Link                                                                      |
 | ------- | ---------------------------------------------------- | -------- | -------- | ---------- | ------------------------------------------------------------------------- |
-| BUG-006 | Amplify Backend CLI Missing aws-cdk-lib Error        | Critical | Resolved | 2024-12-19 | [link](./amplify/amplify-backend-cli-missing-aws-cdk-lib-error.md)        |
-| BUG-007 | Amplify GraphQL Transformer Missing Constructs Error | Critical | Resolved | 2024-12-19 | [link](./amplify/amplify-graphql-transformer-missing-constructs-error.md) |
-| BUG-008 | Amplify Backend Missing Config Files Error           | Critical | Resolved | 2024-12-19 | [link](./amplify/amplify-backend-missing-config-files-error.md)           |
+| BUG-017 | Amplify Backend CLI Missing aws-cdk-lib Error        | Critical | Resolved | 2024-12-19 | [link](./amplify/amplify-backend-cli-missing-aws-cdk-lib-error.md)        |
+| BUG-018 | Amplify GraphQL Transformer Missing Constructs Error | Critical | Resolved | 2024-12-19 | [link](./amplify/amplify-graphql-transformer-missing-constructs-error.md) |
+| BUG-019 | Amplify Backend Missing Config Files Error           | Critical | Resolved | 2024-12-19 | [link](./amplify/amplify-backend-missing-config-files-error.md)           |
 
 ### TypeScript Issues
 
