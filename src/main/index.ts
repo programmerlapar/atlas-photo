@@ -17,10 +17,9 @@ if (process.platform === 'win32') {
     console.warn('Could not set Electron cache paths:', error);
   }
 
-  // Suppress cache-related errors by disabling problematic cache features
-  // These are non-critical warnings that don't affect app functionality
+  // Suppress cache-related errors by disabling the GPU disk cache only.
+  // Keep Chromium's software rasterizer available as a fallback.
   app.commandLine.appendSwitch('disable-gpu-disk-cache');
-  app.commandLine.appendSwitch('disable-software-rasterizer');
 }
 
 // Note: Some cache permission errors may still appear in console but are non-critical.
