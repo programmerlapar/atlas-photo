@@ -12,16 +12,15 @@ bug_id: BUG-018
 category: amplify
 context: amplify/gen2-graphql-transformer
 severity: critical
-status: resolved
+status: external
 priority: high
 date_reported: 2024-12-19
-date_resolved: 2024-12-19
+date_reconciled: 2026-09-14
 reporter: Auto (AI Assistant)
 resolver: Auto (AI Assistant)
 related_files:
   - package.json
   - Docs/Implementation.md
-  - Docs/Configuration_Guide.md
 related_bugs:
   - BUG-017
 tags:
@@ -47,7 +46,7 @@ error_code: MODULE_NOT_FOUND
 
 ## Description
 
-When running `npx ampx sandbox` or other Amplify backend CLI commands with GraphQL resources, Node.js throws a `MODULE_NOT_FOUND` error because `constructs` is not installed. The `@aws-amplify/graphql-transformer-core` and related GraphQL packages require `constructs` as a peer dependency, but it's not automatically installed and was not included in the initial project setup.
+In the external Amplify project where this issue was reported, running `npx ampx sandbox` or other Amplify backend CLI commands with GraphQL resources throws a `MODULE_NOT_FOUND` error because `constructs` is not installed. The `@aws-amplify/graphql-transformer-core` and related GraphQL packages require `constructs` as a peer dependency, but it was not included in that project's initial setup. Atlas Photo is not an Amplify project and does not contain the affected packages or backend configuration.
 
 The error occurs when the GraphQL transformer tries to import `constructs` from its internal modules:
 
@@ -58,6 +57,8 @@ Error: Cannot find module 'constructs'
 The `constructs` library is a foundational package used by AWS CDK for building infrastructure constructs. It's required by Amplify's GraphQL transformer core when generating GraphQL APIs.
 
 ## Steps to Reproduce
+
+These steps describe the external Amplify project where the issue was observed; they are not runnable in Atlas Photo because this repository has no Amplify backend.
 
 1. Set up a new project with `@aws-amplify/backend-cli` and `@aws-amplify/backend` dependencies
 2. Configure Amplify backend with GraphQL resources or use Amplify's GraphQL schema generation
@@ -129,44 +130,29 @@ Require stack:
   - This is related to BUG-017 (aws-cdk-lib missing) - both are AWS CDK-related peer dependencies
 - **Why it wasn't caught earlier:**
   - The dependency compatibility matrix in Implementation.md did not include AWS CDK peer dependencies for GraphQL transformer
-  - The Configuration_Guide.md did not list `constructs` as a required dev dependency
+  - The external project's configuration guide did not list `constructs` as a required dev dependency
   - This error only occurs when using GraphQL resources or when Amplify's GraphQL transformer is invoked
 
 ## Resolution
 
-**Solution:** Add `constructs` as a dev dependency in `package.json`.
+**Status:** External / not applied in Atlas Photo.
 
-**Code Changes:**
+The documented remediation belongs to the separate Amplify project in which the error was observed. This repository has no Amplify backend, no `@aws-amplify/graphql-transformer-*` packages, and no `constructs` dependency, so no local dependency or configuration change is claimed for BUG-018.
 
-```json
-// package.json - devDependencies
-{
-  "devDependencies": {
-    // ... existing dependencies
-    "aws-cdk-lib": "^2.0.0",
-    "constructs": "^10.3.0"
-    // ... rest of dependencies
-  }
-}
-```
-
-**Files Modified:**
-
-- `package.json` - Added `constructs` to devDependencies
+**Files Modified in This Repository:** None for the original bug. The only related local files are the existing `package.json` and `Docs/Implementation.md`, which were inspected while reconciling this report.
 
 **Verification Steps:**
 
-1. Add `constructs` to `package.json` devDependencies
-2. Run `yarn install` to install the dependency
-3. Run `npx ampx sandbox` or `yarn sandbox`
-4. Verify that the sandbox starts successfully without errors
-5. Verify that GraphQL resources are processed correctly (if applicable)
+1. Run `test -f package.json` from the repository root.
+2. Run `test ! -d amplify` to confirm there is no local Amplify project context.
+3. Run `node -e "const p=require('./package.json'); if (p.dependencies?.constructs || p.devDependencies?.constructs) process.exit(1)"` to confirm the external remediation was not applied here.
+4. Do not run `npx ampx sandbox` in this repository: `ampx` and an Amplify backend are not present. Run that command only in the external Amplify project after adding `constructs` there.
 
 ## Prevention Strategies
 
 1. **Documentation Updates:**
    - Update `Docs/Implementation.md` to include `constructs` in the dependency compatibility matrix
-   - Update `Docs/Configuration_Guide.md` to list `constructs` as a required dev dependency for Amplify Gen 2 projects using GraphQL
+   - Update the configuration guide in the applicable external Amplify project to list `constructs` as a required dev dependency for Amplify Gen 2 projects using GraphQL
    - Add note about peer dependencies for Amplify GraphQL transformer packages
 
 2. **Checklist Updates:**
@@ -180,7 +166,7 @@ Require stack:
    - Add check for AWS CDK peer dependencies (`aws-cdk-lib`, `constructs`) when using Amplify Gen 2
 
 4. **Package Installation Verification:**
-   - Add verification step in Stage 1 setup to test `yarn sandbox` command
+   - Add a verification step in the external project's Stage 1 setup to test its sandbox command
    - Include peer dependency check for all AWS CDK-related packages (`aws-cdk-lib`, `constructs`)
    - Document that these dependencies are required even if not explicitly used
 
@@ -212,11 +198,10 @@ Require stack:
 
 **How to Verify Fix:**
 
-1. Ensure `constructs` is in `package.json` devDependencies
-2. Run `yarn install` to install dependencies
-3. Run `npx ampx sandbox` - should start without errors
-4. Verify backend resources are created successfully
-5. Verify GraphQL schema generation works (if using GraphQL features)
+1. In the external Amplify project, ensure `constructs` is in `package.json` devDependencies.
+2. In that project, run the project's dependency installation command.
+3. In that project, run `npx ampx sandbox` and verify that the sandbox starts without errors.
+4. Verify backend resources are created successfully and GraphQL schema generation works when applicable.
 
 **Regression Testing:**
 
@@ -227,5 +212,5 @@ Require stack:
 
 ---
 
-**Last Updated:** 2024-12-19
-**Version Fixed In:** 1.0.0
+**Last Updated:** 2026-09-14
+**Version Fixed In:** External project only; not fixed in Atlas Photo

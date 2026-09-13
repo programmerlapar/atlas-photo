@@ -2,7 +2,7 @@
 
 **Purpose:** Central index of all bug reports for easy searching and reference.
 
-**Last Updated:** 2026-09-02 (Regenerated from report metadata)
+**Last Updated:** 2026-09-14 (Reconciled with repository state)
 
 ---
 
@@ -12,8 +12,9 @@
 
 - **Open:** 0 bugs
 - **In Progress:** 0 bugs
-- **Resolved:** 19 bugs (BUG-001, BUG-002, BUG-003, BUG-004, BUG-005, BUG-006, BUG-007, BUG-008, BUG-009, BUG-010, BUG-011, BUG-012, BUG-013, BUG-014, BUG-015, BUG-016, BUG-017, BUG-018, BUG-019)
+- **Resolved:** 18 bugs (BUG-001, BUG-002, BUG-003, BUG-004, BUG-005, BUG-006, BUG-007, BUG-008, BUG-009, BUG-010, BUG-011, BUG-012, BUG-013, BUG-014, BUG-015, BUG-016, BUG-017, BUG-019)
 - **Closed:** 0 bugs
+- **External:** 1 bug (BUG-018; remediation is not applied in this repository)
 
 ### By Severity
 
@@ -49,7 +50,7 @@
 | Bug ID  | Title                                                | Severity | Status   | Date       | Link                                                                      |
 | ------- | ---------------------------------------------------- | -------- | -------- | ---------- | ------------------------------------------------------------------------- |
 | BUG-017 | Amplify Backend CLI Missing aws-cdk-lib Error        | Critical | Resolved | 2024-12-19 | [link](./amplify/amplify-backend-cli-missing-aws-cdk-lib-error.md)        |
-| BUG-018 | Amplify GraphQL Transformer Missing Constructs Error | Critical | Resolved | 2024-12-19 | [link](./amplify/amplify-graphql-transformer-missing-constructs-error.md) |
+| BUG-018 | Amplify GraphQL Transformer Missing Constructs Error | Critical | External | 2026-09-14 | [link](./amplify/amplify-graphql-transformer-missing-constructs-error.md) |
 | BUG-019 | Amplify Backend Missing Config Files Error           | Critical | Resolved | 2024-12-19 | [link](./amplify/amplify-backend-missing-config-files-error.md)           |
 
 ### TypeScript Issues
