@@ -55,6 +55,10 @@ class MockIntersectionObserver {
 
 let lastObserver: MockIntersectionObserver | null = null;
 
+const setLastObserver = (observer: MockIntersectionObserver) => {
+  lastObserver = observer;
+};
+
 beforeEach(() => {
   lastObserver = null;
   vi.stubGlobal(
@@ -62,7 +66,7 @@ beforeEach(() => {
     class extends MockIntersectionObserver {
       constructor(cb: IntersectionObserverCallback) {
         super(cb);
-        lastObserver = this;
+        setLastObserver(this);
       }
     }
   );

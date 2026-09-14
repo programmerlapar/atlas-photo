@@ -74,7 +74,7 @@ const FilterPanel = ({ onClose }: FilterPanelProps) => {
           <div className="space-y-2">
             <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
+              onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
               className="w-full px-3 py-2 bg-[var(--glass-bg-1)] border border-[var(--border-default)] rounded-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="date">Date</option>
@@ -102,7 +102,7 @@ const FilterPanel = ({ onClose }: FilterPanelProps) => {
           </h3>
           <select
             value={groupBy}
-            onChange={(e) => setGroupBy(e.target.value as any)}
+            onChange={(e) => setGroupBy(e.target.value as typeof groupBy)}
             className="w-full px-3 py-2 bg-[var(--glass-bg-1)] border border-[var(--border-default)] rounded-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-primary"
           >
             <option value="date">Date</option>
