@@ -1,8 +1,13 @@
 declare module 'lodash.debounce' {
-  function debounce<T extends (...args: any[]) => void>(
+  type DebouncedFunc<T extends (...args: never[]) => void> = T & {
+    cancel: () => void;
+    flush: () => void;
+  };
+
+  function debounce<T extends (...args: never[]) => void>(
     fn: T,
     wait?: number,
     options?: { leading?: boolean; maxWait?: number; trailing?: boolean }
-  ): T & { cancel: () => void; flush: () => void };
+  ): DebouncedFunc<T>;
   export default debounce;
 }
