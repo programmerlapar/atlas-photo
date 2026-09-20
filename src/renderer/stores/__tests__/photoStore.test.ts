@@ -60,3 +60,23 @@ describe('photoStore – viewStateCache', () => {
     ).toBe(200);
   });
 });
+
+describe('photoStore – photos', () => {
+  it('replaces an existing photo when an update arrives for the same path', () => {
+    const initialPhoto = {
+      id: '/photos/edited.jpg-100',
+      path: '/photos/edited.jpg',
+      filename: 'edited.jpg',
+    };
+    const updatedPhoto = {
+      ...initialPhoto,
+      id: '/photos/edited.jpg-200',
+      metadata: { date: new Date('2026-09-20') },
+    };
+
+    usePhotoStore.getState().addPhoto(initialPhoto);
+    usePhotoStore.getState().addPhoto(updatedPhoto);
+
+    expect(usePhotoStore.getState().photos).toEqual([updatedPhoto]);
+  });
+});

@@ -48,9 +48,16 @@ export const usePhotoStore = create<PhotoState>((set) => ({
   error: null,
   setPhotos: (photos) => set({ photos }),
   addPhoto: (photo) =>
-    set((state) => ({
-      photos: [...state.photos, photo],
-    })),
+    set((state) => {
+      const existingPhotoIndex = state.photos.findIndex(
+        (item) => item.path === photo.path
+      );
+      if (existingPhotoIndex < 0) return { photos: [...state.photos, photo] };
+
+      const photos = [...state.photos];
+      photos[existingPhotoIndex] = photo;
+      return { photos };
+    }),
   removePhoto: (photoPath) =>
     set((state) => ({
       photos: state.photos.filter((p) => p.path !== photoPath),

@@ -146,8 +146,15 @@ export const setupIpcHandlers = () => {
             photo.thumbnailPath = thumbnailPath;
           }
 
-          // Add to current photos
-          currentPhotos.push(photo);
+          // File watcher notifications represent both new and changed photos.
+          const existingPhotoIndex = currentPhotos.findIndex(
+            (item) => item.path === photo.path
+          );
+          if (existingPhotoIndex >= 0) {
+            currentPhotos[existingPhotoIndex] = photo;
+          } else {
+            currentPhotos.push(photo);
+          }
           await photoIndex.upsert(path, photo);
 
           // Notify renderer
