@@ -10,6 +10,7 @@ import { Storage } from '../utils/storage';
 import { PhotoIndex } from '../services/photoIndex';
 import { ImageCacheService } from './cache/ImageCacheService';
 import { addAllowedLibraryRoot } from '../utils/protocol';
+import { isApprovedLibraryPhotoPath } from '../utils/libraryPhotoPath';
 import type { Photo } from '../../shared/types/photo';
 
 // Store photo data in memory for current session
@@ -575,12 +576,36 @@ export const setupIpcHandlers = () => {
           return { success: false, error: 'User cancelled', results: [] };
         }
 
+        const recentDirectories =
+          (await storage.get<string[]>('recentDirectories')) || [];
+        const indexedPhotos =
+          await photoIndex.getStoredForDirectories(recentDirectories);
+        const approvedPhotoPaths = new Set([
+          ...currentPhotos.map((photo) => photo.path),
+          ...indexedPhotos.map((photo) => photo.path),
+        ]);
+        const libraryRoots = [currentDirectory, ...recentDirectories].filter(
+          (directory): directory is string => Boolean(directory)
+        );
         const results = [];
         let successCount = 0;
         let errorCount = 0;
 
         for (const photoPath of photoPaths) {
-          if (existsSync(photoPath)) {
+          if (
+            !isApprovedLibraryPhotoPath(
+              photoPath,
+              libraryRoots,
+              approvedPhotoPaths
+            )
+          ) {
+            results.push({
+              path: photoPath,
+              success: false,
+              error: 'File is not an approved photo in the current library',
+            });
+            errorCount++;
+          } else if (existsSync(photoPath)) {
             try {
               await unlink(photoPath);
               results.push({ path: photoPath, success: true, error: null });
@@ -588,7 +613,9 @@ export const setupIpcHandlers = () => {
 
               // Remove from current photos
               currentPhotos = currentPhotos.filter((p) => p.path !== photoPath);
-              if (currentDirectory) await photoIndex.remove(currentDirectory, photoPath);
+              for (const directory of libraryRoots) {
+                await photoIndex.remove(directory, photoPath);
+              }
 
               // Notify renderer
               const windows = BrowserWindow.getAllWindows();
