@@ -61,6 +61,7 @@ const GalleryView = () => {
   const galleryScrollRef = useRef<HTMLDivElement>(null);
   const restoredLocationKey = useRef<string | null>(null);
   const hasLoadedLibrary = useRef(false);
+  const loadedAlbumDirectory = useRef<string | null>(null);
 
   // Check if we're in "All" view mode
   const isAllView = new URLSearchParams(location.search).get('view') === 'all';
@@ -69,6 +70,7 @@ const GalleryView = () => {
   const viewKey = isAllView ? 'library' : (currentDirectory ?? 'unknown');
   const cachedViewState = usePhotoStore((s) => s.viewStateCache[viewKey]);
   const cacheViewState = usePhotoStore((s) => s.cacheViewState);
+  const setCurrentDirectory = usePhotoStore((s) => s.setCurrentDirectory);
   const cacheViewStateRef = useRef(cacheViewState);
   cacheViewStateRef.current = cacheViewState;
 
@@ -117,6 +119,7 @@ const GalleryView = () => {
 
   useEffect(() => {
     if (isAllView) {
+      loadedAlbumDirectory.current = null;
       if (!hasLoadedLibrary.current && !isLoading) {
         hasLoadedLibrary.current = true;
         void loadLibraryPhotos();
@@ -127,19 +130,29 @@ const GalleryView = () => {
     hasLoadedLibrary.current = false;
     const loadAlbumPhotos = async () => {
       const lastDirectory = await getLastDirectory();
-      if (lastDirectory && photos.length === 0 && !isLoading) {
+      if (!lastDirectory || isLoading) return;
+      if (loadedAlbumDirectory.current === lastDirectory) return;
+
+      loadedAlbumDirectory.current = lastDirectory;
+      if (currentDirectory !== lastDirectory) {
+        setCurrentDirectory(lastDirectory);
+      }
+
+      if (photos.length === 0 || currentDirectory !== lastDirectory) {
         await loadPhotos();
       }
     };
 
     void loadAlbumPhotos();
   }, [
+    currentDirectory,
     getLastDirectory,
     isAllView,
     isLoading,
     loadLibraryPhotos,
     loadPhotos,
     photos.length,
+    setCurrentDirectory,
   ]);
 
   // Save scroll position to cache (debounced)
