@@ -2,6 +2,8 @@ import { BrowserWindow, app } from 'electron';
 import { join } from 'path';
 
 const isDev = !app.isPackaged;
+const preloadPath = join(__dirname, '../preload/index.js');
+const rendererEntryPath = join(__dirname, '../renderer/index.html');
 
 /**
  * Creates and configures the main application window
@@ -16,7 +18,7 @@ export const createMainWindow = (): BrowserWindow => {
     backgroundColor: '#FFFFFF',
     show: false,
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: preloadPath,
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
@@ -35,9 +37,9 @@ export const createMainWindow = (): BrowserWindow => {
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');
     mainWindow.webContents.openDevTools();
-     } else {
-     mainWindow.loadFile(join(__dirname, '../../dist-electron/renderer/index.html'));
-   }
+  } else {
+    mainWindow.loadFile(rendererEntryPath);
+  }
 
   // Set Content-Security-Policy for security
   // In development mode, we need 'unsafe-eval' and 'unsafe-inline' for Vite HMR,
@@ -96,11 +98,11 @@ export const createMainWindow = (): BrowserWindow => {
 
   // Show window when ready
   mainWindow.setTitle('Atlas Photo');
-    mainWindow.show();
+  mainWindow.show();
 
-    if (isDev) {
-      mainWindow.webContents.openDevTools();
-    }
+  if (isDev) {
+    mainWindow.webContents.openDevTools();
+  }
 
   return mainWindow;
 };
