@@ -22,6 +22,7 @@
     "check": "npm run typecheck && npm run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "test": "vitest run",
+    "test:packaged": "npm run electron:build && node scripts/packaged-smoke-test.mjs",
     "test:watch": "vitest",
     "release:win": "electron-builder --win",
     "release:mac": "electron-builder --mac",
