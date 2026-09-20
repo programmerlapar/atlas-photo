@@ -4,13 +4,18 @@ import { isPhotoFile } from '../../shared/constants/fileTypes';
 import type { Photo } from '../../shared/types/photo';
 import { stat } from 'fs/promises';
 
+type FileEvent = 'rename' | 'change';
+
 /**
  * Watches a directory for new photo files
  */
 export class FileWatcher {
   private watcher: FSWatcher | null = null;
   private watchedPath: string | null = null;
-  private onPhotoAdded?: (photo: Photo) => void;
+  private readonly notifiedMtimes = new Map<string, number>();
+  private readonly processingPaths = new Set<string>();
+  private readonly queuedEvents = new Map<string, FileEvent>();
+  private onPhotoAdded?: (photo: Photo) => void | Promise<void>;
   private onPhotoRemoved?: (photoPath: string) => void;
 
   /**
@@ -21,7 +26,7 @@ export class FileWatcher {
    */
   startWatching(
     directoryPath: string,
-    onPhotoAdded?: (photo: Photo) => void,
+    onPhotoAdded?: (photo: Photo) => void | Promise<void>,
     onPhotoRemoved?: (photoPath: string) => void
   ): void {
     this.stopWatching();
@@ -38,31 +43,59 @@ export class FileWatcher {
 
         const fullPath = join(directoryPath, filename);
 
-        if (eventType === 'rename') {
-          // Check if file exists (added) or doesn't exist (removed)
-          try {
-            const stats = await stat(fullPath);
+        if (eventType !== 'rename' && eventType !== 'change') return;
+        if (this.processingPaths.has(fullPath)) {
+          this.queuedEvents.set(fullPath, eventType);
+          return;
+        }
+        this.processingPaths.add(fullPath);
 
-            if (stats.isFile() && isPhotoFile(filename)) {
-              const photo: Photo = {
-                id: `${fullPath}-${stats.mtimeMs}`,
-                path: fullPath,
-                filename: filename,
-              };
-
-              if (this.onPhotoAdded) {
-                this.onPhotoAdded(photo);
-              }
+        try {
+          let nextEvent: FileEvent | undefined = eventType;
+          while (nextEvent) {
+            this.queuedEvents.delete(fullPath);
+            try {
+              await this.processFileEvent(fullPath, filename, nextEvent);
+            } catch (error) {
+              console.error(`Error processing file event for ${fullPath}:`, error);
             }
-          } catch {
-            // File doesn't exist, it was removed
-            if (this.onPhotoRemoved) {
-              this.onPhotoRemoved(fullPath);
-            }
+            nextEvent = this.queuedEvents.get(fullPath);
           }
+        } finally {
+          this.processingPaths.delete(fullPath);
+          this.queuedEvents.delete(fullPath);
         }
       }
     );
+  }
+
+  private async processFileEvent(
+    fullPath: string,
+    filename: string,
+    eventType: FileEvent
+  ): Promise<void> {
+    let stats: Awaited<ReturnType<typeof stat>>;
+    try {
+      stats = await stat(fullPath);
+    } catch {
+      // A failed rename stat indicates that the file was removed. A failed
+      // change stat can be a transient write, so leave the current index alone.
+      this.notifiedMtimes.delete(fullPath);
+      if (eventType === 'rename') {
+        this.onPhotoRemoved?.(fullPath);
+      }
+      return;
+    }
+
+    if (!stats.isFile() || !isPhotoFile(filename)) return;
+    if (this.notifiedMtimes.get(fullPath) === stats.mtimeMs) return;
+
+    await this.onPhotoAdded?.({
+      id: `${fullPath}-${stats.mtimeMs}`,
+      path: fullPath,
+      filename,
+    });
+    this.notifiedMtimes.set(fullPath, stats.mtimeMs);
   }
 
   /**
@@ -74,6 +107,9 @@ export class FileWatcher {
       this.watcher = null;
     }
 
+    this.notifiedMtimes.clear();
+    this.processingPaths.clear();
+    this.queuedEvents.clear();
     this.watchedPath = null;
     this.onPhotoAdded = undefined;
     this.onPhotoRemoved = undefined;
