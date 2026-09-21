@@ -26,5 +26,15 @@
   "files": [
     "dist-electron/**/*",
     "src/renderer/assets/**/*"
-  ]
+  ],
+  "linux": {
+    "target": [
+      "AppImage",
+      "deb"
+    ],
+    "icon": "public/icons/logo.png",
+    "category": "Photography",
+    "maintainer": "Atlas Photo <hello@atlas-photo.app>",
+    "syncDesktopName": true
+  }
 }

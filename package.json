@@ -3,7 +3,11 @@
   "version": "0.1.1",
   "description": "Atlas Photo: a privacy-first, offline desktop photo gallery app for Windows, macOS and Linux. Browse photos by location on an interactive GPS map with automatic EXIF metadata extraction. Built with Electron, React, and Vite.",
   "main": "dist-electron/main/index.js",
-  "author": "",
+  "author": {
+    "name": "Atlas Photo",
+    "email": "pirmansah.otoluwa@gmail.com"
+  },
+  "desktopName": "Atlas Photo",
   "license": "MIT",
   "private": true,
   "engines": {
