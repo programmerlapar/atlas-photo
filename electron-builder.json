@@ -5,26 +5,26 @@
     "output": "release",
     "buildResources": "build"
   },
-    "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ],
-      "icon": "public/icons/logo.png"
-    },
+  "win": {
+    "target": ["nsis", "portable"],
+    "icon": "public/icons/logo.png"
+  },
   "nsis": {
     "oneClick": false,
     "allowToChangeInstallationDirectory": true,
     "shortcutName": "Atlas Photo",
-    "installerLanguages": [
-      "en-US"
-    ]
+    "installerLanguages": ["en-US"]
   },
   "portable": {
     "artifactName": "${productName}_Portable_${version}.${ext}"
   },
-  "files": [
-    "dist-electron/**/*",
-    "src/renderer/assets/**/*"
-  ]
+  "files": ["dist-electron/**/*", "src/renderer/assets/**/*"],
+  "asarUnpack": ["node_modules/@img/sharp-libvips-*/**"],
+  "linux": {
+    "target": ["AppImage", "deb"],
+    "icon": "public/icons/logo.png",
+    "category": "Photography",
+    "maintainer": "Atlas Photo <hello@atlas-photo.app>",
+    "syncDesktopName": true
+  }
 }

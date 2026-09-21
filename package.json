@@ -3,7 +3,11 @@
   "version": "0.1.1",
   "description": "Atlas Photo: a privacy-first, offline desktop photo gallery app for Windows, macOS and Linux. Browse photos by location on an interactive GPS map with automatic EXIF metadata extraction. Built with Electron, React, and Vite.",
   "main": "dist-electron/main/index.js",
-  "author": "",
+  "author": {
+    "name": "Atlas Photo",
+    "email": "hello@atlas-photo.app"
+  },
+  "desktopName": "Atlas Photo",
   "license": "MIT",
   "private": true,
   "engines": {
@@ -22,7 +26,7 @@
     "check": "npm run typecheck && npm run lint",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "test": "vitest run",
-    "test:packaged": "npm run electron:build && node scripts/packaged-smoke-test.mjs",
+    "test:packaged": "npm run electron:build && electron-builder --linux --dir && node scripts/packaged-smoke-test.mjs",
     "test:watch": "vitest",
     "release:win": "electron-builder --win",
     "release:mac": "electron-builder --mac",

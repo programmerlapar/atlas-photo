@@ -6,6 +6,8 @@ directories:
 files:
   - dist-electron/**/*
   - public/**/*
+asarUnpack:
+  - node_modules/@img/sharp-libvips-*/**
 win:
   target:
     - nsis
@@ -21,6 +23,7 @@ linux:
   target:
     - AppImage
     - deb
-  icon: resources/icons/icon.png
+  icon: public/icons/logo.png
   category: Photography
-
+  maintainer: Atlas Photo <hello@atlas-photo.app>
+  syncDesktopName: true
