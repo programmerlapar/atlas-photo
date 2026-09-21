@@ -9,6 +9,10 @@ const packageJson = JSON.parse(
 const mainEntry = resolve(projectRoot, packageJson.main);
 const preloadEntry = resolve(projectRoot, 'dist-electron/preload/index.js');
 const rendererEntry = resolve(projectRoot, 'dist-electron/renderer/index.html');
+const unpackedLibvipsEntry = resolve(
+  projectRoot,
+  'release/linux-unpacked/resources/app.asar.unpacked/node_modules/@img/sharp-libvips-linux-x64/lib/libvips-cpp.so.8.18.6'
+);
 
 if (!existsSync(mainEntry)) {
   throw new Error(`Missing packaged main entry: ${mainEntry}`);
@@ -20,6 +24,12 @@ if (!existsSync(preloadEntry)) {
 
 if (!existsSync(rendererEntry)) {
   throw new Error(`Missing packaged renderer entry: ${rendererEntry}`);
+}
+
+if (process.platform === 'linux' && !existsSync(unpackedLibvipsEntry)) {
+  throw new Error(
+    `Missing unpacked sharp libvips binary: ${unpackedLibvipsEntry}`
+  );
 }
 
 const mainBundle = readFileSync(mainEntry, 'utf8');
