@@ -21,6 +21,8 @@ linux:
   target:
     - AppImage
     - deb
-  icon: resources/icons/icon.png
+  icon: public/icons/logo.png
   category: Photography
+  maintainer: Atlas Photo <hello@atlas-photo.app>
+  syncDesktopName: true
 
