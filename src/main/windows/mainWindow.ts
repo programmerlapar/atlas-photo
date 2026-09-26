@@ -11,7 +11,7 @@ const rendererEntryPath = join(__dirname, '../renderer/index.html');
 export const createMainWindow = (): BrowserWindow => {
   const mainWindow = new BrowserWindow({
     width: 1280,
-    height: 800,
+    height: 900,
     minWidth: 1024,
     minHeight: 600,
     icon: join(__dirname, '../../public/icons/logo.png'),

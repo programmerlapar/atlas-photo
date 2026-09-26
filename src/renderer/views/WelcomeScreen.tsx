@@ -1,9 +1,9 @@
 import {
   ArrowUpRight,
   FolderOpen,
-  Globe2,
   Images,
   Loader2,
+  Map,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
@@ -116,7 +116,7 @@ const WelcomeScreen = () => {
             <div className="welcome-values" aria-label="Atlas Photo features">
               <div className="welcome-value">
                 <span className="welcome-value-icon">
-                  <Globe2 size={17} aria-hidden="true" />
+                  <Map size={17} aria-hidden="true" />
                 </span>
                 <span>Location-aware</span>
               </div>
@@ -143,8 +143,15 @@ const WelcomeScreen = () => {
             className="welcome-menu"
           >
             <div className="welcome-menu-intro">
-              <p className="welcome-menu-kicker">Start here</p>
-              <h2>Open your photo library</h2>
+              <div className="welcome-menu-heading">
+                <span className="welcome-menu-icon">
+                  <Images size={18} aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="welcome-menu-kicker">Start here</p>
+                  <h2>Open your photo library</h2>
+                </div>
+              </div>
               <p>
                 Choose a folder on your device. Atlas Photo reads your images
                 locally and builds your albums as it goes.

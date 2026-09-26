@@ -1549,12 +1549,18 @@ html[data-albums-header-scrolled='true']
 /* Welcome route: a calm entry point that treats the map as the product's
    signature, while keeping the first action and recent folders close at hand. */
 .welcome-screen {
+  --welcome-display-size: clamp(3rem, calc(2.35rem + 3vw), 5.4rem);
+  --welcome-body-size: clamp(0.875rem, calc(0.8rem + 0.35vw), 1.0625rem);
+  --welcome-menu-title-size: clamp(
+    1.375rem,
+    calc(1.125rem + 0.55vw),
+    1.5625rem
+  );
   position: relative;
-  height: calc(100vh - 58px);
-  height: calc(100dvh - 58px);
-  min-height: 0;
+  min-height: calc(100vh - 58px);
+  min-height: calc(100dvh - 58px);
   overflow-x: hidden;
-  overflow-y: hidden;
+  overflow-y: auto;
   background:
     radial-gradient(
       circle at 12% 12%,
@@ -1575,8 +1581,8 @@ html[data-albums-header-scrolled='true']
   z-index: 1;
   display: flex;
   width: min(100%, 1180px);
-  height: 100%;
-  min-height: 0;
+  min-height: calc(100vh - 58px);
+  min-height: calc(100dvh - 58px);
   margin: 0 auto;
   flex-direction: column;
   padding: 34px clamp(22px, 5vw, 72px) 24px;
@@ -1608,7 +1614,7 @@ html[data-albums-header-scrolled='true']
 
 .welcome-brand-name {
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: clamp(0.8125rem, calc(0.75rem + 0.1vw), 0.875rem);
   font-weight: 750;
   letter-spacing: -0.01em;
   line-height: 17px;
@@ -1624,10 +1630,10 @@ html[data-albums-header-scrolled='true']
 .welcome-layout {
   display: grid;
   align-items: center;
-  flex: 1;
-  min-height: 0;
-  grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
-  gap: clamp(42px, 7vw, 104px);
+  flex: 1 1 auto;
+  min-height: min-content;
+  grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+  gap: clamp(32px, 5.5vw, 88px);
   padding: clamp(24px, 5vh, 64px) 0 clamp(20px, 4vh, 48px);
 }
 
@@ -1659,7 +1665,7 @@ html[data-albums-header-scrolled='true']
 .welcome-story h1 {
   max-width: 700px;
   color: var(--text-primary);
-  font-size: clamp(3.25rem, 6.2vw, 5.4rem);
+  font-size: var(--welcome-display-size);
   font-weight: 720;
   letter-spacing: -0.065em;
   line-height: 0.96;
@@ -1674,7 +1680,7 @@ html[data-albums-header-scrolled='true']
   max-width: 560px;
   margin-top: 28px;
   color: var(--text-tertiary);
-  font-size: 17px;
+  font-size: var(--welcome-body-size);
   line-height: 1.65;
 }
 
@@ -1889,8 +1895,8 @@ html[data-albums-header-scrolled='true']
   align-self: center;
   width: 100%;
   max-width: 430px;
-  max-height: 100%;
-  overflow-y: auto;
+  min-height: 0;
+  overflow: visible;
   border-color: var(--border-default);
   background: color-mix(in srgb, var(--bg-elevated) 86%, transparent);
   padding: clamp(25px, 3.2vw, 38px) !important;
@@ -1918,6 +1924,24 @@ html[data-albums-header-scrolled='true']
   gap: 10px;
 }
 
+.welcome-menu-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+}
+
+.welcome-menu-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary);
+}
+
 .welcome-menu-kicker {
   color: var(--color-primary);
   font-size: 11px;
@@ -1928,7 +1952,7 @@ html[data-albums-header-scrolled='true']
 
 .welcome-menu h2 {
   color: var(--text-primary);
-  font-size: 25px;
+  font-size: var(--welcome-menu-title-size);
   font-weight: 720;
   letter-spacing: -0.035em;
   line-height: 1.1;
@@ -2067,43 +2091,43 @@ html[data-albums-header-scrolled='true']
   justify-content: space-between;
   gap: 18px;
   color: var(--text-muted);
-  font-size: 10px;
+  font-size: clamp(0.625rem, calc(0.58rem + 0.08vw), 0.6875rem);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
-@media (max-height: 700px) and (min-width: 901px) {
+@media (max-height: 860px) and (min-width: 901px) {
   .welcome-shell {
-    padding-top: 18px;
-    padding-bottom: 14px;
+    padding-top: clamp(16px, 3.5vh, 28px);
+    padding-bottom: clamp(12px, 2.5vh, 20px);
   }
 
   .welcome-layout {
     gap: clamp(28px, 4vw, 56px);
-    padding-top: 16px;
-    padding-bottom: 14px;
+    padding-top: clamp(16px, 3vh, 40px);
+    padding-bottom: clamp(14px, 2.5vh, 30px);
   }
 
   .welcome-title-row {
-    margin-bottom: 12px;
+    margin-bottom: clamp(10px, 1.8vh, 18px);
   }
 
   .welcome-story h1 {
-    font-size: clamp(2.6rem, 5.4vw, 4.3rem);
+    font-size: clamp(2.6rem, calc(2.25rem + 3.2vw), 4.3rem);
   }
 
   .welcome-intro {
-    margin-top: 16px;
-    font-size: 14px;
+    margin-top: clamp(14px, 2vh, 22px);
+    font-size: clamp(0.8125rem, calc(0.75rem + 0.2vw), 0.9375rem);
     line-height: 1.45;
   }
 
   .welcome-preview {
-    margin-top: 18px;
+    margin-top: clamp(16px, 2.5vh, 26px);
   }
 
   .welcome-map {
-    height: clamp(110px, 18vh, 160px);
+    height: clamp(110px, 18vh, 180px);
   }
 
   .welcome-preview-header,
@@ -2112,11 +2136,11 @@ html[data-albums-header-scrolled='true']
   }
 
   .welcome-menu {
-    padding: 22px !important;
+    padding: clamp(18px, 2.5vw, 28px) !important;
   }
 
   .welcome-menu h2 {
-    font-size: 22px;
+    font-size: clamp(1.25rem, calc(1.05rem + 0.45vw), 1.4rem);
   }
 
   .welcome-menu-intro > p:last-child {
@@ -2124,7 +2148,7 @@ html[data-albums-header-scrolled='true']
   }
 
   .welcome-open-button {
-    margin-top: 18px;
+    margin-top: clamp(16px, 2vh, 21px);
   }
 
   .welcome-privacy-note {
@@ -2132,7 +2156,7 @@ html[data-albums-header-scrolled='true']
   }
 
   .welcome-menu-divider {
-    margin: 16px 0 13px;
+    margin: clamp(14px, 2vh, 20px) 0 clamp(12px, 1.6vh, 16px);
   }
 
   .welcome-recent {
@@ -2151,10 +2175,11 @@ html[data-albums-header-scrolled='true']
   }
 
   .welcome-layout {
+    flex: 0 0 auto;
     grid-template-columns: minmax(0, 1fr);
     gap: 22px;
     padding-top: 32px;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .welcome-story-copy {
@@ -2168,6 +2193,7 @@ html[data-albums-header-scrolled='true']
   .welcome-menu {
     align-self: start;
     max-width: 560px;
+    overflow: visible;
   }
 }
 
@@ -2182,7 +2208,7 @@ html[data-albums-header-scrolled='true']
   }
 
   .welcome-story h1 {
-    font-size: clamp(2.85rem, 14vw, 4.25rem);
+    font-size: clamp(2.7rem, calc(2rem + 8vw), 4.25rem);
   }
 
   .welcome-intro {
@@ -2240,7 +2266,8 @@ html[data-albums-header-scrolled='true']
   }
 
   .welcome-menu {
-    max-height: 100%;
+    max-height: none;
+    overflow: visible;
     padding: 18px !important;
   }
 }
