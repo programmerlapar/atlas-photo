@@ -2,12 +2,13 @@ import {
   ArrowUpRight,
   FolderOpen,
   Globe2,
+  Images,
   Loader2,
-  MapPinned,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
 import { useState } from 'react';
+import logoImg from '../assets/logo.png';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import RecentDirectories from '../components/layout/RecentDirectories';
@@ -45,8 +46,8 @@ const WelcomeScreen = () => {
     <div className="welcome-screen">
       <div className="welcome-shell">
         <header className="welcome-brand">
-          <div className="welcome-brand-mark" aria-hidden="true">
-            <MapPinned size={19} strokeWidth={2.4} />
+          <div className="welcome-brand-mark">
+            <img src={logoImg} alt="" />
           </div>
           <div>
             <p className="welcome-brand-name">Atlas Photo</p>
@@ -113,16 +114,22 @@ const WelcomeScreen = () => {
             </div>
 
             <div className="welcome-values" aria-label="Atlas Photo features">
-              <div>
-                <Globe2 size={17} aria-hidden="true" />
+              <div className="welcome-value">
+                <span className="welcome-value-icon">
+                  <Globe2 size={17} aria-hidden="true" />
+                </span>
                 <span>Location-aware</span>
               </div>
-              <div>
-                <FolderOpen size={17} aria-hidden="true" />
+              <div className="welcome-value">
+                <span className="welcome-value-icon">
+                  <Images size={17} aria-hidden="true" />
+                </span>
                 <span>Album-first</span>
               </div>
-              <div>
-                <ShieldCheck size={17} aria-hidden="true" />
+              <div className="welcome-value">
+                <span className="welcome-value-icon">
+                  <ShieldCheck size={17} aria-hidden="true" />
+                </span>
                 <span>Private by design</span>
               </div>
             </div>

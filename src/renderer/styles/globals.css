@@ -1550,9 +1550,11 @@ html[data-albums-header-scrolled='true']
    signature, while keeping the first action and recent folders close at hand. */
 .welcome-screen {
   position: relative;
-  min-height: calc(100vh - 58px);
+  height: calc(100vh - 58px);
+  height: calc(100dvh - 58px);
+  min-height: 0;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
   background:
     radial-gradient(
       circle at 12% 12%,
@@ -1573,7 +1575,8 @@ html[data-albums-header-scrolled='true']
   z-index: 1;
   display: flex;
   width: min(100%, 1180px);
-  min-height: calc(100vh - 58px);
+  height: 100%;
+  min-height: 0;
   margin: 0 auto;
   flex-direction: column;
   padding: 34px clamp(22px, 5vw, 72px) 24px;
@@ -1596,6 +1599,13 @@ html[data-albums-header-scrolled='true']
   color: var(--color-primary);
 }
 
+.welcome-brand-mark img {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
 .welcome-brand-name {
   color: var(--text-primary);
   font-size: 14px;
@@ -1615,9 +1625,10 @@ html[data-albums-header-scrolled='true']
   display: grid;
   align-items: center;
   flex: 1;
+  min-height: 0;
   grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
   gap: clamp(42px, 7vw, 104px);
-  padding: clamp(48px, 8vh, 88px) 0 clamp(40px, 7vh, 72px);
+  padding: clamp(24px, 5vh, 64px) 0 clamp(20px, 4vh, 48px);
 }
 
 .welcome-story {
@@ -1670,7 +1681,7 @@ html[data-albums-header-scrolled='true']
 .welcome-preview {
   position: relative;
   overflow: hidden;
-  margin-top: clamp(34px, 6vh, 62px);
+  margin-top: clamp(22px, 4vh, 48px);
   border: 1px solid
     color-mix(in srgb, var(--color-primary) 22%, var(--border-default));
   border-radius: 20px;
@@ -1716,7 +1727,8 @@ html[data-albums-header-scrolled='true']
 
 .welcome-map {
   position: relative;
-  min-height: 214px;
+  height: clamp(128px, 24vh, 214px);
+  min-height: 0;
   overflow: hidden;
   background:
     radial-gradient(
@@ -1847,8 +1859,8 @@ html[data-albums-header-scrolled='true']
 .welcome-values {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px 24px;
-  margin-top: 30px;
+  gap: 10px 20px;
+  margin-top: clamp(16px, 3vh, 30px);
   color: var(--text-tertiary);
   font-size: 11px;
   font-weight: 650;
@@ -1860,7 +1872,15 @@ html[data-albums-header-scrolled='true']
   gap: 7px;
 }
 
-.welcome-values svg {
+.welcome-value-icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
   color: var(--color-primary);
 }
 
@@ -1869,6 +1889,8 @@ html[data-albums-header-scrolled='true']
   align-self: center;
   width: 100%;
   max-width: 430px;
+  max-height: 100%;
+  overflow-y: auto;
   border-color: var(--border-default);
   background: color-mix(in srgb, var(--bg-elevated) 86%, transparent);
   padding: clamp(25px, 3.2vw, 38px) !important;
@@ -2050,11 +2072,89 @@ html[data-albums-header-scrolled='true']
   text-transform: uppercase;
 }
 
+@media (max-height: 700px) and (min-width: 901px) {
+  .welcome-shell {
+    padding-top: 18px;
+    padding-bottom: 14px;
+  }
+
+  .welcome-layout {
+    gap: clamp(28px, 4vw, 56px);
+    padding-top: 16px;
+    padding-bottom: 14px;
+  }
+
+  .welcome-title-row {
+    margin-bottom: 12px;
+  }
+
+  .welcome-story h1 {
+    font-size: clamp(2.6rem, 5.4vw, 4.3rem);
+  }
+
+  .welcome-intro {
+    margin-top: 16px;
+    font-size: 14px;
+    line-height: 1.45;
+  }
+
+  .welcome-preview {
+    margin-top: 18px;
+  }
+
+  .welcome-map {
+    height: clamp(110px, 18vh, 160px);
+  }
+
+  .welcome-preview-header,
+  .welcome-preview-footer {
+    padding: 10px 14px;
+  }
+
+  .welcome-menu {
+    padding: 22px !important;
+  }
+
+  .welcome-menu h2 {
+    font-size: 22px;
+  }
+
+  .welcome-menu-intro > p:last-child {
+    line-height: 1.4;
+  }
+
+  .welcome-open-button {
+    margin-top: 18px;
+  }
+
+  .welcome-privacy-note {
+    margin-top: 12px;
+  }
+
+  .welcome-menu-divider {
+    margin: 16px 0 13px;
+  }
+
+  .welcome-recent {
+    gap: 8px;
+  }
+
+  .welcome-recent > div:last-child > div {
+    min-height: 32px;
+  }
+}
+
 @media (max-width: 900px) {
+  .welcome-shell {
+    padding-top: 24px;
+    padding-bottom: 18px;
+  }
+
   .welcome-layout {
     grid-template-columns: minmax(0, 1fr);
-    gap: 44px;
-    padding-top: 58px;
+    gap: 22px;
+    padding-top: 32px;
+    overflow: hidden;
   }
 
   .welcome-story-copy {
@@ -2062,7 +2162,7 @@ html[data-albums-header-scrolled='true']
   }
 
   .welcome-preview {
-    max-width: 640px;
+    display: none;
   }
 
   .welcome-menu {
@@ -2094,14 +2194,6 @@ html[data-albums-header-scrolled='true']
     margin-top: 32px;
   }
 
-  .welcome-map {
-    min-height: 180px;
-  }
-
-  .welcome-map-label {
-    display: none;
-  }
-
   .welcome-values {
     gap: 10px 17px;
     margin-top: 24px;
@@ -2114,6 +2206,42 @@ html[data-albums-header-scrolled='true']
   .welcome-footer {
     flex-direction: column;
     gap: 7px;
+  }
+}
+
+@media (max-width: 900px) and (max-height: 700px) {
+  .welcome-layout {
+    gap: 18px;
+    padding-top: 24px;
+    padding-bottom: 12px;
+  }
+
+  .welcome-story-copy {
+    display: grid;
+    gap: 10px;
+  }
+
+  .welcome-title-row {
+    margin-bottom: 0;
+  }
+
+  .welcome-story h1 {
+    font-size: clamp(2.45rem, 10vw, 3.8rem);
+  }
+
+  .welcome-intro {
+    margin-top: 0;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .welcome-values {
+    margin-top: 12px;
+  }
+
+  .welcome-menu {
+    max-height: 100%;
+    padding: 18px !important;
   }
 }
 
