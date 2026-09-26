@@ -1,17 +1,21 @@
-import { MapPin, Lock, Sparkles, Camera, Globe, Shield, Loader2 } from 'lucide-react';
+import {
+  ArrowUpRight,
+  FolderOpen,
+  Images,
+  Loader2,
+  Map,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react';
 import { useState } from 'react';
+import logoImg from '../assets/logo.png';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
-import { selectDirectory } from '../services/api';
-import { usePhotos } from '../hooks/usePhotos';
-import { useMotionNavigate } from '../hooks/useMotionNavigate';
 import RecentDirectories from '../components/layout/RecentDirectories';
+import { useMotionNavigate } from '../hooks/useMotionNavigate';
+import { usePhotos } from '../hooks/usePhotos';
+import { selectDirectory } from '../services/api';
 
-/**
- * Welcome screen component displayed on first launch
- * Engages photography enthusiasts and travelers with compelling value proposition
- * Uses Liquid Glass Card component for elevated surfaces
- */
 const WelcomeScreen = () => {
   const navigate = useMotionNavigate();
   const { handleScanDirectory, currentDirectory } = usePhotos();
@@ -25,11 +29,9 @@ const WelcomeScreen = () => {
         throw new Error('Electron API not available');
       }
 
-      // If directory is provided, use it; otherwise open file picker
       const selectedDirectory = directory || (await selectDirectory());
 
       if (selectedDirectory) {
-        // Scan directory and navigate to albums view
         await handleScanDirectory(selectedDirectory);
         navigate('/albums');
       }
@@ -41,145 +43,165 @@ const WelcomeScreen = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[var(--bg-primary)]">
-      <Card
-        variant="custom-glass"
-        padding="p-8 md:p-12"
-        shadow="l3"
-        rounded="xl"
-        className="max-w-3xl w-full space-y-10 animate-scale-in"
-      >
-        {/* Welcome message with compelling headline */}
-        <div className="text-center space-y-6">
-          <div className="space-y-3">
-            <div className="flex items-center justify-center gap-2 mb-2">
-              <Camera className="w-8 h-8 text-[var(--color-primary)]" />
-              <Sparkles className="w-6 h-6 text-[var(--color-primary)]" />
-            </div>
-            <h1 className="text-5xl md:text-6xl font-bold text-[var(--text-primary)] leading-tight">
-              Relive Your Memories
-              <br />
-              <span className="text-[var(--color-primary)]">On The Map</span>
-            </h1>
+    <div className="welcome-screen">
+      <div className="welcome-shell">
+        <header className="welcome-brand">
+          <div className="welcome-brand-mark">
+            <img src={logoImg} alt="" />
           </div>
-          <p className="text-lg md:text-xl text-[var(--text-secondary)] max-w-2xl mx-auto leading-relaxed">
-            Transform your photo collection into a journey. Browse beautiful iOS-style galleries
-            and discover exactly where each moment was captured—all on an interactive map.
-          </p>
-        </div>
+          <div>
+            <p className="welcome-brand-name">Atlas Photo</p>
+            <p className="welcome-brand-detail">Your local photo atlas</p>
+          </div>
+        </header>
 
-        {/* Enhanced feature highlights with better descriptions */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card
-            variant="custom-glass"
-            padding="p-5"
-            shadow="l1"
-            rounded="md"
-            className="text-center space-y-3 hover:shadow-l2 hover:-translate-y-1 transition-all duration-200"
-          >
-            <div className="flex justify-center">
-              <div className="p-3 rounded-lg bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20">
-                <Camera className="w-6 h-6 text-[var(--color-primary)]" />
+        <div className="welcome-layout">
+          <section className="welcome-story" aria-labelledby="welcome-heading">
+            <div className="welcome-story-copy">
+              <div className="welcome-title-row">
+                <Sparkles size={18} aria-hidden="true" />
+                <span>A new way to look back</span>
               </div>
-            </div>
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">iOS Photos Experience</h3>
-            <p className="text-xs text-[var(--text-tertiary)] leading-relaxed">
-              Beautiful, intuitive galleries that let you focus on your photos
-            </p>
-          </Card>
-          <Card
-            variant="custom-glass"
-            padding="p-5"
-            shadow="l1"
-            rounded="md"
-            className="text-center space-y-3 hover:shadow-l2 hover:-translate-y-1 transition-all duration-200"
-          >
-            <div className="flex justify-center">
-              <div className="p-3 rounded-lg bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20">
-                <Globe className="w-6 h-6 text-[var(--color-primary)]" />
-              </div>
-            </div>
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Explore Your Journey</h3>
-            <p className="text-xs text-[var(--text-tertiary)] leading-relaxed">
-              See where every photo was taken on an interactive world map
-            </p>
-          </Card>
-          <Card
-            variant="custom-glass"
-            padding="p-5"
-            shadow="l1"
-            rounded="md"
-            className="text-center space-y-3 hover:shadow-l2 hover:-translate-y-1 transition-all duration-200"
-          >
-            <div className="flex justify-center">
-              <div className="p-3 rounded-lg bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/20">
-                <Shield className="w-6 h-6 text-[var(--color-primary)]" />
-              </div>
-            </div>
-            <h3 className="text-sm font-semibold text-[var(--text-primary)]">100% Private & Local</h3>
-            <p className="text-xs text-[var(--text-tertiary)] leading-relaxed">
-              Your photos never leave your device. No cloud, no subscriptions
-            </p>
-          </Card>
-        </div>
-
-        {/* Value proposition for travelers and photographers */}
-        <div className="bg-gradient-to-r from-[var(--color-primary)]/5 to-[var(--color-primary)]/10 border border-[var(--color-primary)]/20 rounded-lg p-6 space-y-3">
-          <div className="flex items-start gap-3">
-            <MapPin className="w-5 h-5 text-[var(--color-primary)] shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Perfect for Travelers & Photographers</h3>
-              <p className="text-xs text-[var(--text-tertiary)] leading-relaxed">
-                Automatically extract location data from your photos and visualize your travel routes,
-                vacation spots, and favorite places on a beautiful map. No manual tagging required.
+              <h1 id="welcome-heading">
+                Find the places
+                <br />
+                <em>inside your photos.</em>
+              </h1>
+              <p className="welcome-intro">
+                Atlas Photo turns a folder of images into a living collection of
+                memories, organized by album and mapped by where each moment
+                happened.
               </p>
             </div>
-          </div>
-        </div>
 
-        {/* Recent Directories */}
-        <RecentDirectories
-          onSelectDirectory={handleSelectDirectory}
-          currentDirectory={currentDirectory}
-        />
+            <div
+              className="welcome-preview"
+              aria-label="Illustration of photos arranged on a map"
+            >
+              <div className="welcome-preview-header">
+                <span>ATLAS VIEW</span>
+                <span>LOCAL LIBRARY</span>
+              </div>
+              <div className="welcome-map" aria-hidden="true">
+                <div className="welcome-map-grid" />
+                <svg viewBox="0 0 620 260" role="presentation">
+                  <path d="M30 202 C130 176 168 214 251 151 S382 70 464 111 S545 159 591 45" />
+                  <path d="M82 64 C151 103 186 79 250 107 S360 197 438 178" />
+                </svg>
+                <span className="welcome-map-pin welcome-map-pin-one">
+                  <span />
+                </span>
+                <span className="welcome-map-pin welcome-map-pin-two">
+                  <span />
+                </span>
+                <span className="welcome-map-pin welcome-map-pin-three">
+                  <span />
+                </span>
+                <div className="welcome-map-label welcome-map-label-one">
+                  COASTAL ROAD
+                </div>
+                <div className="welcome-map-label welcome-map-label-two">
+                  ALPINE LIGHT
+                </div>
+              </div>
+              <div className="welcome-preview-footer">
+                <span className="welcome-preview-status">
+                  <span className="welcome-status-dot" />
+                  Ready when you are
+                </span>
+                <span>EXIF · MAP · ALBUMS</span>
+              </div>
+            </div>
 
-        {/* Primary CTA with enhanced messaging */}
-        <div className="flex flex-col items-center space-y-4 pt-2">
-          <Button
-            onClick={() => handleSelectDirectory()}
-            variant="primary"
-            size="lg"
-            disabled={isSelecting}
-            className="w-full md:w-auto min-w-[200px] text-base font-semibold"
+            <div className="welcome-values" aria-label="Atlas Photo features">
+              <div className="welcome-value">
+                <span className="welcome-value-icon">
+                  <Map size={17} aria-hidden="true" />
+                </span>
+                <span>Location-aware</span>
+              </div>
+              <div className="welcome-value">
+                <span className="welcome-value-icon">
+                  <Images size={17} aria-hidden="true" />
+                </span>
+                <span>Album-first</span>
+              </div>
+              <div className="welcome-value">
+                <span className="welcome-value-icon">
+                  <ShieldCheck size={17} aria-hidden="true" />
+                </span>
+                <span>Private by design</span>
+              </div>
+            </div>
+          </section>
+
+          <Card
+            variant="custom-glass"
+            padding="p-0"
+            shadow="l3"
+            rounded="xl"
+            className="welcome-menu"
           >
-            {isSelecting ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Selecting...</span>
+            <div className="welcome-menu-intro">
+              <div className="welcome-menu-heading">
+                <span className="welcome-menu-icon">
+                  <Images size={18} aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="welcome-menu-kicker">Start here</p>
+                  <h2>Open your photo library</h2>
+                </div>
+              </div>
+              <p>
+                Choose a folder on your device. Atlas Photo reads your images
+                locally and builds your albums as it goes.
+              </p>
+            </div>
+
+            <Button
+              onClick={() => handleSelectDirectory()}
+              variant="primary"
+              size="lg"
+              disabled={isSelecting}
+              className="welcome-open-button"
+            >
+              {isSelecting ? (
+                <span className="welcome-button-content">
+                  <Loader2 size={19} className="animate-spin" />
+                  Opening library...
+                </span>
+              ) : (
+                <span className="welcome-button-content">
+                  <FolderOpen size={19} />
+                  Choose a photo folder
+                  <ArrowUpRight size={17} aria-hidden="true" />
+                </span>
+              )}
+            </Button>
+
+            <div className="welcome-privacy-note">
+              <ShieldCheck size={17} aria-hidden="true" />
+              <span>
+                <strong>Your photos stay on this device.</strong>
+                <small>No upload, account, or subscription required.</small>
               </span>
-            ) : (
-              <span className="flex items-center gap-2">
-                <MapPin className="w-5 h-5" />
-                <span>Start Exploring Your Photos</span>
-              </span>
-            )}
-          </Button>
-          <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-[var(--text-tertiary)]">
-            <span className="flex items-center gap-1.5">
-              <Lock className="w-3.5 h-3.5" />
-              <span>100% Private</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="text-[var(--color-primary)]">✓</span>
-              <span>Free Forever</span>
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5" />
-              <span>Cross-Platform</span>
-            </span>
-          </div>
+            </div>
+
+            <div className="welcome-menu-divider" />
+
+            <RecentDirectories
+              onSelectDirectory={handleSelectDirectory}
+              currentDirectory={currentDirectory}
+              className="welcome-recent"
+            />
+          </Card>
         </div>
-      </Card>
+
+        <footer className="welcome-footer">
+          <span>Atlas Photo</span>
+          <span>Browse locally. Remember visually.</span>
+        </footer>
+      </div>
     </div>
   );
 };
