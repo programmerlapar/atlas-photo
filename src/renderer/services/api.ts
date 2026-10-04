@@ -178,11 +178,19 @@ export const getAlbumCover = async (albumPath: string) => {
   return window.electronAPI.getAlbumCover(albumPath);
 };
 
+export const RECENT_DIRECTORIES_CHANGED_EVENT =
+  'photomap:recent-directories-changed';
+
 /** Removes a folder from PhotoMap Collections without touching its source files. */
 export const removeRecentDirectory = async (directoryPath: string) => {
   if (!window.electronAPI) {
     throw new Error('Electron API not available');
   }
 
-  return window.electronAPI.removeRecentDirectory(directoryPath);
+  const result = await window.electronAPI.removeRecentDirectory(directoryPath);
+  if (result.success) {
+    window.dispatchEvent(new Event(RECENT_DIRECTORIES_CHANGED_EVENT));
+  }
+
+  return result;
 };
