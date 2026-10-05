@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -9,6 +9,10 @@ const packageJson = JSON.parse(
 const mainEntry = resolve(projectRoot, packageJson.main);
 const preloadEntry = resolve(projectRoot, 'dist-electron/preload/index.js');
 const rendererEntry = resolve(projectRoot, 'dist-electron/renderer/index.html');
+const unpackedSharpPackagesDir = resolve(
+  projectRoot,
+  'release/linux-unpacked/resources/app.asar.unpacked/node_modules/@img'
+);
 
 if (!existsSync(mainEntry)) {
   throw new Error(`Missing packaged main entry: ${mainEntry}`);
@@ -20,6 +24,31 @@ if (!existsSync(preloadEntry)) {
 
 if (!existsSync(rendererEntry)) {
   throw new Error(`Missing packaged renderer entry: ${rendererEntry}`);
+}
+
+const hasUnpackedLibvips =
+  existsSync(unpackedSharpPackagesDir) &&
+  readdirSync(unpackedSharpPackagesDir, { withFileTypes: true })
+    .filter(
+      (entry) => entry.isDirectory() && entry.name.startsWith('sharp-libvips-')
+    )
+    .some((packageEntry) => {
+      const libDir = resolve(
+        unpackedSharpPackagesDir,
+        packageEntry.name,
+        'lib'
+      );
+
+      return (
+        existsSync(libDir) &&
+        readdirSync(libDir).some((entry) => entry.startsWith('libvips-cpp.so.'))
+      );
+    });
+
+if (process.platform === 'linux' && !hasUnpackedLibvips) {
+  throw new Error(
+    `Missing unpacked sharp libvips binary: ${unpackedSharpPackagesDir}`
+  );
 }
 
 const mainBundle = readFileSync(mainEntry, 'utf8');
