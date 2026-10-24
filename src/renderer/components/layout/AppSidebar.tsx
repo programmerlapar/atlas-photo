@@ -5,7 +5,10 @@ import { useMotionNavigate } from '../../hooks/useMotionNavigate';
 import { useFilterStore, type GroupOption } from '../../stores/filterStore';
 import { useThemeStore } from '../../stores/themeStore';
 import { usePhotoStore } from '../../stores/photoStore';
-import { scanDirectory } from '../../services/api';
+import {
+  RECENT_DIRECTORIES_CHANGED_EVENT,
+  scanDirectory,
+} from '../../services/api';
 import {
   ChevronDown,
   ChevronRight,
@@ -61,7 +64,22 @@ const AppSidebar = () => {
         console.error('Unable to load sidebar albums:', error);
       }
     };
+    const handleRecentDirectoriesChanged = () => {
+      void loadAlbumPaths();
+    };
+
     void loadAlbumPaths();
+    window.addEventListener(
+      RECENT_DIRECTORIES_CHANGED_EVENT,
+      handleRecentDirectoriesChanged
+    );
+
+    return () => {
+      window.removeEventListener(
+        RECENT_DIRECTORIES_CHANGED_EVENT,
+        handleRecentDirectoriesChanged
+      );
+    };
   }, [location.pathname]);
 
   const handleAlbumSelect = async (path: string) => {
