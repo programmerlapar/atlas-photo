@@ -1,4 +1,4 @@
-import { X, Calendar, FileType, SortAsc, SortDesc } from 'lucide-react';
+import { X, Calendar, FileType, Search, SortAsc, SortDesc } from 'lucide-react';
 import { useFilterStore } from '../../stores/filterStore';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
@@ -13,11 +13,13 @@ export interface FilterPanelProps {
  */
 const FilterPanel = ({ onClose }: FilterPanelProps) => {
   const {
+    searchQuery,
     dateRange,
     fileTypes,
     sortBy,
     sortOrder,
     groupBy,
+    setSearchQuery,
     setDateRange,
     setFileTypes,
     setSortBy,
@@ -65,6 +67,25 @@ const FilterPanel = ({ onClose }: FilterPanelProps) => {
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        {/* Search */}
+        <div className="space-y-2">
+          <label
+            htmlFor="photo-search"
+            className="text-sm font-semibold text-[var(--text-tertiary)] uppercase tracking-wide flex items-center gap-2"
+          >
+            <Search className="w-4 h-4" />
+            Search photos
+          </label>
+          <input
+            id="photo-search"
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Filename, date, or location"
+            className="w-full px-3 py-2 bg-[var(--glass-bg-1)] border border-[var(--border-default)] rounded-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
+
         {/* Sort */}
         <div className="space-y-2">
           <h3 className="text-sm font-semibold text-[var(--text-tertiary)] uppercase tracking-wide flex items-center gap-2">
