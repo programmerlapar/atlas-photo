@@ -1247,17 +1247,17 @@
     postcss "^8.5.15"
     tailwindcss "4.3.2"
 
-"@tanstack/query-core@5.105.0":
-  version "5.105.0"
-  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.105.0.tgz#c3bbf51a664d4af09b2f404b2595ccdc9a743021"
-  integrity sha512-7p56vRmT/z4UJ6sctGIdl5WRUQyUv53IUpUwEKi2g97zMbO7zh8ZsCLffGAvCPBR4xD72e3VXsDyLwXHhoNTMQ==
+"@tanstack/query-core@5.107.1":
+  version "5.107.1"
+  resolved "https://registry.yarnpkg.com/@tanstack/query-core/-/query-core-5.107.1.tgz#cd1f9952b4d623e66349931df631b287d9c4a3fe"
+  integrity sha512-PSyAik11oQBEVOiVy5hjZWHmoUqOXqK1WYy4v55mcxozEfKaQgpUMsgnXhWjuESzSht8JfzqMS1m6M/9CpNgvg==
 
-"@tanstack/react-query@^5.105.0":
-  version "5.105.0"
-  resolved "https://registry.yarnpkg.com/@tanstack/react-query/-/react-query-5.105.0.tgz#16605f0d0fcae9d179071cf48434c4adc4a59497"
-  integrity sha512-y+hMuDERvgg6ay1da0V1a6ZC0ZONt7dELxSFkqRZuwm7p1TTZs0MoXrPlBRflIpRoYjvzQVYxycnLImpFLhWrw==
+"@tanstack/react-query@^5.107.1":
+  version "5.107.1"
+  resolved "https://registry.yarnpkg.com/@tanstack/react-query/-/react-query-5.107.1.tgz#277e4b8c4d6d0496047ef15afacbc8c091ce0532"
+  integrity sha512-udCOOLp3ZAheUrIHLCe+ZZge6nr2ZUrGMSWcCuXsjY1Bf2JeeE09oxst97PILiCY6N8xo/7bIo3Hvz13zh06FA==
   dependencies:
-    "@tanstack/query-core" "5.105.0"
+    "@tanstack/query-core" "5.107.1"
 
 "@testing-library/dom@^10.4.1":
   version "10.4.1"
@@ -3802,10 +3802,10 @@ lru-cache@^6.0.0:
   dependencies:
     yallist "^4.0.0"
 
-lucide-react@^1.65.0:
-  version "1.65.0"
-  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-1.65.0.tgz#4ffc266698c29885f4f7c05674ca65e68edd28e4"
-  integrity sha512-roSdtzudEY39i2hn5LLjA8toYfhF2z4S10WSqZF4ubXpHlOmNTvaxMxZLdJfQDi6pEifQWX+cRmYihKSsvAxfA==
+lucide-react@^1.72.0:
+  version "1.72.0"
+  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-1.72.0.tgz#a2e6e0b5aea895df30ac375cf2ca130e223e3819"
+  integrity sha512-fbF5i1GU8GODETa3Q7rXqrJrcx3iPYrQtxthom103zGx+Z0BGwKYAW9s+9435ohYJ7hQm0av0PoZcqI1CRwNrg==
 
 lz-string@^1.5.0:
   version "1.5.0"
@@ -4367,10 +4367,10 @@ react-router@7.18.5:
     cookie "^1.0.1"
     set-cookie-parser "^2.6.0"
 
-react-window@^2.5.1:
-  version "2.5.1"
-  resolved "https://registry.yarnpkg.com/react-window/-/react-window-2.5.1.tgz#5956a8ba9c9be60bd2eec6b92d47283b3ed993c1"
-  integrity sha512-UgN90PCLkLshBXyMCmcpI4fOmcCwFnyYSN2/3/m/DDAzxCQInMwmVuEtJZE1+Wy060KjA1XH6ASaxb2aAxwsfw==
+react-window@^2.5.3:
+  version "2.5.3"
+  resolved "https://registry.yarnpkg.com/react-window/-/react-window-2.5.3.tgz#75a7d9e21f8faa1928b191f670f8a975406c541f"
+  integrity sha512-zN/mX+4cLgwp8xDqQYKmgbzj/oZ2LrF4V8KbAbgkpA9zAt3+q4nWPe0MhvIDIh9c4kHPySSchNcd8DjyR6jItQ==
 
 react@^19.3.1:
   version "19.3.1"
@@ -5445,7 +5445,7 @@ yocto-queue@^0.1.0:
   resolved "https://registry.npmjs.org/yocto-queue/-/yocto-queue-0.1.0.tgz"
   integrity sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==
 
-zustand@^5.0.16:
-  version "5.0.16"
-  resolved "https://registry.yarnpkg.com/zustand/-/zustand-5.0.16.tgz#5d1fbffc43529a4313dd61b7183b93450638e9d4"
-  integrity sha512-Uv7e327ihlCfayfja3hDc0M64Upev1LWBKpRobdK4NyovDDPeeX4imWXc/wzC1yc6fkYPoAY/ncKVPAs2jrtQw==
+zustand@^5.1.0:
+  version "5.1.0"
+  resolved "https://registry.yarnpkg.com/zustand/-/zustand-5.1.0.tgz#739f981fa5427f3d3704705726e9c821671b307f"
+  integrity sha512-ciJZlP48M1PTQbVQq81CGVFxHTLpZNrFjKqwjtCU34AWuXTZT/jrF3p9+fI84Cf1eSCMLapxqBy/SNTfwOBuqA==
