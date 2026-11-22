@@ -25,7 +25,8 @@
   },
   "files": [
     "dist-electron/**/*",
-    "src/renderer/assets/**/*"
+    "src/renderer/assets/**/*",
+    "public/**/*"
   ],
   "linux": {
     "target": [

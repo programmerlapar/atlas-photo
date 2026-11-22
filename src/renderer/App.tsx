@@ -7,6 +7,7 @@ import GalleryView from './views/GalleryView';
 import DetailView from './views/DetailView';
 import MapViewPage from './views/MapView';
 import SettingsView from './views/SettingsView';
+import PeopleView from './views/PeopleView';
 import { AppChrome } from './components/layout';
 
 /**
@@ -52,7 +53,9 @@ const App = () => {
   }
 
   const showSidebar =
-    ['/albums', '/gallery', '/settings'].includes(location.pathname) ||
+    ['/albums', '/gallery', '/settings', '/people'].includes(
+      location.pathname
+    ) ||
     (location.pathname === '/' && hasAlbums);
   const integratedToolbar =
     ['/albums', '/gallery', '/map'].includes(location.pathname) ||
@@ -78,6 +81,7 @@ const App = () => {
           <Route path="/detail/:photoId" element={<DetailView />} />
           <Route path="/map" element={<MapViewPage />} />
           <Route path="/settings" element={<SettingsView />} />
+          <Route path="/people" element={<PeopleView />} />
         </Routes>
       </main>
     </div>

@@ -1,4 +1,5 @@
 import { ArrowLeft, FolderOpen, Grid, Moon, Sun, Grid3x3 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { usePhotos } from '../hooks/usePhotos';
 import { useMotionNavigate } from '../hooks/useMotionNavigate';
 import { useFilterStore, type GroupOption, type SortOption } from '../stores/filterStore';
@@ -19,6 +20,49 @@ const SettingsView = () => {
   const { theme, toggleTheme } = useThemeStore();
   const { albumGridSize, setAlbumGridSize } = usePreferencesStore();
   const isDarkMode = theme === 'dark';
+  const [faceGroupingEnabled, setFaceGroupingEnabled] = useState(false);
+  const [facePreferenceLoading, setFacePreferenceLoading] = useState(true);
+  const [facePreferenceError, setFacePreferenceError] = useState<string | null>(null);
+
+  const loadFaceGroupingSetting = async () => {
+    setFacePreferenceLoading(true);
+    setFacePreferenceError(null);
+    try {
+      setFaceGroupingEnabled(await window.electronAPI.getFaceGroupingEnabled());
+    } catch {
+      setFacePreferenceError('Face grouping settings could not be loaded. Try again.');
+    } finally {
+      setFacePreferenceLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+    window.electronAPI.getFaceGroupingEnabled()
+      .then((enabled) => {
+        if (active) setFaceGroupingEnabled(enabled);
+      })
+      .catch(() => {
+        if (active) setFacePreferenceError('Face grouping settings could not be loaded. Try again.');
+      })
+      .finally(() => {
+        if (active) setFacePreferenceLoading(false);
+      });
+    return () => { active = false; };
+  }, []);
+
+  const handleFaceGroupingChange = async (enabled: boolean) => {
+    setFacePreferenceLoading(true);
+    setFacePreferenceError(null);
+    try {
+      await window.electronAPI.setFaceGroupingEnabled(enabled);
+      setFaceGroupingEnabled(enabled);
+    } catch {
+      setFacePreferenceError('The setting could not be updated. Check the current setting before starting another scan.');
+    } finally {
+      setFacePreferenceLoading(false);
+    }
+  };
 
   const handleDirectoryChange = async () => {
     // Directory change is handled in WelcomeScreen
@@ -212,6 +256,34 @@ const SettingsView = () => {
               Configure your PhotoMap preferences and view options
             </p>
           </div>
+          <section className="rounded-2xl border border-[var(--border-default)] bg-[var(--glass-bg-1)] p-5">
+            <h3 className="text-base font-semibold text-[var(--text-primary)]">People</h3>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+              Group similar faces in your library. Face matching runs on this device. When enabled, face embeddings and names are saved locally in app data; disabling removes them.
+            </p>
+            <label className="mt-4 flex items-start gap-3 text-sm text-[var(--text-primary)]">
+              <input
+                type="checkbox"
+                checked={faceGroupingEnabled}
+                disabled={facePreferenceLoading}
+                onChange={(event) => void handleFaceGroupingChange(event.target.checked)}
+                className="mt-0.5 h-4 w-4 accent-primary"
+              />
+              <span>Enable face grouping and local face-data storage</span>
+            </label>
+            {facePreferenceLoading && <p className="mt-2 text-xs text-[var(--text-secondary)]" role="status">Loading or saving face grouping preference…</p>}
+            {facePreferenceError && <p className="mt-2 text-xs text-[var(--color-danger,var(--text-secondary))]" role="alert">{facePreferenceError}</p>}
+            {facePreferenceError && !facePreferenceLoading && (
+              <button onClick={() => void loadFaceGroupingSetting()} className="mt-2 text-xs underline">
+                Retry loading setting
+              </button>
+            )}
+            {faceGroupingEnabled && (
+              <Button variant="secondary" size="sm" onClick={() => navigate('/people')} className="mt-4 rounded-lg px-3 py-2">
+                Open People
+              </Button>
+            )}
+          </section>
         </div>
       </div>
     </div>

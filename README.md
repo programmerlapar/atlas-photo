@@ -17,6 +17,7 @@
 *   📸 **Fluid & Intuitive Gallery:** A beautifully crafted interface designed for seamless photo browsing and discovery.
 *   🗺️ **Map View Integration:** Instantly see where each photo was taken on an interactive leaflet map.
 *   📍 **Automatic Metadata Extraction:** Automatically pulls GPS coordinates from EXIF data to populate the map.
+*   👥 **Private People Groups:** Optionally detect and group similar faces on-device. Face embeddings and names stay in local app data and are removed when the feature is disabled.
 *   🔒 **Privacy-First & Local-Only:** Your photos never leave your device. Everything is processed 100% locally for maximum security and privacy.
 *   🚀 **High Performance:** Built with Electron, React, and Vite for a smooth, responsive experience.
 

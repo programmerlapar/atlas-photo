@@ -35,6 +35,7 @@
   "dependencies": {
     "@luomus/leaflet-smooth-wheel-zoom": "^1.0.0",
     "@tanstack/react-query": "^5.105.0",
+    "@vladmandic/human": "^3.3.6",
     "exifr": "^7.1.3",
     "heic-convert": "^2.1.0",
     "leaflet": "^1.9.4",

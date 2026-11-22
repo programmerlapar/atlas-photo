@@ -1,4 +1,5 @@
 import type { Photo } from '../../shared/types/photo';
+import type { DetectedFace, PersonGroup } from '../../shared/types/people';
 
 /**
  * Type definitions for Electron API exposed via preload script
@@ -11,6 +12,15 @@ export interface ElectronAPI {
   ) => Promise<{ photos: Photo[]; error: string | null }>;
   getPhotos: () => Promise<Photo[]>;
   getLibraryPhotos: () => Promise<Photo[]>;
+  getFaceGroupingEnabled: () => Promise<boolean>;
+  setFaceGroupingEnabled: (enabled: boolean) => Promise<boolean>;
+  getPeopleGroups: () => Promise<PersonGroup[]>;
+  saveDetectedFaces: (
+    photoPath: string,
+    faces: DetectedFace[]
+  ) => Promise<PersonGroup[]>;
+  renamePerson: (personId: string, name: string) => Promise<PersonGroup[]>;
+  getPhotoThumbnailData: (photoPath: string) => Promise<Uint8Array | null>;
   getPhotoMetadata: (path: string) => Promise<unknown>;
   generateThumbnail: (
     path: string,
