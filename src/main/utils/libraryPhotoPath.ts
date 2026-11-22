@@ -1,4 +1,5 @@
 import { isAbsolute, relative, resolve } from 'path';
+import { existsSync, realpathSync } from 'fs';
 
 const isPathInsideRoot = (filePath: string, rootPath: string): boolean => {
   const relativePath = relative(resolve(rootPath), resolve(filePath));
@@ -17,14 +18,28 @@ export const isApprovedLibraryPhotoPath = (
 ): boolean => {
   if (!isAbsolute(photoPath)) return false;
 
-  const resolvedPhotoPath = resolve(photoPath);
-  const isInLibrary = libraryRoots.some((rootPath) =>
-    isPathInsideRoot(resolvedPhotoPath, rootPath)
-  );
+  if (!existsSync(photoPath)) return false;
+  let resolvedPhotoPath: string;
+  try {
+    resolvedPhotoPath = realpathSync(photoPath);
+  } catch {
+    return false;
+  }
+  const isInLibrary = libraryRoots.some((rootPath) => {
+    try {
+      return isPathInsideRoot(resolvedPhotoPath, realpathSync(rootPath));
+    } catch {
+      return false;
+    }
+  });
   if (!isInLibrary) return false;
 
   for (const approvedPhotoPath of approvedPhotoPaths) {
-    if (resolve(approvedPhotoPath) === resolvedPhotoPath) return true;
+    try {
+      if (realpathSync(approvedPhotoPath) === resolvedPhotoPath) return true;
+    } catch {
+      continue;
+    }
   }
 
   return false;

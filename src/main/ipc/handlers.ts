@@ -1,7 +1,7 @@
 import { ipcMain, BrowserWindow, shell, clipboard } from 'electron';
 import { dialog } from 'electron';
 import { existsSync } from 'fs';
-import { copyFile, unlink } from 'fs/promises';
+import { copyFile, readFile, unlink } from 'fs/promises';
 import { join, basename } from 'path';
 import { processPhotos } from '../services/photoProcessor';
 import { extractPhotoMetadata } from '../services/exifExtractor';
@@ -9,9 +9,11 @@ import { FileWatcher } from '../services/fileWatcher';
 import { Storage } from '../utils/storage';
 import { PhotoIndex } from '../services/photoIndex';
 import { ImageCacheService } from './cache/ImageCacheService';
+import { PeopleIndex } from '../services/peopleIndex';
 import { addAllowedLibraryRoot } from '../utils/protocol';
 import { isApprovedLibraryPhotoPath } from '../utils/libraryPhotoPath';
 import type { Photo } from '../../shared/types/photo';
+import type { DetectedFace } from '../../shared/types/people';
 
 // Store photo data in memory for current session
 let currentPhotos: Photo[] = [];
@@ -20,6 +22,20 @@ const fileWatcher = new FileWatcher();
 const storage = new Storage();
 const photoIndex = new PhotoIndex();
 const imageCache = new ImageCacheService();
+const peopleIndex = new PeopleIndex();
+let faceDataQueue: Promise<void> = Promise.resolve();
+const withFaceDataLock = async <T>(operation: () => Promise<T>): Promise<T> => {
+  const result = faceDataQueue.then(operation);
+  faceDataQueue = result.then(() => undefined, () => undefined);
+  return result;
+};
+const removeFaceDataForPhoto = async (photoPath: string): Promise<void> => {
+  try {
+    await withFaceDataLock(() => peopleIndex.removePhoto(photoPath));
+  } catch (error) {
+    console.warn('Unable to update the local people index after photo removal.', error);
+  }
+};
 let backgroundThumbnailRun = 0;
 
 // Load last directory on startup
@@ -168,6 +184,7 @@ export const setupIpcHandlers = () => {
           // Remove from current photos
           currentPhotos = currentPhotos.filter((p) => p.path !== photoPath);
           await photoIndex.remove(path, photoPath);
+          await removeFaceDataForPhoto(photoPath);
 
           // Notify renderer
           const windows = BrowserWindow.getAllWindows();
@@ -220,6 +237,102 @@ export const setupIpcHandlers = () => {
 
     return Array.from(uniquePhotos.values());
   });
+
+  ipcMain.handle('get-face-grouping-enabled', async () =>
+    (await storage.get<boolean>('faceGroupingEnabled')) === true
+  );
+
+  ipcMain.handle('set-face-grouping-enabled', (_event, enabled: unknown) =>
+    withFaceDataLock(async () => {
+      if (typeof enabled !== 'boolean') throw new Error('Invalid face grouping preference');
+      if (!enabled) await peopleIndex.clear();
+      await storage.set('faceGroupingEnabled', enabled);
+      return enabled;
+    })
+  );
+
+  ipcMain.handle('get-people-groups', async () => {
+    if ((await storage.get<boolean>('faceGroupingEnabled')) !== true) return [];
+    return peopleIndex.getGroups();
+  });
+
+  ipcMain.handle('get-photo-thumbnail-data', (_event, photoPath: unknown) =>
+    withFaceDataLock(async () => {
+      if ((await storage.get<boolean>('faceGroupingEnabled')) !== true) {
+        throw new Error('Enable face grouping in Settings before analyzing photos');
+      }
+      if (typeof photoPath !== 'string') throw new Error('Invalid photo path');
+      const recentDirs = (await storage.get<string[]>('recentDirectories')) || [];
+      const indexedPhotos = await photoIndex.getStoredForDirectories(recentDirs);
+      const approvedPhotoPaths = new Set([
+        ...currentPhotos.map((photo) => photo.path),
+        ...indexedPhotos.map((photo) => photo.path),
+      ]);
+      const roots = [currentDirectory, ...recentDirs].filter(
+        (directory): directory is string => Boolean(directory)
+      );
+      if (!isApprovedLibraryPhotoPath(photoPath, roots, approvedPhotoPaths)) {
+        throw new Error('Photo is not part of the approved library');
+      }
+      const thumbnailPath = await imageCache.getThumbnail(photoPath);
+      if (!thumbnailPath) return null;
+      const bytes = await readFile(thumbnailPath);
+      if (bytes.byteLength > 8 * 1024 * 1024) {
+        throw new Error('Photo preview is too large to analyze');
+      }
+      return new Uint8Array(bytes);
+    })
+  );
+
+  ipcMain.handle('save-detected-faces', (_event, photoPath: unknown, faces: unknown) =>
+    withFaceDataLock(async () => {
+      if ((await storage.get<boolean>('faceGroupingEnabled')) !== true) {
+        throw new Error('Enable face grouping in Settings before saving face data');
+      }
+      if (typeof photoPath !== 'string' || !Array.isArray(faces) || faces.length > 30) {
+        throw new Error('Invalid face detection result');
+      }
+      const recentDirs = (await storage.get<string[]>('recentDirectories')) || [];
+      const indexedPhotos = await photoIndex.getStoredForDirectories(recentDirs);
+      const approvedPhotoPaths = new Set([
+        ...currentPhotos.map((photo) => photo.path),
+        ...indexedPhotos.map((photo) => photo.path),
+      ]);
+      const roots = [currentDirectory, ...recentDirs].filter(
+        (directory): directory is string => Boolean(directory)
+      );
+      if (!isApprovedLibraryPhotoPath(photoPath, roots, approvedPhotoPaths)) {
+        throw new Error('Photo is not part of the approved library');
+      }
+
+      const validatedFaces = (faces as DetectedFace[]).map((face) => {
+        if (
+          face.photoPath !== photoPath ||
+          !Array.isArray(face.box) || face.box.length !== 4 ||
+          face.box.some((coordinate) => !Number.isFinite(coordinate) || coordinate < 0 || coordinate > 1) ||
+          face.box[0] + face.box[2] > 1 || face.box[1] + face.box[3] > 1 ||
+          !Array.isArray(face.descriptor) || face.descriptor.length < 64 || face.descriptor.length > 4096 ||
+          face.descriptor.some((value) => !Number.isFinite(value) || Math.abs(value) > 10)
+        ) {
+          throw new Error('Invalid face detection data');
+        }
+        return face;
+      });
+      return peopleIndex.savePhotoFaces(photoPath, validatedFaces);
+    })
+  );
+
+  ipcMain.handle('rename-person', (_event, personId: unknown, name: unknown) =>
+    withFaceDataLock(async () => {
+      if ((await storage.get<boolean>('faceGroupingEnabled')) !== true) {
+        throw new Error('Face grouping is disabled');
+      }
+      if (typeof personId !== 'string' || typeof name !== 'string' || name.length > 120) {
+        throw new Error('Invalid person name');
+      }
+      return peopleIndex.renamePerson(personId, name);
+    })
+  );
 
   // Get photo metadata handler
   ipcMain.handle('get-photo-metadata', async (_event, path: string) => {
@@ -616,6 +729,7 @@ export const setupIpcHandlers = () => {
               for (const directory of libraryRoots) {
                 await photoIndex.remove(directory, photoPath);
               }
+              await removeFaceDataForPhoto(photoPath);
 
               // Notify renderer
               const windows = BrowserWindow.getAllWindows();

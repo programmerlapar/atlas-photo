@@ -68,7 +68,7 @@
 #### Advanced Features (Future)
 
 26. **Photo Editing** - Basic photo editing (crop, rotate, brightness, contrast)
-27. **Face Detection** - Detect and group photos by faces
+27. **Face Detection** - Detect and group photos by faces (implemented as optional local People groups)
 28. **Album Creation** - Create custom albums/folders
 29. **Photo Tagging** - Add custom tags to photos
 30. **Location Reverse Geocoding** - Show location names on map (city, country)

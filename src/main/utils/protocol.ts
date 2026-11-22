@@ -1,7 +1,7 @@
-import { protocol, session } from 'electron';
+import { app, protocol, session } from 'electron';
 import { existsSync, realpathSync } from 'fs';
 import { Buffer } from 'buffer';
-import { isAbsolute, relative } from 'path';
+import { isAbsolute, join, relative } from 'path';
 
 type ProtocolCallback = (response: Electron.ProtocolResponse) => void;
 
@@ -77,7 +77,7 @@ export const registerCustomProtocol = (allowedRoots: string[] = []) => {
         while (base64.length % 4) base64 += '=';
 
         const filePath = Buffer.from(base64, 'base64').toString('utf-8');
-        const allowedFilePath = isAllowedProtocolPath(filePath, allowedLibraryRoots);
+      const allowedFilePath = isAllowedProtocolPath(filePath, allowedLibraryRoots);
 
         if (allowedFilePath) {
           callback({ path: allowedFilePath });
@@ -111,4 +111,44 @@ export const registerCustomProtocol = (allowedRoots: string[] = []) => {
     console.error('Failed to register custom protocol:', error);
     throw error;
   }
+};
+
+const FACE_MODEL_FILES = new Set([
+  'blazeface.json',
+  'blazeface.bin',
+  'faceres.json',
+  'faceres.bin',
+]);
+
+export const resolveFaceModelPath = (requestUrl: string): string | null => {
+  try {
+    const url = new URL(requestUrl);
+    const filename = decodeURIComponent(url.pathname).replace(/^\/human\//, '');
+    if (
+      url.protocol !== 'atlas-model:' ||
+      url.hostname !== 'models' ||
+      !FACE_MODEL_FILES.has(filename)
+    ) {
+      return null;
+    }
+    return join(app.getAppPath(), 'public', 'models', 'human', filename);
+  } catch {
+    return null;
+  }
+};
+
+/** Serve only the bundled face model files over a fetch-capable local scheme. */
+export const registerFaceModelProtocol = (): void => {
+  const handler = (
+    request: Electron.ProtocolRequest,
+    callback: ProtocolCallback
+  ) => {
+    const modelPath = resolveFaceModelPath(request.url);
+    callback(
+      modelPath && existsSync(modelPath) ? { path: modelPath } : { error: -10 }
+    );
+  };
+  const customSession = session.fromPartition('persist:main');
+  customSession.protocol.registerFileProtocol('atlas-model', handler);
+  protocol.registerFileProtocol('atlas-model', handler);
 };

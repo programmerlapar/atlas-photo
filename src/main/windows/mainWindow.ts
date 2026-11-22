@@ -54,7 +54,7 @@ export const createMainWindow = (): BrowserWindow => {
     "style-src 'self' 'unsafe-inline'; " +
     "img-src 'self' data: atlas-photo: file: https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org; " +
     "font-src 'self' data:; " +
-    "connect-src 'self' http://localhost:* ws://localhost:* ws://127.0.0.1:* https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org;";
+    "connect-src 'self' atlas-model: http://localhost:* ws://localhost:* ws://127.0.0.1:* https://*.basemaps.cartocdn.com https://*.tile.openstreetmap.org;";
 
   mainWindow.webContents.session.webRequest.onHeadersReceived(
     (details, callback) => {

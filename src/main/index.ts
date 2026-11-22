@@ -1,11 +1,26 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, protocol } from 'electron';
 import { createMainWindow } from './windows/mainWindow';
 import { setupIpcHandlers } from './ipc/handlers';
-import { registerCustomProtocol, restoreAllowedLibraryRoots } from './utils/protocol';
+import {
+  registerCustomProtocol,
+  registerFaceModelProtocol,
+  restoreAllowedLibraryRoots,
+} from './utils/protocol';
 import { Storage } from './utils/storage';
 
 // Configure cache paths and command line switches before app is ready
 // This must be called before app.whenReady()
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'atlas-model',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      corsEnabled: true,
+    },
+  },
+]);
 if (process.platform === 'win32') {
   try {
     // Set cache directory to user data directory to avoid permission issues
@@ -31,7 +46,8 @@ setupIpcHandlers();
 // Handle app lifecycle
 app.whenReady().then(async () => {
   const storage = new Storage();
-  const recentDirectories = (await storage.get<string[]>('recentDirectories')) || [];
+  const recentDirectories =
+    (await storage.get<string[]>('recentDirectories')) || [];
   const lastDirectory = await storage.get<string>('lastDirectory');
   restoreAllowedLibraryRoots(
     lastDirectory ? [...recentDirectories, lastDirectory] : recentDirectories
@@ -42,6 +58,7 @@ app.whenReady().then(async () => {
   // Protocol registration must be synchronous - it cannot be async
   try {
     registerCustomProtocol();
+    registerFaceModelProtocol();
   } catch (error) {
     console.error('Failed to register custom protocol:', error);
     // Continue anyway - protocol might still work

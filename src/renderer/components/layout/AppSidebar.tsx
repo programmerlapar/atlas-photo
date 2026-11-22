@@ -19,6 +19,7 @@ import {
   Settings2,
   SlidersHorizontal,
   Sun,
+  UsersRound,
 } from 'lucide-react';
 
 /** Attached top-level navigation, intentionally limited to Library and Albums. */
@@ -132,6 +133,14 @@ const AppSidebar = () => {
         >
           <Images className="h-4 w-4" />
           <span>Library</span>
+        </button>
+        <button
+          onClick={() => navigate('/people')}
+          className={`desktop-sidebar-item ${location.pathname === '/people' ? 'desktop-sidebar-item-active' : ''}`}
+          aria-current={location.pathname === '/people' ? 'page' : undefined}
+        >
+          <UsersRound className="h-4 w-4" />
+          <span>People</span>
         </button>
         <div className="desktop-sidebar-albums">
           <div

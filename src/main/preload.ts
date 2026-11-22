@@ -1,5 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { Photo } from '../shared/types/photo';
+import type { DetectedFace, PersonGroup } from '../shared/types/people';
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -19,6 +20,28 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getPhotos: () => ipcRenderer.invoke('get-photos') as Promise<Photo[]>,
   getLibraryPhotos: () =>
     ipcRenderer.invoke('get-library-photos') as Promise<Photo[]>,
+  getFaceGroupingEnabled: () =>
+    ipcRenderer.invoke('get-face-grouping-enabled') as Promise<boolean>,
+  setFaceGroupingEnabled: (enabled: boolean) =>
+    ipcRenderer.invoke(
+      'set-face-grouping-enabled',
+      enabled
+    ) as Promise<boolean>,
+  getPeopleGroups: () =>
+    ipcRenderer.invoke('get-people-groups') as Promise<PersonGroup[]>,
+  saveDetectedFaces: (photoPath: string, faces: DetectedFace[]) =>
+    ipcRenderer.invoke('save-detected-faces', photoPath, faces) as Promise<
+      PersonGroup[]
+    >,
+  renamePerson: (personId: string, name: string) =>
+    ipcRenderer.invoke('rename-person', personId, name) as Promise<
+      PersonGroup[]
+    >,
+  getPhotoThumbnailData: (photoPath: string) =>
+    ipcRenderer.invoke(
+      'get-photo-thumbnail-data',
+      photoPath
+    ) as Promise<Uint8Array | null>,
   getPhotoMetadata: (path: string) =>
     ipcRenderer.invoke('get-photo-metadata', path) as Promise<unknown>,
 
