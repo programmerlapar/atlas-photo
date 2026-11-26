@@ -6,13 +6,13 @@ import SettingsView from '../SettingsView';
 
 beforeEach(() => {
   vi.clearAllMocks();
-  window.electronAPI.getFaceGroupingEnabled = vi.fn(async () => false);
+  window.electronAPI.getFaceGroupingEnabled = vi.fn(async () => true);
   window.electronAPI.setFaceGroupingEnabled = vi.fn(async (enabled) => enabled);
   window.electronAPI.getRecentDirectories = vi.fn(async () => []);
 });
 
 describe('Settings face grouping preference', () => {
-  it('requires an explicit enable action before face data can be stored', async () => {
+  it('shows face grouping enabled by default and offers privacy controls', async () => {
     render(
       <MemoryRouter>
         <SettingsView />
@@ -20,15 +20,19 @@ describe('Settings face grouping preference', () => {
     );
 
     const preference = await screen.findByRole('checkbox', {
-      name: 'Enable face grouping and local face-data storage',
+      name: 'Group similar faces in your library',
     });
-    expect(preference).not.toBeChecked();
+    expect(preference).toBeChecked();
     expect(window.electronAPI.setFaceGroupingEnabled).not.toHaveBeenCalled();
 
     fireEvent.click(preference);
 
-    await waitFor(() => expect(preference).toBeChecked());
-    expect(window.electronAPI.setFaceGroupingEnabled).toHaveBeenCalledWith(true);
-    expect(screen.getByRole('button', { name: 'Open People' })).toBeInTheDocument();
+    await waitFor(() => expect(preference).not.toBeChecked());
+    expect(window.electronAPI.setFaceGroupingEnabled).toHaveBeenCalledWith(
+      false
+    );
+    expect(
+      screen.getByText(/Turning this off deletes locally stored face groups/)
+    ).toBeInTheDocument();
   });
 });

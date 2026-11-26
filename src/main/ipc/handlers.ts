@@ -13,7 +13,7 @@ import { PeopleIndex } from '../services/peopleIndex';
 import { addAllowedLibraryRoot } from '../utils/protocol';
 import { isApprovedLibraryPhotoPath } from '../utils/libraryPhotoPath';
 import type { Photo } from '../../shared/types/photo';
-import type { DetectedFace } from '../../shared/types/people';
+import type { DetectedFace, FaceScanMode } from '../../shared/types/people';
 
 // Store photo data in memory for current session
 let currentPhotos: Photo[] = [];
@@ -23,17 +23,67 @@ const storage = new Storage();
 const photoIndex = new PhotoIndex();
 const imageCache = new ImageCacheService();
 const peopleIndex = new PeopleIndex();
+
+const getIndexedLibraryPhotos = async (): Promise<Photo[]> => {
+  const recentDirs = (await storage.get<string[]>('recentDirectories')) || [];
+  const indexedPhotos = await photoIndex.getStoredForDirectories(recentDirs);
+  const uniquePhotos = new Map<string, Photo>();
+
+  for (const photo of indexedPhotos) {
+    // Collections may overlap because directory scans are recursive.
+    // Recent collections are read first, so retain their newer index entry.
+    if (!uniquePhotos.has(photo.path)) uniquePhotos.set(photo.path, photo);
+  }
+  for (const photo of currentPhotos) {
+    if (!uniquePhotos.has(photo.path)) uniquePhotos.set(photo.path, photo);
+  }
+
+  return Array.from(uniquePhotos.values());
+};
+
+const assertApprovedFaceScanPhoto = async (
+  photoPath: unknown,
+  photoId: unknown
+): Promise<Photo> => {
+  if (typeof photoPath !== 'string' || typeof photoId !== 'string') {
+    throw new Error('Invalid photo scan reference');
+  }
+  const photos = await getIndexedLibraryPhotos();
+  const photo = photos.find((candidate) => candidate.path === photoPath);
+  const recentDirs = (await storage.get<string[]>('recentDirectories')) || [];
+  const roots = [currentDirectory, ...recentDirs].filter(
+    (directory): directory is string => Boolean(directory)
+  );
+  if (
+    !photo ||
+    photo.id !== photoId ||
+    !isApprovedLibraryPhotoPath(
+      photoPath,
+      roots,
+      photos.map((candidate) => candidate.path)
+    )
+  ) {
+    throw new Error('Photo is not part of the approved library');
+  }
+  return photo;
+};
 let faceDataQueue: Promise<void> = Promise.resolve();
 const withFaceDataLock = async <T>(operation: () => Promise<T>): Promise<T> => {
   const result = faceDataQueue.then(operation);
-  faceDataQueue = result.then(() => undefined, () => undefined);
+  faceDataQueue = result.then(
+    () => undefined,
+    () => undefined
+  );
   return result;
 };
 const removeFaceDataForPhoto = async (photoPath: string): Promise<void> => {
   try {
     await withFaceDataLock(() => peopleIndex.removePhoto(photoPath));
   } catch (error) {
-    console.warn('Unable to update the local people index after photo removal.', error);
+    console.warn(
+      'Unable to update the local people index after photo removal.',
+      error
+    );
   }
 };
 let backgroundThumbnailRun = 0;
@@ -61,7 +111,10 @@ const sendProgress = (progress: {
   });
 };
 
-const publishThumbnail = async (path: string, thumbnailPath: string): Promise<void> => {
+const publishThumbnail = async (
+  path: string,
+  thumbnailPath: string
+): Promise<void> => {
   const photo = currentPhotos.find((item) => item.path === path);
   // A visible request may join a prefetch already in progress. Only publish
   // once so the renderer is not forced through duplicate list updates.
@@ -75,17 +128,26 @@ const publishThumbnail = async (path: string, thumbnailPath: string): Promise<vo
   });
 };
 
-const startBackgroundThumbnailPrefetch = (directoryPath: string, photos: Photo[]): void => {
+const startBackgroundThumbnailPrefetch = (
+  directoryPath: string,
+  photos: Photo[]
+): void => {
   const run = ++backgroundThumbnailRun;
   const runPrefetch = async () => {
     // One low-priority worker runs only after the UI settles. Foreground work
     // queued by Gallery, Map, or Detail always moves ahead of the next item.
     for (const photo of photos) {
-      if (run !== backgroundThumbnailRun || currentDirectory !== directoryPath) return;
+      if (run !== backgroundThumbnailRun || currentDirectory !== directoryPath)
+        return;
       if (photo.thumbnailPath) continue;
 
-      const thumbnailPath = await imageCache.getThumbnail(photo.path, 500, 'prefetch');
-      if (run !== backgroundThumbnailRun || currentDirectory !== directoryPath) return;
+      const thumbnailPath = await imageCache.getThumbnail(
+        photo.path,
+        500,
+        'prefetch'
+      );
+      if (run !== backgroundThumbnailRun || currentDirectory !== directoryPath)
+        return;
       if (thumbnailPath) await publishThumbnail(photo.path, thumbnailPath);
     }
   };
@@ -102,18 +164,21 @@ const startBackgroundThumbnailPrefetch = (directoryPath: string, photos: Photo[]
  * Sets up all IPC handlers for communication between main and renderer processes
  */
 export const setupIpcHandlers = () => {
-  ipcMain.handle('window-control', (event, action: 'minimize' | 'maximize' | 'close') => {
-    const window = BrowserWindow.fromWebContents(event.sender);
-    if (!window) return false;
+  ipcMain.handle(
+    'window-control',
+    (event, action: 'minimize' | 'maximize' | 'close') => {
+      const window = BrowserWindow.fromWebContents(event.sender);
+      if (!window) return false;
 
-    if (action === 'minimize') window.minimize();
-    if (action === 'maximize') {
-      if (window.isMaximized()) window.unmaximize();
-      else window.maximize();
+      if (action === 'minimize') window.minimize();
+      if (action === 'maximize') {
+        if (window.isMaximized()) window.unmaximize();
+        else window.maximize();
+      }
+      if (action === 'close') window.close();
+      return true;
     }
-    if (action === 'close') window.close();
-    return true;
-  });
+  );
 
   // Directory selection handler
   ipcMain.handle('select-directory', async () => {
@@ -139,7 +204,8 @@ export const setupIpcHandlers = () => {
       await storage.set('lastDirectory', path);
 
       // Add to recent directories list
-      const recentDirs = (await storage.get<string[]>('recentDirectories')) || [];
+      const recentDirs =
+        (await storage.get<string[]>('recentDirectories')) || [];
       // Remove if already exists (to move to top)
       const filteredDirs = recentDirs.filter((dir) => dir !== path);
       // Add to beginning (most recent first)
@@ -224,27 +290,33 @@ export const setupIpcHandlers = () => {
 
   // Library reads the existing per-collection index rather than scanning every
   // saved folder on navigation. Individual album scans keep those indexes fresh.
-  ipcMain.handle('get-library-photos', async () => {
-    const recentDirs = (await storage.get<string[]>('recentDirectories')) || [];
-    const indexedPhotos = await photoIndex.getStoredForDirectories(recentDirs);
-    const uniquePhotos = new Map<string, Photo>();
+  ipcMain.handle('get-library-photos', getIndexedLibraryPhotos);
 
-    for (const photo of indexedPhotos) {
-      // Collections may overlap because directory scans are recursive.
-      // Recent collections are read first, so retain their newer index entry.
-      if (!uniquePhotos.has(photo.path)) uniquePhotos.set(photo.path, photo);
+  ipcMain.handle(
+    'get-face-scan-queue',
+    async (_event, mode: unknown = 'new') => {
+      if ((await storage.get<boolean>('faceGroupingEnabled')) === false) {
+        return { photos: [], total: 0, checked: 0, failed: 0 };
+      }
+      if (mode !== 'new' && mode !== 'retry-failed' && mode !== 'all') {
+        throw new Error('Invalid face scan mode');
+      }
+      return peopleIndex.getFaceScanQueue(
+        await getIndexedLibraryPhotos(),
+        mode as FaceScanMode
+      );
     }
+  );
 
-    return Array.from(uniquePhotos.values());
-  });
-
-  ipcMain.handle('get-face-grouping-enabled', async () =>
-    (await storage.get<boolean>('faceGroupingEnabled')) === true
+  ipcMain.handle(
+    'get-face-grouping-enabled',
+    async () => (await storage.get<boolean>('faceGroupingEnabled')) !== false
   );
 
   ipcMain.handle('set-face-grouping-enabled', (_event, enabled: unknown) =>
     withFaceDataLock(async () => {
-      if (typeof enabled !== 'boolean') throw new Error('Invalid face grouping preference');
+      if (typeof enabled !== 'boolean')
+        throw new Error('Invalid face grouping preference');
       if (!enabled) await peopleIndex.clear();
       await storage.set('faceGroupingEnabled', enabled);
       return enabled;
@@ -252,18 +324,23 @@ export const setupIpcHandlers = () => {
   );
 
   ipcMain.handle('get-people-groups', async () => {
-    if ((await storage.get<boolean>('faceGroupingEnabled')) !== true) return [];
+    if ((await storage.get<boolean>('faceGroupingEnabled')) === false)
+      return [];
     return peopleIndex.getGroups();
   });
 
   ipcMain.handle('get-photo-thumbnail-data', (_event, photoPath: unknown) =>
     withFaceDataLock(async () => {
-      if ((await storage.get<boolean>('faceGroupingEnabled')) !== true) {
-        throw new Error('Enable face grouping in Settings before analyzing photos');
+      if ((await storage.get<boolean>('faceGroupingEnabled')) === false) {
+        throw new Error(
+          'Enable face grouping in Settings before analyzing photos'
+        );
       }
       if (typeof photoPath !== 'string') throw new Error('Invalid photo path');
-      const recentDirs = (await storage.get<string[]>('recentDirectories')) || [];
-      const indexedPhotos = await photoIndex.getStoredForDirectories(recentDirs);
+      const recentDirs =
+        (await storage.get<string[]>('recentDirectories')) || [];
+      const indexedPhotos =
+        await photoIndex.getStoredForDirectories(recentDirs);
       const approvedPhotoPaths = new Set([
         ...currentPhotos.map((photo) => photo.path),
         ...indexedPhotos.map((photo) => photo.path),
@@ -284,53 +361,88 @@ export const setupIpcHandlers = () => {
     })
   );
 
-  ipcMain.handle('save-detected-faces', (_event, photoPath: unknown, faces: unknown) =>
-    withFaceDataLock(async () => {
-      if ((await storage.get<boolean>('faceGroupingEnabled')) !== true) {
-        throw new Error('Enable face grouping in Settings before saving face data');
-      }
-      if (typeof photoPath !== 'string' || !Array.isArray(faces) || faces.length > 30) {
-        throw new Error('Invalid face detection result');
-      }
-      const recentDirs = (await storage.get<string[]>('recentDirectories')) || [];
-      const indexedPhotos = await photoIndex.getStoredForDirectories(recentDirs);
-      const approvedPhotoPaths = new Set([
-        ...currentPhotos.map((photo) => photo.path),
-        ...indexedPhotos.map((photo) => photo.path),
-      ]);
-      const roots = [currentDirectory, ...recentDirs].filter(
-        (directory): directory is string => Boolean(directory)
-      );
-      if (!isApprovedLibraryPhotoPath(photoPath, roots, approvedPhotoPaths)) {
-        throw new Error('Photo is not part of the approved library');
-      }
-
-      const validatedFaces = (faces as DetectedFace[]).map((face) => {
-        if (
-          face.photoPath !== photoPath ||
-          !Array.isArray(face.box) || face.box.length !== 4 ||
-          face.box.some((coordinate) => !Number.isFinite(coordinate) || coordinate < 0 || coordinate > 1) ||
-          face.box[0] + face.box[2] > 1 || face.box[1] + face.box[3] > 1 ||
-          !Array.isArray(face.descriptor) || face.descriptor.length < 64 || face.descriptor.length > 4096 ||
-          face.descriptor.some((value) => !Number.isFinite(value) || Math.abs(value) > 10)
-        ) {
-          throw new Error('Invalid face detection data');
+  ipcMain.handle(
+    'save-detected-faces',
+    (_event, photoPath: unknown, photoId: unknown, faces: unknown) =>
+      withFaceDataLock(async () => {
+        if ((await storage.get<boolean>('faceGroupingEnabled')) === false) {
+          throw new Error(
+            'Enable face grouping in Settings before saving face data'
+          );
         }
-        return face;
-      });
-      return peopleIndex.savePhotoFaces(photoPath, validatedFaces);
-    })
+        if (
+          typeof photoPath !== 'string' ||
+          typeof photoId !== 'string' ||
+          !Array.isArray(faces) ||
+          faces.length > 30
+        ) {
+          throw new Error('Invalid face detection result');
+        }
+        await assertApprovedFaceScanPhoto(photoPath, photoId);
+
+        const validatedFaces = (faces as DetectedFace[]).map((face) => {
+          if (
+            face.photoPath !== photoPath ||
+            !Array.isArray(face.box) ||
+            face.box.length !== 4 ||
+            face.box.some(
+              (coordinate) =>
+                !Number.isFinite(coordinate) || coordinate < 0 || coordinate > 1
+            ) ||
+            face.box[0] + face.box[2] > 1 ||
+            face.box[1] + face.box[3] > 1 ||
+            !Array.isArray(face.descriptor) ||
+            face.descriptor.length < 64 ||
+            face.descriptor.length > 4096 ||
+            face.descriptor.some(
+              (value) => !Number.isFinite(value) || Math.abs(value) > 10
+            )
+          ) {
+            throw new Error('Invalid face detection data');
+          }
+          return face;
+        });
+        return peopleIndex.savePhotoFaces(photoPath, photoId, validatedFaces);
+      })
+  );
+
+  ipcMain.handle(
+    'record-face-scan-failure',
+    (_event, photoPath: unknown, photoId: unknown) =>
+      withFaceDataLock(async () => {
+        if ((await storage.get<boolean>('faceGroupingEnabled')) === false) {
+          throw new Error('Face grouping is disabled');
+        }
+        const photo = await assertApprovedFaceScanPhoto(photoPath, photoId);
+        await peopleIndex.recordPhotoScanFailure(photo.path, photo.id);
+      })
   );
 
   ipcMain.handle('rename-person', (_event, personId: unknown, name: unknown) =>
     withFaceDataLock(async () => {
-      if ((await storage.get<boolean>('faceGroupingEnabled')) !== true) {
+      if ((await storage.get<boolean>('faceGroupingEnabled')) === false) {
         throw new Error('Face grouping is disabled');
       }
-      if (typeof personId !== 'string' || typeof name !== 'string' || name.length > 120) {
+      if (
+        typeof personId !== 'string' ||
+        typeof name !== 'string' ||
+        name.length > 120
+      ) {
         throw new Error('Invalid person name');
       }
       return peopleIndex.renamePerson(personId, name);
+    })
+  );
+
+  ipcMain.handle('forget-person', (_event, personId: unknown) =>
+    withFaceDataLock(async () => {
+      if ((await storage.get<boolean>('faceGroupingEnabled')) === false) {
+        throw new Error('Face grouping is disabled');
+      }
+      if (typeof personId !== 'string' || personId.length > 120) {
+        throw new Error('Invalid person group');
+      }
+      return peopleIndex.forgetPerson(personId);
     })
   );
 
@@ -343,7 +455,8 @@ export const setupIpcHandlers = () => {
       const metadata = await extractPhotoMetadata(path);
       if (cachedPhoto && metadata) {
         cachedPhoto.metadata = metadata;
-        if (currentDirectory) await photoIndex.upsert(currentDirectory, cachedPhoto);
+        if (currentDirectory)
+          await photoIndex.upsert(currentDirectory, cachedPhoto);
       }
       return metadata;
     } catch (error) {
@@ -356,16 +469,25 @@ export const setupIpcHandlers = () => {
   // Returns thumbnail path and updates the photo in currentPhotos
   ipcMain.handle(
     'generate-thumbnail',
-    async (_event, path: string, priority: 'visible' | 'prefetch' = 'visible') => {
-    try {
-      const thumbnailPath = await imageCache.getThumbnail(path, 500, priority);
-      if (thumbnailPath) await publishThumbnail(path, thumbnailPath);
-      return thumbnailPath;
-    } catch (error) {
-      console.error('Error generating thumbnail:', error);
-      return null;
+    async (
+      _event,
+      path: string,
+      priority: 'visible' | 'prefetch' = 'visible'
+    ) => {
+      try {
+        const thumbnailPath = await imageCache.getThumbnail(
+          path,
+          500,
+          priority
+        );
+        if (thumbnailPath) await publishThumbnail(path, thumbnailPath);
+        return thumbnailPath;
+      } catch (error) {
+        console.error('Error generating thumbnail:', error);
+        return null;
+      }
     }
-  });
+  );
 
   // Get current directory handler
   ipcMain.handle('get-current-directory', async () => {
@@ -393,13 +515,17 @@ export const setupIpcHandlers = () => {
 
   ipcMain.handle('remove-recent-directory', async (_event, path: string) => {
     try {
-      const recentDirs = (await storage.get<string[]>('recentDirectories')) || [];
+      const recentDirs =
+        (await storage.get<string[]>('recentDirectories')) || [];
       const updatedDirs = recentDirs.filter((dir) => dir !== path);
       await storage.set('recentDirectories', updatedDirs);
       return { success: true };
     } catch (error) {
       console.error('Error removing recent directory:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
     }
   });
 
@@ -409,7 +535,10 @@ export const setupIpcHandlers = () => {
       return { success: true };
     } catch (error) {
       console.error('Error clearing recent directories:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
     }
   });
 
@@ -449,28 +578,36 @@ export const setupIpcHandlers = () => {
   });
 
   // Set custom album cover
-  ipcMain.handle('set-album-cover', async (_event, albumPath: string, photoPath: string) => {
-    try {
-      const albumCovers = (await storage.get<Record<string, string>>('albumCovers')) || {};
-      albumCovers[albumPath] = photoPath;
-      await storage.set('albumCovers', albumCovers);
-      
-      // Generate thumbnail for the cover photo
-      const thumbnailPath = await imageCache.getThumbnail(photoPath);
-      
-      return { success: true, thumbnailPath };
-    } catch (error) {
-      console.error('Error setting album cover:', error);
-      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+  ipcMain.handle(
+    'set-album-cover',
+    async (_event, albumPath: string, photoPath: string) => {
+      try {
+        const albumCovers =
+          (await storage.get<Record<string, string>>('albumCovers')) || {};
+        albumCovers[albumPath] = photoPath;
+        await storage.set('albumCovers', albumCovers);
+
+        // Generate thumbnail for the cover photo
+        const thumbnailPath = await imageCache.getThumbnail(photoPath);
+
+        return { success: true, thumbnailPath };
+      } catch (error) {
+        console.error('Error setting album cover:', error);
+        return {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        };
+      }
     }
-  });
+  );
 
   // Get custom album cover
   ipcMain.handle('get-album-cover', async (_event, albumPath: string) => {
     try {
-      const albumCovers = (await storage.get<Record<string, string>>('albumCovers')) || {};
+      const albumCovers =
+        (await storage.get<Record<string, string>>('albumCovers')) || {};
       const coverPhotoPath = albumCovers[albumPath];
-      
+
       if (!coverPhotoPath) {
         return { photoPath: null, thumbnailPath: null };
       }

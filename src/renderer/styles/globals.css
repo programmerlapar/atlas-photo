@@ -843,6 +843,154 @@ html[data-albums-header-scrolled='true']
   padding: 22px 22px 32px;
 }
 
+.people-view > .photos-toolbar h1 {
+  font-size: 22px;
+  line-height: 28px;
+}
+
+.people-view > .photos-toolbar .photos-toolbar-subtitle {
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.people-content {
+  max-width: 1600px;
+  margin-inline: auto;
+  padding: 28px 28px 40px;
+}
+
+.people-content > * + * {
+  margin-block-start: 24px;
+}
+
+.people-overview {
+  display: grid;
+  gap: 16px;
+}
+
+.people-content > .people-library-section {
+  display: grid;
+  gap: 32px;
+  margin-block-start: 32px;
+}
+
+.people-view [data-view='grid'] {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 32px 24px;
+}
+
+.settings-view {
+  min-height: calc(100vh - 58px);
+  color: var(--text-primary);
+}
+
+.settings-panel {
+  flex: 0 0 320px;
+}
+
+.settings-main {
+  display: flex;
+  justify-content: center;
+  padding: 40px clamp(24px, 5vw, 72px);
+}
+
+.settings-content {
+  width: 100%;
+  padding-bottom: 24px;
+}
+
+.people-avatar-actions {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  transition:
+    opacity 150ms var(--transition-ios),
+    transform 150ms var(--transition-ios);
+}
+
+.people-person-action {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  transition:
+    color 150ms var(--transition-ios),
+    background-color 150ms var(--transition-ios);
+}
+
+.people-person-action:hover {
+  background: var(--photos-control-hover);
+  color: var(--text-primary);
+}
+
+.people-person-action:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.people-person-action-danger:hover {
+  color: var(--color-warning);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .people-avatar-actions {
+    transform: translate(-50%, 3px);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .people-person-tile:hover .people-avatar-actions,
+  .people-person-tile:focus-within .people-avatar-actions {
+    transform: translate(-50%, 0);
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .people-content {
+    padding: 22px 14px 28px;
+  }
+
+  .people-content > .people-library-section {
+    gap: 24px;
+    margin-block-start: 24px;
+  }
+
+  .people-view [data-view='grid'] {
+    gap: 24px 16px;
+  }
+}
+
+@media (max-width: 900px) {
+  .settings-view {
+    flex-direction: column;
+  }
+
+  .settings-panel {
+    width: 100%;
+    flex: 0 0 auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-default);
+    box-shadow: none;
+  }
+
+  .settings-main {
+    padding: 28px 24px 40px;
+  }
+}
+
+@media (max-width: 520px) {
+  .settings-main {
+    padding: 22px 16px 32px;
+  }
+}
+
 .albums-size-button {
   width: 42px;
   border: 0;

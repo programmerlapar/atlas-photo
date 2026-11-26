@@ -1,11 +1,18 @@
 import type { Photo } from '../../shared/types/photo';
-import type { DetectedFace, PersonGroup } from '../../shared/types/people';
+import type {
+  DetectedFace,
+  FaceScanMode,
+  FaceScanQueue,
+  PersonGroup,
+} from '../../shared/types/people';
 
 /**
  * Type definitions for Electron API exposed via preload script
  */
 export interface ElectronAPI {
-  windowControl: (action: 'minimize' | 'maximize' | 'close') => Promise<boolean>;
+  windowControl: (
+    action: 'minimize' | 'maximize' | 'close'
+  ) => Promise<boolean>;
   selectDirectory: () => Promise<string | null>;
   scanDirectory: (
     path: string
@@ -15,11 +22,15 @@ export interface ElectronAPI {
   getFaceGroupingEnabled: () => Promise<boolean>;
   setFaceGroupingEnabled: (enabled: boolean) => Promise<boolean>;
   getPeopleGroups: () => Promise<PersonGroup[]>;
+  getFaceScanQueue: (mode?: FaceScanMode) => Promise<FaceScanQueue>;
   saveDetectedFaces: (
     photoPath: string,
+    photoId: string,
     faces: DetectedFace[]
-  ) => Promise<PersonGroup[]>;
+  ) => Promise<PersonGroup[] | null>;
+  recordFaceScanFailure: (photoPath: string, photoId: string) => Promise<void>;
   renamePerson: (personId: string, name: string) => Promise<PersonGroup[]>;
+  forgetPerson: (personId: string) => Promise<PersonGroup[]>;
   getPhotoThumbnailData: (photoPath: string) => Promise<Uint8Array | null>;
   getPhotoMetadata: (path: string) => Promise<unknown>;
   generateThumbnail: (
@@ -82,7 +93,10 @@ export interface ElectronAPI {
     firstPhotoPath: string | null;
     thumbnailPath: string | null;
   }>;
-  setAlbumCover: (albumPath: string, photoPath: string) => Promise<{
+  setAlbumCover: (
+    albumPath: string,
+    photoPath: string
+  ) => Promise<{
     success: boolean;
     thumbnailPath?: string | null;
     error?: string;
