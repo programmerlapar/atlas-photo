@@ -1,6 +1,11 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { Photo } from '../shared/types/photo';
-import type { DetectedFace, PersonGroup } from '../shared/types/people';
+import type {
+  DetectedFace,
+  FaceScanMode,
+  FaceScanQueue,
+  PersonGroup,
+} from '../shared/types/people';
 
 // Expose protected methods that allow the renderer process to use
 // the ipcRenderer without exposing the entire object
@@ -29,14 +34,31 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ) as Promise<boolean>,
   getPeopleGroups: () =>
     ipcRenderer.invoke('get-people-groups') as Promise<PersonGroup[]>,
-  saveDetectedFaces: (photoPath: string, faces: DetectedFace[]) =>
-    ipcRenderer.invoke('save-detected-faces', photoPath, faces) as Promise<
-      PersonGroup[]
-    >,
+  getFaceScanQueue: (mode: FaceScanMode = 'new') =>
+    ipcRenderer.invoke('get-face-scan-queue', mode) as Promise<FaceScanQueue>,
+  saveDetectedFaces: (
+    photoPath: string,
+    photoId: string,
+    faces: DetectedFace[]
+  ) =>
+    ipcRenderer.invoke(
+      'save-detected-faces',
+      photoPath,
+      photoId,
+      faces
+    ) as Promise<PersonGroup[] | null>,
+  recordFaceScanFailure: (photoPath: string, photoId: string) =>
+    ipcRenderer.invoke(
+      'record-face-scan-failure',
+      photoPath,
+      photoId
+    ) as Promise<void>,
   renamePerson: (personId: string, name: string) =>
     ipcRenderer.invoke('rename-person', personId, name) as Promise<
       PersonGroup[]
     >,
+  forgetPerson: (personId: string) =>
+    ipcRenderer.invoke('forget-person', personId) as Promise<PersonGroup[]>,
   getPhotoThumbnailData: (photoPath: string) =>
     ipcRenderer.invoke(
       'get-photo-thumbnail-data',
@@ -47,7 +69,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Thumbnail operations
   generateThumbnail: (path: string, priority?: 'visible' | 'prefetch') =>
-    ipcRenderer.invoke('generate-thumbnail', path, priority) as Promise<string | null>,
+    ipcRenderer.invoke('generate-thumbnail', path, priority) as Promise<
+      string | null
+    >,
 
   // Directory state
   getCurrentDirectory: () =>
@@ -93,7 +117,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('photo-removed', (_event, photoPath) => callback(photoPath));
   },
 
-  onThumbnailGenerated: (callback: (data: { path: string; thumbnailPath: string }) => void) => {
+  onThumbnailGenerated: (
+    callback: (data: { path: string; thumbnailPath: string }) => void
+  ) => {
     ipcRenderer.on('thumbnail-generated', (_event, data) => callback(data));
   },
 

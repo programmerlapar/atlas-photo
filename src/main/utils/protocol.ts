@@ -24,15 +24,17 @@ const canonicalizeRoots = (roots: string[]): string[] =>
 
 export const isAllowedProtocolPath = (
   filePath: string,
-  allowedRoots?: string[]
+  allowedRoots?: string[],
+  additionalAllowedRoots: string[] = []
 ): string | null => {
   if (!isAbsolute(filePath) || !existsSync(filePath)) return null;
 
   try {
     const resolvedFilePath = realpathSync(filePath);
-    return canonicalizeRoots(allowedRoots ?? allowedLibraryRoots).some((root) =>
-      isPathInsideRoot(resolvedFilePath, root)
-    )
+    return canonicalizeRoots([
+      ...(allowedRoots ?? allowedLibraryRoots),
+      ...additionalAllowedRoots,
+    ]).some((root) => isPathInsideRoot(resolvedFilePath, root))
       ? resolvedFilePath
       : null;
   } catch {
@@ -77,7 +79,12 @@ export const registerCustomProtocol = (allowedRoots: string[] = []) => {
         while (base64.length % 4) base64 += '=';
 
         const filePath = Buffer.from(base64, 'base64').toString('utf-8');
-      const allowedFilePath = isAllowedProtocolPath(filePath, allowedLibraryRoots);
+        const thumbnailCachePath = join(app.getPath('userData'), 'thumbnails');
+        const allowedFilePath = isAllowedProtocolPath(
+          filePath,
+          allowedLibraryRoots,
+          [thumbnailCachePath]
+        );
 
         if (allowedFilePath) {
           callback({ path: allowedFilePath });

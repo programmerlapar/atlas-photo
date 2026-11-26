@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -12,6 +12,10 @@ const electronBuilderConfig = JSON.parse(
 const mainEntry = resolve(projectRoot, packageJson.main);
 const preloadEntry = resolve(projectRoot, 'dist-electron/preload/index.js');
 const rendererEntry = resolve(projectRoot, 'dist-electron/renderer/index.html');
+const unpackedResources = resolve(
+  projectRoot,
+  'release/linux-unpacked/resources/app.asar.unpacked/node_modules/@img'
+);
 const faceModelFiles = [
   'blazeface.json',
   'blazeface.bin',
@@ -31,7 +35,37 @@ if (!existsSync(rendererEntry)) {
   throw new Error(`Missing packaged renderer entry: ${rendererEntry}`);
 }
 if (!electronBuilderConfig.files.includes('public/**/*')) {
-  throw new Error('Electron builder config does not include public model assets');
+  throw new Error(
+    'Electron builder config does not include public model assets'
+  );
+}
+
+if (
+  !electronBuilderConfig.asarUnpack?.includes(
+    'node_modules/@img/sharp-libvips-*/**'
+  )
+) {
+  throw new Error('Electron builder config does not unpack Sharp libvips');
+}
+
+const sharpLibvipsPackage = readdirSync(unpackedResources).find((entry) =>
+  entry.startsWith('sharp-libvips-')
+);
+if (!sharpLibvipsPackage) {
+  throw new Error(
+    `Missing unpacked Sharp libvips package: ${unpackedResources}`
+  );
+}
+
+const libvipsDirectory = resolve(unpackedResources, sharpLibvipsPackage, 'lib');
+if (
+  !readdirSync(libvipsDirectory).some((entry) =>
+    entry.startsWith('libvips-cpp.so.')
+  )
+) {
+  throw new Error(
+    `Missing unpacked libvips shared library: ${libvipsDirectory}`
+  );
 }
 
 for (const filename of faceModelFiles) {

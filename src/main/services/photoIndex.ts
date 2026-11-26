@@ -1,4 +1,4 @@
-import { mkdir, readFile, rename, stat, writeFile } from 'fs/promises';
+import { mkdir, opendir, readFile, rename, stat, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
 import { app } from 'electron';
@@ -6,6 +6,7 @@ import type { Photo } from '../../shared/types/photo';
 
 interface DirectoryIndexEntry {
   directoryMtimeMs: number;
+  directoryFingerprint?: string | null;
   photos: Photo[];
   updatedAt: number;
 }
@@ -28,16 +29,29 @@ export class PhotoIndex {
   private persistTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
-    this.indexPath = join(app.getPath('userData'), 'storage', 'photo-index-v1.json');
+    this.indexPath = join(
+      app.getPath('userData'),
+      'storage',
+      'photo-index-v1.json'
+    );
   }
 
   async get(directoryPath: string): Promise<Photo[] | null> {
     const entry = (await this.load()).directories[directoryPath];
-    if (!entry) return null;
+    if (!entry || !entry.directoryFingerprint) return null;
 
     try {
       const directoryStats = await stat(directoryPath);
-      if (!directoryStats.isDirectory() || directoryStats.mtimeMs !== entry.directoryMtimeMs) return null;
+      if (
+        !directoryStats.isDirectory() ||
+        directoryStats.mtimeMs !== entry.directoryMtimeMs
+      )
+        return null;
+      if (
+        (await getDirectoryFingerprint(directoryPath)) !==
+        entry.directoryFingerprint
+      )
+        return null;
       return entry.photos;
     } catch {
       return null;
@@ -51,16 +65,18 @@ export class PhotoIndex {
    */
   async getStoredForDirectories(directoryPaths: string[]): Promise<Photo[]> {
     const directories = (await this.load()).directories;
-    return directoryPaths.flatMap((directoryPath) =>
-      directories[directoryPath]?.photos ?? []
+    return directoryPaths.flatMap(
+      (directoryPath) => directories[directoryPath]?.photos ?? []
     );
   }
 
   async save(directoryPath: string, photos: Photo[]): Promise<void> {
     const directoryStats = await stat(directoryPath);
+    const directoryFingerprint = await getDirectoryFingerprint(directoryPath);
     const data = await this.load();
     data.directories[directoryPath] = {
       directoryMtimeMs: directoryStats.mtimeMs,
+      directoryFingerprint,
       photos,
       updatedAt: Date.now(),
     };
@@ -89,7 +105,8 @@ export class PhotoIndex {
     if (this.data) return this.data;
     try {
       if (existsSync(this.indexPath)) {
-        const parsed = JSON.parse(await readFile(this.indexPath, 'utf8')) as PhotoIndexData | LegacyPhotoIndexData;
+        const parsed = JSON.parse(await readFile(this.indexPath, 'utf8')) as
+          PhotoIndexData | LegacyPhotoIndexData;
         if (parsed.version === 1 && parsed.directories) {
           const upgraded: PhotoIndexData = {
             version: 2,
@@ -125,17 +142,28 @@ export class PhotoIndex {
           for (const entry of Object.values(parsed.directories)) {
             entry.photos = entry.photos.map((photo) => {
               const compactExifData = compactExif(photo.metadata?.exif);
-              if (photo.metadata?.exif && Object.keys(compactExifData).length < Object.keys(photo.metadata.exif).length) {
+              if (
+                photo.metadata?.exif &&
+                Object.keys(compactExifData).length <
+                  Object.keys(photo.metadata.exif).length
+              ) {
                 compacted = true;
               }
               if (typeof photo.metadata?.date === 'string') {
                 return {
                   ...photo,
-                  metadata: { ...photo.metadata, date: new Date(photo.metadata.date), exif: compactExifData },
+                  metadata: {
+                    ...photo.metadata,
+                    date: new Date(photo.metadata.date),
+                    exif: compactExifData,
+                  },
                 };
               }
               return photo.metadata?.exif
-                ? { ...photo, metadata: { ...photo.metadata, exif: compactExifData } }
+                ? {
+                    ...photo,
+                    metadata: { ...photo.metadata, exif: compactExifData },
+                  }
                 : photo;
             });
           }
@@ -174,8 +202,47 @@ export class PhotoIndex {
       });
     }, 750);
   }
-
 }
+
+/**
+ * Captures directory mtimes and child-directory names throughout a tree. A
+ * root-only mtime misses changes made several folders below a selected library.
+ * Streaming entries avoids materializing large flat photo folders in memory.
+ */
+const getDirectoryFingerprint = async (
+  directoryPath: string
+): Promise<string | null> => {
+  const directories: Array<[string, number, string[]]> = [];
+  const visit = async (
+    currentPath: string,
+    relativePath: string
+  ): Promise<void> => {
+    const directoryStats = await stat(currentPath);
+    const childDirectories: string[] = [];
+    const directory = await opendir(currentPath);
+    for await (const entry of directory) {
+      if (entry.isDirectory()) childDirectories.push(entry.name);
+    }
+    childDirectories.sort((left, right) => left.localeCompare(right));
+    directories.push([relativePath, directoryStats.mtimeMs, childDirectories]);
+
+    for (const childDirectory of childDirectories) {
+      const childPath = join(currentPath, childDirectory);
+      const childRelativePath = relativePath
+        ? join(relativePath, childDirectory)
+        : childDirectory;
+      await visit(childPath, childRelativePath);
+    }
+  };
+
+  try {
+    await visit(directoryPath, '');
+    return JSON.stringify(directories);
+  } catch {
+    // An incomplete snapshot must never be used to certify a cached index.
+    return null;
+  }
+};
 
 const parseLegacyExifDate = (...values: unknown[]): Date | undefined => {
   for (const value of values) {
@@ -188,14 +255,31 @@ const parseLegacyExifDate = (...values: unknown[]): Date | undefined => {
   return undefined;
 };
 
-const compactExif = (exif: Record<string, unknown> | undefined): Record<string, unknown> => {
+const compactExif = (
+  exif: Record<string, unknown> | undefined
+): Record<string, unknown> => {
   if (!exif) return {};
   const retainedKeys = new Set([
-    'DateTimeOriginal', 'DateTimeDigitized', 'CreateDate', 'DateTime', 'ModifyDate',
-    'Make', 'Model', 'ISO', 'FNumber', 'ExposureTime', 'FocalLength',
-    'latitude', 'longitude', 'GPSAltitude',
+    'DateTimeOriginal',
+    'DateTimeDigitized',
+    'CreateDate',
+    'DateTime',
+    'ModifyDate',
+    'Make',
+    'Model',
+    'ISO',
+    'FNumber',
+    'ExposureTime',
+    'FocalLength',
+    'latitude',
+    'longitude',
+    'GPSAltitude',
     // Raw v1 tags retained only long enough to migrate their dates.
-    '36867', '36868', '306',
+    '36867',
+    '36868',
+    '306',
   ]);
-  return Object.fromEntries(Object.entries(exif).filter(([key]) => retainedKeys.has(key)));
+  return Object.fromEntries(
+    Object.entries(exif).filter(([key]) => retainedKeys.has(key))
+  );
 };

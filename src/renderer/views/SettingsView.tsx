@@ -2,7 +2,11 @@ import { ArrowLeft, FolderOpen, Grid, Moon, Sun, Grid3x3 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { usePhotos } from '../hooks/usePhotos';
 import { useMotionNavigate } from '../hooks/useMotionNavigate';
-import { useFilterStore, type GroupOption, type SortOption } from '../stores/filterStore';
+import {
+  useFilterStore,
+  type GroupOption,
+  type SortOption,
+} from '../stores/filterStore';
 import { useThemeStore } from '../stores/themeStore';
 import { usePreferencesStore } from '../stores/preferencesStore';
 import Button from '../components/ui/Button';
@@ -20,9 +24,11 @@ const SettingsView = () => {
   const { theme, toggleTheme } = useThemeStore();
   const { albumGridSize, setAlbumGridSize } = usePreferencesStore();
   const isDarkMode = theme === 'dark';
-  const [faceGroupingEnabled, setFaceGroupingEnabled] = useState(false);
+  const [faceGroupingEnabled, setFaceGroupingEnabled] = useState(true);
   const [facePreferenceLoading, setFacePreferenceLoading] = useState(true);
-  const [facePreferenceError, setFacePreferenceError] = useState<string | null>(null);
+  const [facePreferenceError, setFacePreferenceError] = useState<string | null>(
+    null
+  );
 
   const loadFaceGroupingSetting = async () => {
     setFacePreferenceLoading(true);
@@ -30,7 +36,9 @@ const SettingsView = () => {
     try {
       setFaceGroupingEnabled(await window.electronAPI.getFaceGroupingEnabled());
     } catch {
-      setFacePreferenceError('Face grouping settings could not be loaded. Try again.');
+      setFacePreferenceError(
+        'Face grouping settings could not be loaded. Try again.'
+      );
     } finally {
       setFacePreferenceLoading(false);
     }
@@ -38,17 +46,23 @@ const SettingsView = () => {
 
   useEffect(() => {
     let active = true;
-    window.electronAPI.getFaceGroupingEnabled()
+    window.electronAPI
+      .getFaceGroupingEnabled()
       .then((enabled) => {
         if (active) setFaceGroupingEnabled(enabled);
       })
       .catch(() => {
-        if (active) setFacePreferenceError('Face grouping settings could not be loaded. Try again.');
+        if (active)
+          setFacePreferenceError(
+            'Face grouping settings could not be loaded. Try again.'
+          );
       })
       .finally(() => {
         if (active) setFacePreferenceLoading(false);
       });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
   const handleFaceGroupingChange = async (enabled: boolean) => {
@@ -58,7 +72,9 @@ const SettingsView = () => {
       await window.electronAPI.setFaceGroupingEnabled(enabled);
       setFaceGroupingEnabled(enabled);
     } catch {
-      setFacePreferenceError('The setting could not be updated. Check the current setting before starting another scan.');
+      setFacePreferenceError(
+        'The setting could not be updated. Check the current setting before starting another scan.'
+      );
     } finally {
       setFacePreferenceLoading(false);
     }
@@ -79,9 +95,9 @@ const SettingsView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--bg-primary)] flex">
+    <div className="settings-view flex bg-[var(--bg-primary)]">
       {/* Settings panel */}
-      <div className="glass-surface-2 border-r border-[var(--border-default)] shadow-l2 w-80 flex flex-col">
+      <div className="settings-panel glass-surface-2 border-r border-[var(--border-default)] shadow-l2 w-80 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-[var(--border-default)]">
           <div className="flex items-center gap-4">
@@ -92,7 +108,9 @@ const SettingsView = () => {
             >
               <ArrowLeft className="w-5 h-5 text-[var(--text-primary)]" />
             </button>
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Settings</h2>
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">
+              Settings
+            </h2>
           </div>
         </div>
 
@@ -107,7 +125,10 @@ const SettingsView = () => {
               </h3>
               {currentDirectory && (
                 <div className="space-y-2">
-                  <p className="text-sm text-[var(--text-primary)] truncate" title={currentDirectory}>
+                  <p
+                    className="text-sm text-[var(--text-primary)] truncate"
+                    title={currentDirectory}
+                  >
                     {currentDirectory.split(/[/\\]/).pop()}
                   </p>
                   <Button
@@ -141,7 +162,11 @@ const SettingsView = () => {
                 </label>
                 <select
                   value={groupBy}
-                  onChange={(e) => setGroupBy((e.target as HTMLSelectElement).value as GroupOption)}
+                  onChange={(e) =>
+                    setGroupBy(
+                      (e.target as HTMLSelectElement).value as GroupOption
+                    )
+                  }
                   className="w-full px-3 py-2 bg-[var(--glass-bg-1)] border border-[var(--border-default)] rounded-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="date">Date</option>
@@ -155,7 +180,11 @@ const SettingsView = () => {
                 </label>
                 <select
                   value={sortBy}
-                  onChange={(e) => setSortBy((e.target as HTMLSelectElement).value as SortOption)}
+                  onChange={(e) =>
+                    setSortBy(
+                      (e.target as HTMLSelectElement).value as SortOption
+                    )
+                  }
                   className="w-full px-3 py-2 bg-[var(--glass-bg-1)] border border-[var(--border-default)] rounded-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="date">Date</option>
@@ -170,7 +199,9 @@ const SettingsView = () => {
                 <select
                   value={sortOrder}
                   onChange={(e) =>
-                    setSortOrder((e.target as HTMLSelectElement).value as 'asc' | 'desc')
+                    setSortOrder(
+                      (e.target as HTMLSelectElement).value as 'asc' | 'desc'
+                    )
                   }
                   className="w-full px-3 py-2 bg-[var(--glass-bg-1)] border border-[var(--border-default)] rounded-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-primary"
                 >
@@ -184,9 +215,15 @@ const SettingsView = () => {
                 </label>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-[var(--text-secondary)]">Large</span>
-                    <span className="text-xs text-[var(--text-secondary)]">Medium</span>
-                    <span className="text-xs text-[var(--text-secondary)]">Compact</span>
+                    <span className="text-xs text-[var(--text-secondary)]">
+                      Large
+                    </span>
+                    <span className="text-xs text-[var(--text-secondary)]">
+                      Medium
+                    </span>
+                    <span className="text-xs text-[var(--text-secondary)]">
+                      Compact
+                    </span>
                   </div>
                   <input
                     type="range"
@@ -195,7 +232,9 @@ const SettingsView = () => {
                     step="1"
                     value={albumGridSize}
                     onChange={(e) => {
-                      const value = parseInt((e.target as HTMLInputElement).value);
+                      const value = parseInt(
+                        (e.target as HTMLInputElement).value
+                      );
                       setAlbumGridSize(value);
                     }}
                     className="w-full h-2 bg-[var(--glass-bg-1)] rounded-full appearance-none cursor-pointer accent-primary"
@@ -204,16 +243,20 @@ const SettingsView = () => {
                         var(--color-primary) 0%, 
                         var(--color-primary) ${albumGridSize}%, 
                         var(--glass-bg-1) ${albumGridSize}%, 
-                        var(--glass-bg-1) 100%)`
+                        var(--glass-bg-1) 100%)`,
                     }}
                   />
                   <div className="flex items-center gap-2 text-xs text-[var(--text-tertiary)]">
                     <Grid3x3 className="w-3 h-3" />
                     <span>
-                      {albumGridSize < 34 && 'Large cards (fewer per row, better for desktop)'}
-                      {albumGridSize >= 34 && albumGridSize <= 66 && 'Balanced view (default)'}
-                      {albumGridSize > 66 && 'Compact view (more albums per row)'}
-                      {' '}({albumGridSize}%)
+                      {albumGridSize < 34 &&
+                        'Large cards (fewer per row, better for desktop)'}
+                      {albumGridSize >= 34 &&
+                        albumGridSize <= 66 &&
+                        'Balanced view (default)'}
+                      {albumGridSize > 66 &&
+                        'Compact view (more albums per row)'}{' '}
+                      ({albumGridSize}%)
                     </span>
                   </div>
                 </div>
@@ -240,7 +283,9 @@ const SettingsView = () => {
                   className="w-4 h-4 rounded border-[var(--border-default)] bg-[var(--glass-bg-1)] text-primary focus:ring-primary"
                   aria-label="Toggle dark mode"
                 />
-                <span className="text-sm text-[var(--text-primary)]">Dark Mode</span>
+                <span className="text-sm text-[var(--text-primary)]">
+                  Dark Mode
+                </span>
               </label>
             </div>
           </div>
@@ -248,38 +293,71 @@ const SettingsView = () => {
       </div>
 
       {/* Main content area */}
-      <div className="flex-1 p-8">
-        <div className="max-w-2xl space-y-6">
+      <div className="settings-main flex-1 p-8">
+        <div className="settings-content max-w-2xl space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">Settings</h2>
+            <h2 className="text-2xl font-bold text-[var(--text-primary)] mb-2">
+              Settings
+            </h2>
             <p className="text-[var(--text-tertiary)]">
               Configure your PhotoMap preferences and view options
             </p>
           </div>
           <section className="rounded-2xl border border-[var(--border-default)] bg-[var(--glass-bg-1)] p-5">
-            <h3 className="text-base font-semibold text-[var(--text-primary)]">People</h3>
+            <h3 className="text-base font-semibold text-[var(--text-primary)]">
+              People
+            </h3>
             <p className="mt-1 text-sm text-[var(--text-secondary)]">
-              Group similar faces in your library. Face matching runs on this device. When enabled, face embeddings and names are saved locally in app data; disabling removes them.
+              Similar faces are grouped automatically on this device as you use
+              People. Face data and names stay in app storage. Turn this off any
+              time to delete saved face data.
             </p>
             <label className="mt-4 flex items-start gap-3 text-sm text-[var(--text-primary)]">
               <input
                 type="checkbox"
                 checked={faceGroupingEnabled}
                 disabled={facePreferenceLoading}
-                onChange={(event) => void handleFaceGroupingChange(event.target.checked)}
+                onChange={(event) =>
+                  void handleFaceGroupingChange(event.target.checked)
+                }
                 className="mt-0.5 h-4 w-4 accent-primary"
               />
-              <span>Enable face grouping and local face-data storage</span>
+              <span>Group similar faces in your library</span>
             </label>
-            {facePreferenceLoading && <p className="mt-2 text-xs text-[var(--text-secondary)]" role="status">Loading or saving face grouping preference…</p>}
-            {facePreferenceError && <p className="mt-2 text-xs text-[var(--color-danger,var(--text-secondary))]" role="alert">{facePreferenceError}</p>}
+            <p className="ml-7 text-xs text-[var(--text-secondary)]">
+              Turning this off deletes locally stored face groups and names.
+            </p>
+            {facePreferenceLoading && (
+              <p
+                className="mt-2 text-xs text-[var(--text-secondary)]"
+                role="status"
+              >
+                Loading or saving face grouping preference…
+              </p>
+            )}
+            {facePreferenceError && (
+              <p
+                className="mt-2 text-xs text-[var(--color-danger,var(--text-secondary))]"
+                role="alert"
+              >
+                {facePreferenceError}
+              </p>
+            )}
             {facePreferenceError && !facePreferenceLoading && (
-              <button onClick={() => void loadFaceGroupingSetting()} className="mt-2 text-xs underline">
+              <button
+                onClick={() => void loadFaceGroupingSetting()}
+                className="mt-2 text-xs underline"
+              >
                 Retry loading setting
               </button>
             )}
             {faceGroupingEnabled && (
-              <Button variant="secondary" size="sm" onClick={() => navigate('/people')} className="mt-4 rounded-lg px-3 py-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => navigate('/people')}
+                className="mt-4 rounded-lg px-3 py-2"
+              >
                 Open People
               </Button>
             )}

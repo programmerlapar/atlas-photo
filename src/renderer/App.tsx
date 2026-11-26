@@ -58,7 +58,7 @@ const App = () => {
     ) ||
     (location.pathname === '/' && hasAlbums);
   const integratedToolbar =
-    ['/albums', '/gallery', '/map'].includes(location.pathname) ||
+    ['/albums', '/gallery', '/map', '/people'].includes(location.pathname) ||
     location.pathname.startsWith('/detail/') ||
     (location.pathname === '/' && hasAlbums);
 
